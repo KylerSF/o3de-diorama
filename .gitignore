@@ -1,0 +1,23 @@
+# Build output
+build/
+*.o
+*.obj
+*.so
+*.a
+*.dll
+*.dylib
+
+# O3DE generated/user state
+Cache/
+user/
+*.setreg.local
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+
+# OS
+.DS_Store
+Thumbs.db

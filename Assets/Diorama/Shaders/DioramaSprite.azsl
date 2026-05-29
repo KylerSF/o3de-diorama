@@ -1,0 +1,65 @@
+/*
+ * Copyright (c) Contributors to the Open 3D Engine Project.
+ * For complete copyright and license terms please see the LICENSE at the root of this distribution.
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR MIT
+ */
+
+// Diorama world-space sprite shader.
+// Vertices arrive already transformed into world space on the CPU side, so the
+// vertex stage only applies the view-projection matrix. The per-draw SRG carries
+// the sprite texture and its sampler so a single draw context can render many
+// sprites, each binding its own texture.
+
+#include <viewsrg_all.srgi>
+
+ShaderResourceGroup SpriteSrg : SRG_PerDraw
+{
+    Texture2D m_texture;
+
+    Sampler m_sampler
+    {
+        MinFilter = Linear;
+        MagFilter = Linear;
+        MipFilter = Linear;
+        AddressU = Clamp;
+        AddressV = Clamp;
+        AddressW = Clamp;
+    };
+}
+
+struct VSInput
+{
+    float3 m_position : POSITION;
+    float4 m_color : COLOR;
+    float2 m_uv : TEXCOORD;
+};
+
+struct VSOutput
+{
+    float4 m_position : SV_Position;
+    float4 m_color : COLOR;
+    float2 m_uv : TEXCOORD;
+};
+
+VSOutput MainVS(VSInput vsInput)
+{
+    VSOutput OUT;
+    OUT.m_position = mul(ViewSrg::m_viewProjectionMatrix, float4(vsInput.m_position, 1.0));
+    OUT.m_color = vsInput.m_color;
+    OUT.m_uv = vsInput.m_uv;
+    return OUT;
+}
+
+struct PSOutput
+{
+    float4 m_color : SV_Target0;
+};
+
+PSOutput MainPS(VSOutput input)
+{
+    PSOutput OUT;
+    float4 sampled = SpriteSrg::m_texture.Sample(SpriteSrg::m_sampler, input.m_uv);
+    OUT.m_color = sampled * input.m_color;
+    return OUT;
+}

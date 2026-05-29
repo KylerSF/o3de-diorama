@@ -1,0 +1,18 @@
+{
+    "Amazon": {
+        "AssetProcessor": {
+            "Settings": {
+                "ScanFolder Diorama/Assets": {
+                    "watch": "@GEMROOT:Diorama@/Assets",
+                    "recursive": 1,
+                    "order": 101
+                },
+                "ScanFolder Diorama/Registry": {
+                    "watch": "@GEMROOT:Diorama@/Registry",
+                    "recursive": 1,
+                    "order": 102
+                }
+            }
+        }
+    }
+}
