@@ -27,7 +27,20 @@ namespace Diorama
         // The gem's asset scan folder watches @GEMROOT:Diorama@/Assets, so the
         // product path is rooted at "diorama/" (the gem name), lowercased.
         constexpr const char* SpriteShaderPath = "diorama/shaders/dioramasprite.azshader";
-        const AZ::Name TextureSrgInput{ "m_texture" };
+
+        // Lazily constructed on first use rather than at namespace scope. A
+        // static AZ::Name constructs during shared-library load (_dl_init),
+        // before the AzCore NameDictionary singleton exists, so MakeName
+        // dereferences uninitialized state and crashes. This surfaces as a
+        // SIGSEGV when AzTestRunner dlopens the gem before the AZ environment is
+        // attached; in the editor the module loads post-bootstrap so it happened
+        // to survive. A function-local static defers construction until after
+        // bootstrap and is thread-safe.
+        const AZ::Name& TextureSrgInput()
+        {
+            static const AZ::Name name{ "m_texture" };
+            return name;
+        }
     } // namespace
 
     SpriteRenderer::SpriteHandle SpriteRenderer::RegisterSprite()
@@ -229,7 +242,7 @@ namespace Diorama
                 continue;
             }
 
-            const AZ::RHI::ShaderInputImageIndex imageIndex = drawSrg->FindShaderInputImageIndex(TextureSrgInput);
+            const AZ::RHI::ShaderInputImageIndex imageIndex = drawSrg->FindShaderInputImageIndex(TextureSrgInput());
             if (!imageIndex.IsValid())
             {
                 continue;
