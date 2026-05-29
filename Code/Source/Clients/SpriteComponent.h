@@ -8,21 +8,18 @@
 #pragma once
 
 #include <Diorama/SpriteComponentConfig.h>
+#include <Clients/SpritePresenter.h>
 
 #include <AzCore/Component/Component.h>
-#include <AzCore/Component/TransformBus.h>
-#include <AzCore/Asset/AssetCommon.h>
 
 namespace Diorama
 {
     //! Lightweight runtime component that draws a single world-space sprite.
-    //! It holds only data and registration logic, delegating all rendering to
-    //! the shared SpriteRenderer owned by the Diorama system component. It has no
-    //! Qt or tools dependency so it ships in game clients.
+    //! It holds the configuration and delegates all rendering to the shared
+    //! SpritePresenter, which talks to the gem's SpriteRenderer. It has no Qt or
+    //! tools dependency so it ships in game clients.
     class SpriteComponent final
         : public AZ::Component
-        , private AZ::TransformNotificationBus::Handler
-        , private AZ::Data::AssetBus::Handler
     {
     public:
         AZ_COMPONENT(Diorama::SpriteComponent, SpriteComponentTypeId);
@@ -44,16 +41,7 @@ namespace Diorama
         void Deactivate() override;
 
     private:
-        // AZ::TransformNotificationBus::Handler
-        void OnTransformChanged(const AZ::Transform& local, const AZ::Transform& world) override;
-
-        // AZ::Data::AssetBus::Handler
-        void OnAssetReady(AZ::Data::Asset<AZ::Data::AssetData> asset) override;
-
-        void PushToRenderer();
-
         SpriteComponentConfig m_config;
-        AZ::Transform m_worldTransform = AZ::Transform::CreateIdentity();
-        AZ::u32 m_spriteHandle = 0; // SpriteRenderer::InvalidHandle
+        SpritePresenter m_presenter;
     };
 } // namespace Diorama

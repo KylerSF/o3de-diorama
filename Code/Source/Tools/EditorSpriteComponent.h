@@ -8,14 +8,17 @@
 #pragma once
 
 #include <Diorama/SpriteComponentConfig.h>
+#include <Clients/SpritePresenter.h>
 
 #include <AzToolsFramework/ToolsComponents/EditorComponentBase.h>
 
 namespace Diorama
 {
     //! Editor-side counterpart to the runtime SpriteComponent. It authors the
-    //! shared SpriteComponentConfig in the entity inspector and, on export or
-    //! play, builds the lightweight runtime SpriteComponent through
+    //! shared SpriteComponentConfig in the entity inspector and renders a live
+    //! preview in the editor viewport through the shared SpritePresenter, so the
+    //! sprite is visible while editing without entering game mode. On export or
+    //! play it builds the lightweight runtime SpriteComponent through
     //! BuildGameEntity. All Qt and AzToolsFramework dependencies stay in this
     //! editor module so the runtime client stays lean.
     class EditorSpriteComponent final
@@ -34,10 +37,18 @@ namespace Diorama
         EditorSpriteComponent() = default;
         ~EditorSpriteComponent() override = default;
 
+        // AZ::Component
+        void Activate() override;
+        void Deactivate() override;
+
         // AzToolsFramework::Components::EditorComponentBase
         void BuildGameEntity(AZ::Entity* gameEntity) override;
 
     private:
+        // Called by the edit context when a property changes; refreshes the preview.
+        AZ::u32 OnConfigChanged();
+
         SpriteComponentConfig m_config;
+        SpritePresenter m_presenter;
     };
 } // namespace Diorama

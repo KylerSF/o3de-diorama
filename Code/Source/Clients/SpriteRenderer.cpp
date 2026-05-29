@@ -11,6 +11,7 @@
 #include <AzCore/Math/Vector3.h>
 
 #include <Atom/RPI.Public/DynamicDraw/DynamicDrawInterface.h>
+#include <Atom/RPI.Public/Image/ImageSystemInterface.h>
 #include <Atom/RPI.Public/RPIUtils.h>
 #include <Atom/RPI.Public/Scene.h>
 #include <Atom/RPI.Public/Shader/Shader.h>
@@ -191,14 +192,29 @@ namespace Diorama
             }
         }
 
+        // Fallback image used when a sprite's own texture has not finished
+        // loading yet. Drawing a tinted quad with the engine's white system image
+        // keeps the sprite visible (and makes missing textures obvious) instead of
+        // silently dropping the draw.
+        AZ::Data::Instance<AZ::RPI::Image> fallbackImage;
+        if (auto* imageSystem = AZ::RPI::ImageSystemInterface::Get())
+        {
+            fallbackImage = imageSystem->GetSystemImage(AZ::RPI::SystemImage::White);
+        }
+
         for (const auto& [handle, entry] : m_sprites)
         {
-            if (!entry.m_visible || !entry.m_config.m_texture.IsReady())
+            AZ::Data::Instance<AZ::RPI::Image> image;
+            bool usingFallback = false;
+            if (entry.m_config.m_texture.IsReady())
             {
-                continue;
+                image = AZ::RPI::StreamingImage::FindOrCreate(entry.m_config.m_texture);
             }
-
-            auto image = AZ::RPI::StreamingImage::FindOrCreate(entry.m_config.m_texture);
+            if (!image)
+            {
+                image = fallbackImage;
+                usingFallback = true;
+            }
             if (!image)
             {
                 continue;
@@ -221,6 +237,17 @@ namespace Diorama
 
             SpriteVertex vertices[4];
             BuildQuad(entry, entry.m_config.m_billboard, cameraTransform, vertices);
+
+            // Tint the fallback quad magenta so an unloaded texture is obvious in
+            // the viewport rather than looking like an intentional white sprite.
+            if (usingFallback)
+            {
+                const AZ::u32 debugTint = AZ::Color(1.0f, 0.0f, 1.0f, 1.0f).ToU32();
+                for (int i = 0; i < 4; ++i)
+                {
+                    vertices[i].m_color = debugTint;
+                }
+            }
 
             static const AZ::u16 indices[6] = { 0, 1, 2, 0, 2, 3 };
 

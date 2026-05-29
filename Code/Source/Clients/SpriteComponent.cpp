@@ -6,7 +6,6 @@
  */
 
 #include <Clients/SpriteComponent.h>
-#include <Clients/SpriteRendererBus.h>
 
 #include <AzCore/Serialization/SerializeContext.h>
 #include <AzCore/Serialization/EditContext.h>
@@ -49,8 +48,6 @@ namespace Diorama
 
     void SpriteComponent::GetIncompatibleServices(AZ::ComponentDescriptor::DependencyArrayType& incompatible)
     {
-        // Only one sprite per entity. This keeps the entity-to-quad mapping simple
-        // and predictable for the renderer.
         incompatible.push_back(AZ_CRC_CE("DioramaSpriteService"));
     }
 
@@ -66,58 +63,11 @@ namespace Diorama
 
     void SpriteComponent::Activate()
     {
-        m_worldTransform = AZ::Transform::CreateIdentity();
-        AZ::TransformBus::EventResult(m_worldTransform, GetEntityId(), &AZ::TransformBus::Events::GetWorldTM);
-
-        // Register through the renderer interface and keep the returned handle.
-        DioramaSpriteRendererRequestBus::BroadcastResult(m_spriteHandle, &DioramaSpriteRendererRequests::RegisterSprite);
-
-        // Trigger the texture load if one is assigned.
-        if (m_config.m_texture.GetId().IsValid())
-        {
-            m_config.m_texture.QueueLoad();
-            AZ::Data::AssetBus::Handler::BusConnect(m_config.m_texture.GetId());
-        }
-
-        AZ::TransformNotificationBus::Handler::BusConnect(GetEntityId());
-        PushToRenderer();
+        m_presenter.Connect(GetEntityId(), m_config);
     }
 
     void SpriteComponent::Deactivate()
     {
-        AZ::TransformNotificationBus::Handler::BusDisconnect();
-        AZ::Data::AssetBus::Handler::BusDisconnect();
-
-        if (m_spriteHandle != 0)
-        {
-            DioramaSpriteRendererRequestBus::Broadcast(&DioramaSpriteRendererRequests::UnregisterSprite, m_spriteHandle);
-            m_spriteHandle = 0;
-        }
-    }
-
-    void SpriteComponent::OnTransformChanged(const AZ::Transform& /*local*/, const AZ::Transform& world)
-    {
-        m_worldTransform = world;
-        PushToRenderer();
-    }
-
-    void SpriteComponent::OnAssetReady(AZ::Data::Asset<AZ::Data::AssetData> asset)
-    {
-        if (asset.GetId() == m_config.m_texture.GetId())
-        {
-            m_config.m_texture = asset;
-            PushToRenderer();
-        }
-    }
-
-    void SpriteComponent::PushToRenderer()
-    {
-        if (m_spriteHandle == 0)
-        {
-            return;
-        }
-
-        DioramaSpriteRendererRequestBus::Broadcast(
-            &DioramaSpriteRendererRequests::UpdateSprite, m_spriteHandle, m_worldTransform, m_config);
+        m_presenter.Disconnect();
     }
 } // namespace Diorama

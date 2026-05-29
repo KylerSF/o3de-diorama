@@ -30,7 +30,8 @@ namespace Diorama
                         ->Attribute(AZ::Edit::Attributes::AppearsInAddComponentMenu, AZ_CRC_CE("Game"))
                         ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
                     ->DataElement(AZ::Edit::UIHandlers::Default, &EditorSpriteComponent::m_config, "Config", "Sprite configuration")
-                        ->Attribute(AZ::Edit::Attributes::Visibility, AZ::Edit::PropertyVisibility::ShowChildrenOnly);
+                        ->Attribute(AZ::Edit::Attributes::Visibility, AZ::Edit::PropertyVisibility::ShowChildrenOnly)
+                        ->Attribute(AZ::Edit::Attributes::ChangeNotify, &EditorSpriteComponent::OnConfigChanged);
             }
         }
     }
@@ -55,10 +56,29 @@ namespace Diorama
         AZ_UNUSED(dependent);
     }
 
+    void EditorSpriteComponent::Activate()
+    {
+        AzToolsFramework::Components::EditorComponentBase::Activate();
+        m_presenter.Connect(GetEntityId(), m_config);
+    }
+
+    void EditorSpriteComponent::Deactivate()
+    {
+        m_presenter.Disconnect();
+        AzToolsFramework::Components::EditorComponentBase::Deactivate();
+    }
+
     void EditorSpriteComponent::BuildGameEntity(AZ::Entity* gameEntity)
     {
         // Hand the authored configuration to the runtime component so the exported
         // game runs only the lightweight client code path.
         gameEntity->CreateComponent<SpriteComponent>(m_config);
+    }
+
+    AZ::u32 EditorSpriteComponent::OnConfigChanged()
+    {
+        // Push the edited values to the live preview immediately.
+        m_presenter.SetConfig(m_config);
+        return AZ::Edit::PropertyRefreshLevels::None;
     }
 } // namespace Diorama

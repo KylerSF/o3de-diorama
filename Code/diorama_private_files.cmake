@@ -7,6 +7,8 @@ set(FILES
     Source/Clients/SpriteComponent.cpp
     Source/Clients/SpriteComponent.h
     Source/Clients/SpriteComponentConfig.cpp
+    Source/Clients/SpritePresenter.cpp
+    Source/Clients/SpritePresenter.h
     Source/Clients/SpriteRenderer.cpp
     Source/Clients/SpriteRenderer.h
     Source/Clients/SpriteRendererBus.h
