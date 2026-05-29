@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include <Diorama/SpriteComponentConfig.h>
 #include <Clients/SpritePresenter.h>
+#include <Diorama/SpriteComponentConfig.h>
 
 #include <AzCore/Component/Component.h>
 
@@ -18,8 +18,7 @@ namespace Diorama
     //! It holds the configuration and delegates all rendering to the shared
     //! SpritePresenter, which talks to the gem's SpriteRenderer. It has no Qt or
     //! tools dependency so it ships in game clients.
-    class SpriteComponent final
-        : public AZ::Component
+    class SpriteComponent final : public AZ::Component
     {
     public:
         AZ_COMPONENT(Diorama::SpriteComponent, SpriteComponentTypeId);

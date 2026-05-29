@@ -8,10 +8,10 @@
 #include <Diorama/SpriteComponentConfig.h>
 
 #include <AzCore/Asset/AssetSerializer.h>
-#include <AzCore/std/utils.h>
-#include <AzCore/Serialization/SerializeContext.h>
 #include <AzCore/Serialization/EditContext.h>
 #include <AzCore/Serialization/EditContextConstants.inl>
+#include <AzCore/Serialization/SerializeContext.h>
+#include <AzCore/std/utils.h>
 
 namespace Diorama
 {
@@ -36,23 +36,53 @@ namespace Diorama
             {
                 editContext->Class<SpriteComponentConfig>("Sprite Configuration", "Settings for a world-space sprite")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
-                        ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &SpriteComponentConfig::m_texture, "Texture", "Texture drawn on the sprite quad")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &SpriteComponentConfig::m_size, "Size", "Quad size in world units (width, height)")
-                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
-                        ->Attribute(AZ::Edit::Attributes::Suffix, " m")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &SpriteComponentConfig::m_pivot, "Pivot", "Normalized pivot within the quad (0.5, 0.5 is centered)")
-                    ->DataElement(AZ::Edit::UIHandlers::Color, &SpriteComponentConfig::m_tint, "Tint", "Color multiplied into the texture; alpha controls transparency")
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default, &SpriteComponentConfig::m_texture, "Texture", "Texture drawn on the sprite quad")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default, &SpriteComponentConfig::m_size, "Size", "Quad size in world units (width, height)")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                    ->Attribute(AZ::Edit::Attributes::Suffix, " m")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &SpriteComponentConfig::m_pivot,
+                        "Pivot",
+                        "Normalized pivot within the quad (0.5, 0.5 is centered)")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Color,
+                        &SpriteComponentConfig::m_tint,
+                        "Tint",
+                        "Color multiplied into the texture; alpha controls transparency")
                     ->DataElement(AZ::Edit::UIHandlers::Default, &SpriteComponentConfig::m_billboard, "Billboard", "Always face the camera")
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Atlas / UV Region")
-                        ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &SpriteComponentConfig::m_uvMin, "UV Min", "Top-left of the sampled texture sub-rectangle (0-1)")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &SpriteComponentConfig::m_uvMax, "UV Max", "Bottom-right of the sampled texture sub-rectangle (0-1)")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &SpriteComponentConfig::m_flipHorizontal, "Flip Horizontal", "Mirror the sampled region horizontally")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &SpriteComponentConfig::m_flipVertical, "Flip Vertical", "Mirror the sampled region vertically")
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &SpriteComponentConfig::m_uvMin,
+                        "UV Min",
+                        "Top-left of the sampled texture sub-rectangle (0-1)")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &SpriteComponentConfig::m_uvMax,
+                        "UV Max",
+                        "Bottom-right of the sampled texture sub-rectangle (0-1)")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &SpriteComponentConfig::m_flipHorizontal,
+                        "Flip Horizontal",
+                        "Mirror the sampled region horizontally")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &SpriteComponentConfig::m_flipVertical,
+                        "Flip Vertical",
+                        "Mirror the sampled region vertically")
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Layering")
-                        ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &SpriteComponentConfig::m_sortOffset, "Sort Offset", "Transparent draw-order bias; larger draws on top");
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &SpriteComponentConfig::m_sortOffset,
+                        "Sort Offset",
+                        "Transparent draw-order bias; larger draws on top");
             }
         }
     }
@@ -76,9 +106,13 @@ namespace Diorama
         }
 
         // Texture V increases downward, so the quad's bottom edge uses vMax.
-        outU[0] = uMin; outV[0] = vMax; // bottom-left
-        outU[1] = uMax; outV[1] = vMax; // bottom-right
-        outU[2] = uMax; outV[2] = vMin; // top-right
-        outU[3] = uMin; outV[3] = vMin; // top-left
+        outU[0] = uMin;
+        outV[0] = vMax; // bottom-left
+        outU[1] = uMax;
+        outV[1] = vMax; // bottom-right
+        outU[2] = uMax;
+        outV[2] = vMin; // top-right
+        outU[3] = uMin;
+        outV[3] = vMin; // top-left
     }
 } // namespace Diorama

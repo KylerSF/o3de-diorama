@@ -102,7 +102,6 @@ namespace Diorama
             return;
         }
 
-        DioramaSpriteRendererRequestBus::Broadcast(
-            &DioramaSpriteRendererRequests::UpdateSprite, m_handle, m_worldTransform, m_config);
+        DioramaSpriteRendererRequestBus::Broadcast(&DioramaSpriteRendererRequests::UpdateSprite, m_handle, m_worldTransform, m_config);
     }
 } // namespace Diorama

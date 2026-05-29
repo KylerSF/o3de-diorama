@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include <Diorama/SpriteComponentConfig.h>
 #include <Clients/SpritePresenter.h>
+#include <Diorama/SpriteComponentConfig.h>
 
 #include <AzToolsFramework/ToolsComponents/EditorComponentBase.h>
 
@@ -21,8 +21,7 @@ namespace Diorama
     //! play it builds the lightweight runtime SpriteComponent through
     //! BuildGameEntity. All Qt and AzToolsFramework dependencies stay in this
     //! editor module so the runtime client stays lean.
-    class EditorSpriteComponent final
-        : public AzToolsFramework::Components::EditorComponentBase
+    class EditorSpriteComponent final : public AzToolsFramework::Components::EditorComponentBase
     {
     public:
         AZ_EDITOR_COMPONENT(Diorama::EditorSpriteComponent, EditorSpriteComponentTypeId, AzToolsFramework::Components::EditorComponentBase);

@@ -36,8 +36,7 @@ namespace Diorama
         virtual void UpdateSprite(SpriteHandle handle, const AZ::Transform& worldTransform, const SpriteComponentConfig& config) = 0;
     };
 
-    class DioramaSpriteRendererBusTraits
-        : public AZ::EBusTraits
+    class DioramaSpriteRendererBusTraits : public AZ::EBusTraits
     {
     public:
         static constexpr AZ::EBusHandlerPolicy HandlerPolicy = AZ::EBusHandlerPolicy::Single;

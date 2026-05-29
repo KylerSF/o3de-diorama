@@ -20,16 +20,19 @@ namespace Diorama
         static constexpr float Eps = 1e-5f;
 
         void ExpectCorners(
-            const SpriteComponentConfig& config,
-            float blU, float blV, float brU, float brV, float trU, float trV, float tlU, float tlV)
+            const SpriteComponentConfig& config, float blU, float blV, float brU, float brV, float trU, float trV, float tlU, float tlV)
         {
             float u[4];
             float v[4];
             config.GetCornerUVs(u, v);
-            EXPECT_NEAR(u[0], blU, Eps); EXPECT_NEAR(v[0], blV, Eps);
-            EXPECT_NEAR(u[1], brU, Eps); EXPECT_NEAR(v[1], brV, Eps);
-            EXPECT_NEAR(u[2], trU, Eps); EXPECT_NEAR(v[2], trV, Eps);
-            EXPECT_NEAR(u[3], tlU, Eps); EXPECT_NEAR(v[3], tlV, Eps);
+            EXPECT_NEAR(u[0], blU, Eps);
+            EXPECT_NEAR(v[0], blV, Eps);
+            EXPECT_NEAR(u[1], brU, Eps);
+            EXPECT_NEAR(v[1], brV, Eps);
+            EXPECT_NEAR(u[2], trU, Eps);
+            EXPECT_NEAR(v[2], trV, Eps);
+            EXPECT_NEAR(u[3], tlU, Eps);
+            EXPECT_NEAR(v[3], tlV, Eps);
         }
     };
 

@@ -271,8 +271,7 @@ namespace Diorama
             // the transparent pass so larger offsets draw on top of smaller ones.
             m_dynamicDraw->SetSortKey(static_cast<AZ::RHI::DrawItemSortKey>(entry.m_config.m_sortOffset));
 
-            m_dynamicDraw->DrawIndexed(
-                vertices, 4, indices, 6, AZ::RHI::IndexFormat::Uint16, drawSrg);
+            m_dynamicDraw->DrawIndexed(vertices, 4, indices, 6, AZ::RHI::IndexFormat::Uint16, drawSrg);
         }
     }
 } // namespace Diorama

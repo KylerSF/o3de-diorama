@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) Contributors to the Open 3D Engine Project.
+ * For complete copyright and license terms please see the LICENSE at the root of this distribution.
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR MIT
+ */
 
 #include "DioramaModuleInterface.h"
 #include <AzCore/Memory/Memory.h>
@@ -9,8 +15,7 @@
 
 namespace Diorama
 {
-    AZ_TYPE_INFO_WITH_NAME_IMPL(DioramaModuleInterface,
-        "DioramaModuleInterface", DioramaModuleInterfaceTypeId);
+    AZ_TYPE_INFO_WITH_NAME_IMPL(DioramaModuleInterface, "DioramaModuleInterface", DioramaModuleInterfaceTypeId);
     AZ_RTTI_NO_TYPE_INFO_IMPL(DioramaModuleInterface, AZ::Module);
     AZ_CLASS_ALLOCATOR_IMPL(DioramaModuleInterface, AZ::SystemAllocator);
 
@@ -20,9 +25,11 @@ namespace Diorama
         // Add ALL components descriptors associated with this gem to m_descriptors.
         // This will associate the AzTypeInfo information for the components with the the SerializeContext, BehaviorContext and EditContext.
         // This happens through the [MyComponent]::Reflect() function.
-        m_descriptors.insert(m_descriptors.end(), {
-            DioramaSystemComponent::CreateDescriptor(),
-            SpriteComponent::CreateDescriptor(),
+        m_descriptors.insert(
+            m_descriptors.end(),
+            {
+                DioramaSystemComponent::CreateDescriptor(),
+                SpriteComponent::CreateDescriptor(),
             });
     }
 

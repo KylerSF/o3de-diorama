@@ -24,8 +24,7 @@ namespace Diorama
     //! the runtime SpriteComponent and the EditorSpriteComponent so that the
     //! editor can author values and hand an identical configuration to the
     //! runtime component through BuildGameEntity.
-    class SpriteComponentConfig final
-        : public AZ::ComponentConfig
+    class SpriteComponentConfig final : public AZ::ComponentConfig
     {
     public:
         AZ_RTTI(SpriteComponentConfig, SpriteComponentConfigTypeId, AZ::ComponentConfig);
