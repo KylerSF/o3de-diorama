@@ -127,8 +127,11 @@ namespace Diorama
         // Local corner offsets (right, up) before orientation, pivot applied.
         const float cornerX[4] = { -halfWidth, halfWidth, halfWidth, -halfWidth };
         const float cornerY[4] = { -halfHeight, -halfHeight, halfHeight, halfHeight };
-        const float uvU[4] = { 0.0f, 1.0f, 1.0f, 0.0f };
-        const float uvV[4] = { 1.0f, 1.0f, 0.0f, 0.0f };
+
+        // UVs come from the config so atlas sub-rectangles and flips are applied.
+        float uvU[4];
+        float uvV[4];
+        config.GetCornerUVs(uvU, uvV);
 
         // Choose the basis that orients the quad. In billboard mode the quad uses
         // the camera right and up axes so it always faces the viewer. Otherwise
@@ -250,6 +253,10 @@ namespace Diorama
             }
 
             static const AZ::u16 indices[6] = { 0, 1, 2, 0, 2, 3 };
+
+            // Bias the draw order for 2.5D layering. The sort key is consumed by
+            // the transparent pass so larger offsets draw on top of smaller ones.
+            m_dynamicDraw->SetSortKey(static_cast<AZ::RHI::DrawItemSortKey>(entry.m_config.m_sortOffset));
 
             m_dynamicDraw->DrawIndexed(
                 vertices, 4, indices, 6, AZ::RHI::IndexFormat::Uint16, drawSrg);

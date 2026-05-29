@@ -52,5 +52,30 @@ namespace Diorama
         //! When true the quad always faces the camera. When false it is oriented
         //! by the entity transform (the quad spans the entity local X and Z axes).
         bool m_billboard = false;
+
+        //! Normalized top-left of the texture sub-rectangle to sample. Together
+        //! with m_uvMax this selects a region of a texture atlas or sprite sheet.
+        //! The default (0,0)-(1,1) samples the whole texture.
+        AZ::Vector2 m_uvMin = AZ::Vector2(0.0f, 0.0f);
+
+        //! Normalized bottom-right of the sampled sub-rectangle. See m_uvMin.
+        AZ::Vector2 m_uvMax = AZ::Vector2(1.0f, 1.0f);
+
+        //! Mirror the sampled region horizontally (useful for facing direction).
+        bool m_flipHorizontal = false;
+
+        //! Mirror the sampled region vertically.
+        bool m_flipVertical = false;
+
+        //! Additional sort bias for transparent draw ordering. Larger values draw
+        //! later (on top). Use this to layer overlapping sprites in 2.5D scenes
+        //! without moving them in depth.
+        float m_sortOffset = 0.0f;
+
+        //! Compute the effective UV coordinates for the four quad corners in
+        //! winding order (bottom-left, bottom-right, top-right, top-left),
+        //! applying the sub-rectangle and the flip flags. Output layout matches
+        //! the renderer's vertex order.
+        void GetCornerUVs(float outU[4], float outV[4]) const;
     };
 } // namespace Diorama
