@@ -1,0 +1,34 @@
+# Changelog
+
+All notable changes to Diorama are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/). While in
+alpha (the 0.x line), minor releases may include breaking changes.
+
+## [Unreleased]
+
+## [0.1.0-alpha] - 2026-05-29
+
+First alpha. World-space sprite rendering through Atom, with editor tooling and
+the runtime/editor module split in place. The `gem.json` version tracks the
+`0.1.0` release line; this git tag carries the `-alpha` pre-release marker.
+
+### Added
+- Diorama gem: world-space 2D/2.5D sprite rendering through Atom, with a
+  lightweight runtime client module and a separate Qt editor module.
+- Sprite component that renders a world-space quad via Atom dynamic draw.
+- Editor viewport preview of sprites through a shared presenter.
+- Atlas UV sub-regions (`UV Min` / `UV Max`), horizontal and vertical flip, and a
+  2.5D sort offset for draw-order control.
+- Unit tests covering sprite UV region and flip mapping (`SpriteUVTest`).
+- Project documentation: README, VISION, examples/how-to outline, and license.
+
+### Fixed
+- Static `AZ::Name` initialization-order crash in `SpriteRenderer`. A
+  namespace-scope `AZ::Name` constructed during shared-library load, before the
+  AzCore `NameDictionary` existed, causing a SIGSEGV when the test library was
+  loaded ahead of engine bootstrap. It is now constructed lazily on first use.
+
+[Unreleased]: https://github.com/nickschuetz/o3de-diorama/compare/v0.1.0-alpha...HEAD
+[0.1.0-alpha]: https://github.com/nickschuetz/o3de-diorama/releases/tag/v0.1.0-alpha

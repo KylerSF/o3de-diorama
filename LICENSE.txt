@@ -1,0 +1,13 @@
+Diorama is licensed under either of
+
+  * Apache License, Version 2.0 (see LICENSE_APACHE2.0.txt), or
+  * MIT license (see LICENSE_MIT.txt)
+
+at your option.
+
+Each source file in this repository carries an SPDX identifier
+(SPDX-License-Identifier: Apache-2.0 OR MIT) declaring the same dual license.
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in this project by you, as defined in the Apache-2.0 license, shall
+be dual licensed as above, without any additional terms or conditions.

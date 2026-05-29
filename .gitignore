@@ -12,11 +12,12 @@ Cache/
 user/
 *.setreg.local
 
-# IDE
+# IDE and local tool state
 .vs/
 .vscode/
 .idea/
 *.user
+.claude/settings.local.json
 
 # OS
 .DS_Store
