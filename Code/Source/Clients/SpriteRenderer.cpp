@@ -113,10 +113,9 @@ namespace Diorama
         }
 
         m_dynamicDraw->InitShader(shader);
-        m_dynamicDraw->InitVertexFormat(
-            { { "POSITION", AZ::RHI::Format::R32G32B32_FLOAT },
-              { "COLOR", AZ::RHI::Format::R8G8B8A8_UNORM },
-              { "TEXCOORD", AZ::RHI::Format::R32G32_FLOAT } });
+        m_dynamicDraw->InitVertexFormat({ { "POSITION", AZ::RHI::Format::R32G32B32_FLOAT },
+                                          { "COLOR", AZ::RHI::Format::R8G8B8A8_UNORM },
+                                          { "TEXCOORD", AZ::RHI::Format::R32G32_FLOAT } });
         m_dynamicDraw->SetOutputScope(m_scene);
         m_dynamicDraw->EndInit();
 

@@ -19,10 +19,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install clang-format
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y clang-format
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install clang-format (pinned)
+        # Pin the exact version so CI and local runs format identically.
+        # clang-format output is not stable across major versions.
+        run: pip install clang-format==18.1.8
       - name: Check C++ formatting
         run: |
           files=$(find Code -type f \( -name '*.cpp' -o -name '*.h' -o -name '*.inl' \))
