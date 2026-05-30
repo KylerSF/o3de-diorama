@@ -52,6 +52,14 @@ namespace Diorama
         //! by the entity transform (the quad spans the entity local X and Z axes).
         bool m_billboard = false;
 
+        //! When true the sprite is visible from both sides (the renderer also
+        //! emits back-facing triangles). When false only the front face draws and
+        //! the sprite disappears when viewed from behind. Defaults to true because
+        //! a flat 2D sprite reads as a double-sided card; turn it off for effects
+        //! that should only be seen from the front. Has no visible effect on a
+        //! billboard, which always faces the camera.
+        bool m_doubleSided = true;
+
         //! Normalized top-left of the texture sub-rectangle to sample. Together
         //! with m_uvMax this selects a region of a texture atlas or sprite sheet.
         //! The default (0,0)-(1,1) samples the whole texture.

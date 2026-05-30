@@ -261,6 +261,10 @@ namespace Diorama
         }
 
         static const AZ::u32 quadIndices[6] = { 0, 1, 2, 0, 2, 3 };
+        // Reversed winding for the back face of a double-sided sprite. With
+        // back-face culling on, emitting both windings makes exactly one face
+        // visible from either side; a single-sided sprite emits only the front.
+        static const AZ::u32 quadIndicesBack[6] = { 0, 2, 1, 0, 3, 2 };
         const AZ::u32 debugTint = AZ::Color(1.0f, 0.0f, 1.0f, 1.0f).ToU32();
 
         for (const SpriteBatchPlan::Batch& batch : m_batchScratch)
@@ -303,7 +307,7 @@ namespace Diorama
             m_indexScratch.clear();
             const AZ::u32 spriteCount = batch.Count();
             m_vertexScratch.resize(spriteCount * 4);
-            m_indexScratch.reserve(spriteCount * 6);
+            m_indexScratch.reserve(spriteCount * 12); // up to 12 indices for a double-sided quad
 
             for (AZ::u32 n = 0; n < spriteCount; ++n)
             {
@@ -323,6 +327,16 @@ namespace Diorama
                 for (int k = 0; k < 6; ++k)
                 {
                     m_indexScratch.push_back(base + quadIndices[k]);
+                }
+                // A double-sided sprite also emits the back face (reversed
+                // winding) so it stays visible when viewed from behind. A
+                // billboard always faces the camera, so it never needs the back.
+                if (entry->m_config.m_doubleSided && !entry->m_config.m_billboard)
+                {
+                    for (int k = 0; k < 6; ++k)
+                    {
+                        m_indexScratch.push_back(base + quadIndicesBack[k]);
+                    }
                 }
             }
 

@@ -20,12 +20,13 @@ namespace Diorama
         if (auto* serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
         {
             serializeContext->Class<SpriteComponentConfig, AZ::ComponentConfig>()
-                ->Version(3)
+                ->Version(4)
                 ->Field("Texture", &SpriteComponentConfig::m_texture)
                 ->Field("Size", &SpriteComponentConfig::m_size)
                 ->Field("Pivot", &SpriteComponentConfig::m_pivot)
                 ->Field("Tint", &SpriteComponentConfig::m_tint)
                 ->Field("Billboard", &SpriteComponentConfig::m_billboard)
+                ->Field("DoubleSided", &SpriteComponentConfig::m_doubleSided)
                 ->Field("UvMin", &SpriteComponentConfig::m_uvMin)
                 ->Field("UvMax", &SpriteComponentConfig::m_uvMax)
                 ->Field("FlipHorizontal", &SpriteComponentConfig::m_flipHorizontal)
@@ -61,6 +62,11 @@ namespace Diorama
                         "Tint",
                         "Color multiplied into the texture; alpha controls transparency")
                     ->DataElement(AZ::Edit::UIHandlers::Default, &SpriteComponentConfig::m_billboard, "Billboard", "Always face the camera")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &SpriteComponentConfig::m_doubleSided,
+                        "Double Sided",
+                        "Visible from both sides; turn off to hide the sprite when viewed from behind")
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Atlas / UV Region")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(

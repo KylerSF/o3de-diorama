@@ -18,6 +18,11 @@ alpha (the 0.x line), minor releases may include breaking changes.
 - How-to guide and runnable example for the Sprite Atlas (teaching ladder rung
   3): sharing one atlas texture across sprites via UV sub-regions, with a
   scripted four-cell example scene and a how-to index.
+- Per-sprite "Double Sided" toggle (default on): a flat sprite is visible from
+  both sides, matching how 2D sprite renderers behave elsewhere. Implemented
+  geometrically (the renderer emits back-facing triangles for double-sided,
+  non-billboard sprites) so it needs no separate shader and does not affect
+  batching. Turn it off to hide a sprite when viewed from behind.
 - Build/test CI: a self-hosted `build-test` workflow that compiles the gem
   through a host O3DE project and runs the unit tests, plus a reusable
   `scripts/ci_build_test.sh` and a self-hosted runner setup guide. Complements
