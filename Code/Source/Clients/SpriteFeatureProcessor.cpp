@@ -7,16 +7,17 @@
 
 #include <Clients/SpriteFeatureProcessor.h>
 
+#include <AzCore/Asset/AssetManager.h>
 #include <AzCore/Math/Matrix3x3.h>
 #include <AzCore/Math/Vector3.h>
 #include <AzCore/Serialization/SerializeContext.h>
 
 #include <Atom/RPI.Public/DynamicDraw/DynamicDrawInterface.h>
 #include <Atom/RPI.Public/Image/ImageSystemInterface.h>
-#include <Atom/RPI.Public/RPIUtils.h>
 #include <Atom/RPI.Public/Scene.h>
 #include <Atom/RPI.Public/Shader/Shader.h>
 #include <Atom/RPI.Public/View.h>
+#include <Atom/RPI.Reflect/Asset/AssetUtils.h>
 
 namespace Diorama
 {
@@ -54,14 +55,27 @@ namespace Diorama
 
     void SpriteFeatureProcessor::Activate()
     {
-        // The draw context is created lazily in EnsureInitialized once the shader
-        // asset is ready; nothing else to set up here.
         m_initialized = false;
+
+        // Kick off the shader load asynchronously (QueueLoad, non-blocking). The
+        // draw context is created in EnsureInitialized once the asset is ready.
+        // Crucially this never blocks: EnsureInitialized runs inside Render(),
+        // which executes as a render job the main thread waits on, so a blocking
+        // load there would deadlock the application.
+        const AZ::Data::AssetId shaderAssetId =
+            AZ::RPI::AssetUtils::GetAssetIdForProductPath(SpriteShaderPath, AZ::RPI::AssetUtils::TraceLevel::Warning);
+        if (shaderAssetId.IsValid())
+        {
+            m_shaderAsset =
+                AZ::Data::AssetManager::Instance().GetAsset<AZ::RPI::ShaderAsset>(shaderAssetId, AZ::Data::AssetLoadBehavior::PreLoad);
+            m_shaderAsset.QueueLoad();
+        }
     }
 
     void SpriteFeatureProcessor::Deactivate()
     {
         m_dynamicDraw = nullptr;
+        m_shaderAsset = {};
         m_initialized = false;
         m_sprites.clear();
 
@@ -124,7 +138,14 @@ namespace Diorama
             return false;
         }
 
-        AZ::Data::Instance<AZ::RPI::Shader> shader = AZ::RPI::LoadShader(SpriteShaderPath);
+        // Poll the async shader load; never block here (this runs in a render
+        // job). Retry on a later frame until the asset is ready.
+        if (!m_shaderAsset.IsReady())
+        {
+            return false;
+        }
+
+        AZ::Data::Instance<AZ::RPI::Shader> shader = AZ::RPI::Shader::FindOrCreate(m_shaderAsset);
         if (!shader)
         {
             return false;

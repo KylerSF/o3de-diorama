@@ -18,7 +18,9 @@
 #include <Atom/RPI.Public/DynamicDraw/DynamicDrawContext.h>
 #include <Atom/RPI.Public/FeatureProcessor.h>
 #include <Atom/RPI.Public/Image/StreamingImage.h>
+#include <Atom/RPI.Public/Shader/Shader.h>
 #include <Atom/RPI.Public/Shader/ShaderResourceGroup.h>
+#include <Atom/RPI.Reflect/Shader/ShaderAsset.h>
 
 namespace Diorama
 {
@@ -80,6 +82,12 @@ namespace Diorama
         bool EnsureInitialized();
         void AppendQuad(const SpriteEntry& entry, const AZ::Transform& cameraTransform, SpriteVertex outVertices[4]) const;
 
+        //! Sprite shader asset, loaded asynchronously starting in Activate(). It
+        //! must never be loaded with a blocking call from Render(): Render() runs
+        //! as a render job that the main thread waits on, so a blocking asset load
+        //! there deadlocks the editor/runtime. EnsureInitialized() only polls
+        //! IsReady() and builds the draw context once the asset has loaded.
+        AZ::Data::Asset<AZ::RPI::ShaderAsset> m_shaderAsset;
         AZ::RHI::Ptr<AZ::RPI::DynamicDrawContext> m_dynamicDraw;
         bool m_initialized = false;
 

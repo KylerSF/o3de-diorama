@@ -45,6 +45,16 @@ alpha (the 0.x line), minor releases may include breaking changes.
   fractional-layer separation, invalid-texture handling, stable in-batch order,
   and buffer reuse).
 
+### Fixed
+- Deadlock that froze the editor (and would freeze a runtime client) the first
+  frame a sprite became drawable. `SpriteFeatureProcessor::Render` runs as a
+  render job the main thread blocks on, and it loaded the sprite shader with a
+  blocking call (`LoadShader` -> `BlockUntilLoadComplete`); the main thread
+  waited for the job while the job waited for the asset. The shader now loads
+  asynchronously in `Activate`, and the per-frame init only polls readiness, so
+  nothing blocks inside the render job. Verified on screen: sprites render and
+  the editor stays responsive.
+
 ## [0.1.0-alpha] - 2026-05-29
 
 First alpha. World-space sprite rendering through Atom, with editor tooling and
