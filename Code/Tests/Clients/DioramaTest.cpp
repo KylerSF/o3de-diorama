@@ -462,4 +462,73 @@ namespace Diorama
         EXPECT_TRUE(m_handler.SetTextureByPath(""));
         EXPECT_FALSE(m_config.m_texture.GetId().IsValid());
     }
+
+    // Verifies the EBus round-trip: a handler connected at an entity id receives
+    // verbs sent via DioramaSpriteRequestBus::Event(id, ...) and answers a
+    // GetSpriteInfo EventResult. This exercises the actual dispatch path an agent
+    // uses (the other handler tests call the methods directly), independent of
+    // any editor/component activation.
+    class SpriteBusDispatchTest : public ::testing::Test
+    {
+    protected:
+        void SetUp() override
+        {
+            m_changeCount = 0;
+            m_handler.Connect(
+                m_entityId,
+                m_config,
+                m_presenter,
+                [this]()
+                {
+                    ++m_changeCount;
+                });
+        }
+        void TearDown() override
+        {
+            m_handler.Disconnect();
+        }
+
+        const AZ::EntityId m_entityId{ AZ::EntityId(0x1234) };
+        SpriteComponentConfig m_config;
+        SpritePresenter m_presenter;
+        SpriteRequestHandler m_handler;
+        int m_changeCount = 0;
+        static constexpr float Eps = 1e-5f;
+    };
+
+    TEST_F(SpriteBusDispatchTest, SetterVerb_DispatchesToConnectedHandler)
+    {
+        DioramaSpriteRequestBus::Event(m_entityId, &DioramaSpriteRequests::SetSize, 4.0f, 2.0f);
+        EXPECT_NEAR(m_config.m_size.GetX(), 4.0f, Eps);
+        EXPECT_NEAR(m_config.m_size.GetY(), 2.0f, Eps);
+        EXPECT_EQ(m_changeCount, 1);
+    }
+
+    TEST_F(SpriteBusDispatchTest, PlaySpriteSheetVerb_DispatchesAndConfigures)
+    {
+        DioramaSpriteRequestBus::Event(m_entityId, &DioramaSpriteRequests::PlaySpriteSheet, 4, 4, 16, 12.0f, true);
+        EXPECT_TRUE(m_config.m_animEnabled);
+        EXPECT_EQ(m_config.m_frameColumns, 4);
+        EXPECT_EQ(m_config.m_frameCount, 16);
+    }
+
+    TEST_F(SpriteBusDispatchTest, GetSpriteInfoVerb_ReturnsViaEventResult)
+    {
+        DioramaSpriteRequestBus::Event(m_entityId, &DioramaSpriteRequests::SetSortOffset, 9.0f);
+
+        SpriteInfo info;
+        DioramaSpriteRequestBus::EventResult(info, m_entityId, &DioramaSpriteRequests::GetSpriteInfo);
+        EXPECT_NEAR(info.m_sortOffset, 9.0f, Eps);
+        EXPECT_TRUE(info.m_doubleSided); // default
+    }
+
+    TEST_F(SpriteBusDispatchTest, NoHandlerAtOtherAddress_VerbIsNoOp)
+    {
+        // A different entity id has no handler; the call must be a safe no-op and
+        // must not touch this handler's config.
+        const AZ::EntityId other{ AZ::EntityId(0x9999) };
+        DioramaSpriteRequestBus::Event(other, &DioramaSpriteRequests::SetSize, 7.0f, 7.0f);
+        EXPECT_NEAR(m_config.m_size.GetX(), 1.0f, Eps); // unchanged default
+        EXPECT_EQ(m_changeCount, 0);
+    }
 } // namespace Diorama
