@@ -113,6 +113,18 @@ namespace Diorama
         Push();
     }
 
+    bool SpritePresenter::IsVisible() const
+    {
+        // Drawn when connected to a feature processor with a handle and a ready
+        // texture. Mirrors the visibility the feature processor applies.
+        return m_connected && m_featureProcessor != nullptr && m_handle != 0 && m_config.m_texture.IsReady();
+    }
+
+    int SpritePresenter::GetCurrentFrame() const
+    {
+        return m_frameState.m_frame;
+    }
+
     void SpritePresenter::QueueTextureLoad()
     {
         if (m_config.m_texture.GetId().IsValid())

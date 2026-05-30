@@ -18,6 +18,18 @@ alpha (the 0.x line), minor releases may include breaking changes.
 - How-to guide and runnable example for the Sprite Atlas (teaching ladder rung
   3): sharing one atlas texture across sprites via UV sub-regions, with a
   scripted four-cell example scene and a how-to index.
+- AI-native sprite API (`DioramaSpriteRequestBus`): a typed, reflected,
+  queryable EBus so an agent can drive a sprite with plain scalar verbs
+  (SetTextureByPath, SetSize, SetUVRegion, SetSortOffset, SetDoubleSided,
+  PlaySpriteSheet, ...) instead of brittle EditContext property-path strings,
+  plus a GetSpriteInfo query and a notification bus. Reflected to the
+  BehaviorContext (callable from Python as `azlmbr.diorama`), with a runnable
+  example (`Docs/examples/sprite_via_ai_bus.py`). See
+  `Docs/design/ai-sprite-api.md`. Verb logic and GetSpriteInfo are unit tested;
+  Python reachability and the GetSpriteInfo readback are confirmed. End-to-end
+  editor-scripted verb application still depends on the sprite component being
+  active, which the current editor `--runpython` flow does not guarantee; that
+  activation path is the remaining follow-up.
 - Per-sprite "Double Sided" toggle (default on): a flat sprite is visible from
   both sides, matching how 2D sprite renderers behave elsewhere. Implemented
   geometrically (the renderer emits back-facing triangles for double-sided,

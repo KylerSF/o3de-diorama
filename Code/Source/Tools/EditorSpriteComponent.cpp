@@ -12,6 +12,8 @@
 #include <AzCore/Serialization/EditContextConstants.inl>
 #include <AzCore/Serialization/SerializeContext.h>
 
+#include <AzToolsFramework/API/ToolsApplicationAPI.h>
+
 namespace Diorama
 {
     void EditorSpriteComponent::Reflect(AZ::ReflectContext* context)
@@ -59,10 +61,26 @@ namespace Diorama
     {
         AzToolsFramework::Components::EditorComponentBase::Activate();
         m_presenter.Connect(GetEntityId(), m_config);
+
+        // Expose the same AI request API in the editor. A verb edits m_config,
+        // pushes it to the live preview, and refreshes the inspector so an
+        // agent-driven change shows up in the human UI too (and vice versa stays
+        // consistent). Both faces drive the one config.
+        m_requestHandler.Connect(
+            GetEntityId(),
+            m_config,
+            m_presenter,
+            [this]()
+            {
+                m_presenter.SetConfig(m_config);
+                AzToolsFramework::ToolsApplicationEvents::Bus::Broadcast(
+                    &AzToolsFramework::ToolsApplicationEvents::InvalidatePropertyDisplay, AzToolsFramework::Refresh_Values);
+            });
     }
 
     void EditorSpriteComponent::Deactivate()
     {
+        m_requestHandler.Disconnect();
         m_presenter.Disconnect();
         AzToolsFramework::Components::EditorComponentBase::Deactivate();
     }

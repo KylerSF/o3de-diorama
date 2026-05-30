@@ -9,6 +9,9 @@
 
 #include <Clients/SpriteAnimation.h>
 #include <Clients/SpriteBatchPlan.h>
+#include <Clients/SpritePresenter.h>
+#include <Clients/SpriteRequestHandler.h>
+#include <Diorama/SpriteBus.h>
 #include <Diorama/SpriteComponentConfig.h>
 
 namespace Diorama
@@ -334,5 +337,129 @@ namespace Diorama
         EXPECT_EQ(m_ordered.size(), 1u);
         ASSERT_EQ(m_batches.size(), 1u);
         EXPECT_EQ(m_batches[0].m_key.m_textureId, Tex(3));
+    }
+
+    // Exercises the AI request verbs directly against a handler bound to a local
+    // config and presenter (methods are called directly, so no live entity/EBus
+    // dispatch is needed). Confirms clamping, the changed callback, the one-shot
+    // convenience verb, and that GetSpriteInfo reflects the config.
+    class SpriteRequestHandlerTest : public ::testing::Test
+    {
+    protected:
+        void SetUp() override
+        {
+            m_changeCount = 0;
+            m_handler.Connect(
+                AZ::EntityId(),
+                m_config,
+                m_presenter,
+                [this]()
+                {
+                    ++m_changeCount;
+                });
+        }
+        void TearDown() override
+        {
+            m_handler.Disconnect();
+        }
+
+        SpriteComponentConfig m_config;
+        SpritePresenter m_presenter;
+        SpriteRequestHandler m_handler;
+        int m_changeCount = 0;
+        static constexpr float Eps = 1e-5f;
+    };
+
+    TEST_F(SpriteRequestHandlerTest, SetSize_ClampsNegativeToZero)
+    {
+        m_handler.SetSize(-3.0f, 5.0f);
+        EXPECT_NEAR(m_config.m_size.GetX(), 0.0f, Eps);
+        EXPECT_NEAR(m_config.m_size.GetY(), 5.0f, Eps);
+    }
+
+    TEST_F(SpriteRequestHandlerTest, SetPivot_ClampsToUnitRange)
+    {
+        m_handler.SetPivot(-1.0f, 2.0f);
+        EXPECT_NEAR(m_config.m_pivot.GetX(), 0.0f, Eps);
+        EXPECT_NEAR(m_config.m_pivot.GetY(), 1.0f, Eps);
+    }
+
+    TEST_F(SpriteRequestHandlerTest, SetTint_ClampsChannels)
+    {
+        m_handler.SetTint(2.0f, -1.0f, 0.5f, 10.0f);
+        EXPECT_NEAR(m_config.m_tint.GetR(), 1.0f, Eps);
+        EXPECT_NEAR(m_config.m_tint.GetG(), 0.0f, Eps);
+        EXPECT_NEAR(m_config.m_tint.GetB(), 0.5f, Eps);
+        EXPECT_NEAR(m_config.m_tint.GetA(), 1.0f, Eps);
+    }
+
+    TEST_F(SpriteRequestHandlerTest, SetUVRegion_ClampsAndOrders)
+    {
+        // Pass max < min and out-of-range; expect clamped to 0..1 and min <= max.
+        m_handler.SetUVRegion(0.9f, 1.5f, 0.2f, -0.3f);
+        EXPECT_NEAR(m_config.m_uvMin.GetX(), 0.2f, Eps);
+        EXPECT_NEAR(m_config.m_uvMax.GetX(), 0.9f, Eps);
+        EXPECT_NEAR(m_config.m_uvMin.GetY(), 0.0f, Eps); // 1.5 clamps to 1, -0.3 clamps to 0; min is 0
+        EXPECT_NEAR(m_config.m_uvMax.GetY(), 1.0f, Eps);
+    }
+
+    TEST_F(SpriteRequestHandlerTest, PlaySpriteSheet_SetsGridPlaybackAndEnables)
+    {
+        m_handler.PlaySpriteSheet(4, 4, 16, 12.0f, true);
+        EXPECT_EQ(m_config.m_frameColumns, 4);
+        EXPECT_EQ(m_config.m_frameRows, 4);
+        EXPECT_EQ(m_config.m_frameCount, 16);
+        EXPECT_NEAR(m_config.m_framesPerSecond, 12.0f, Eps);
+        EXPECT_TRUE(m_config.m_loop);
+        EXPECT_TRUE(m_config.m_animEnabled);
+    }
+
+    TEST_F(SpriteRequestHandlerTest, SetFrameGrid_ClampsToAtLeastOne)
+    {
+        m_handler.SetFrameGrid(0, -2, 0);
+        EXPECT_EQ(m_config.m_frameColumns, 1);
+        EXPECT_EQ(m_config.m_frameRows, 1);
+        EXPECT_EQ(m_config.m_frameCount, 1);
+    }
+
+    TEST_F(SpriteRequestHandlerTest, EachSetter_FiresChangedCallback)
+    {
+        m_handler.SetBillboard(true);
+        m_handler.SetDoubleSided(false);
+        m_handler.SetFlip(true, true);
+        m_handler.SetSortOffset(3.0f);
+        EXPECT_EQ(m_changeCount, 4);
+        EXPECT_TRUE(m_config.m_billboard);
+        EXPECT_FALSE(m_config.m_doubleSided);
+        EXPECT_TRUE(m_config.m_flipHorizontal);
+        EXPECT_TRUE(m_config.m_flipVertical);
+        EXPECT_NEAR(m_config.m_sortOffset, 3.0f, Eps);
+    }
+
+    TEST_F(SpriteRequestHandlerTest, GetSpriteInfo_ReflectsConfig)
+    {
+        m_handler.SetSize(4.0f, 2.0f);
+        m_handler.SetSortOffset(7.0f);
+        m_handler.SetDoubleSided(false);
+        m_handler.PlaySpriteSheet(2, 2, 4, 10.0f, false);
+
+        const SpriteInfo info = m_handler.GetSpriteInfo();
+        EXPECT_NEAR(info.m_width, 4.0f, Eps);
+        EXPECT_NEAR(info.m_height, 2.0f, Eps);
+        EXPECT_NEAR(info.m_sortOffset, 7.0f, Eps);
+        EXPECT_FALSE(info.m_doubleSided);
+        EXPECT_TRUE(info.m_animEnabled);
+        EXPECT_EQ(info.m_frameCount, 4);
+        // No texture assigned and no live feature processor in a unit test.
+        EXPECT_FALSE(info.m_textureLoaded);
+        EXPECT_FALSE(info.m_visible);
+        EXPECT_TRUE(info.m_texturePath.empty());
+    }
+
+    TEST_F(SpriteRequestHandlerTest, SetTextureByPath_EmptyClearsTexture)
+    {
+        // Empty path clears the texture and is reported as success.
+        EXPECT_TRUE(m_handler.SetTextureByPath(""));
+        EXPECT_FALSE(m_config.m_texture.GetId().IsValid());
     }
 } // namespace Diorama
