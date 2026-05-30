@@ -7,8 +7,12 @@
 
 #include <AzTest/AzTest.h>
 
+#include <AzCore/Component/ComponentApplication.h>
+#include <AzCore/Component/Entity.h>
+
 #include <Clients/SpriteAnimation.h>
 #include <Clients/SpriteBatchPlan.h>
+#include <Clients/SpriteComponent.h>
 #include <Clients/SpritePresenter.h>
 #include <Clients/SpriteRequestHandler.h>
 #include <Diorama/SpriteBus.h>
@@ -530,5 +534,96 @@ namespace Diorama
         DioramaSpriteRequestBus::Event(other, &DioramaSpriteRequests::SetSize, 7.0f, 7.0f);
         EXPECT_NEAR(m_config.m_size.GetX(), 1.0f, Eps); // unchanged default
         EXPECT_EQ(m_changeCount, 0);
+    }
+
+    // Minimal stub component that provides TransformService, so a SpriteComponent
+    // (which requires it) can activate on a real entity without pulling in
+    // AzFramework's TransformComponent.
+    class TransformStubComponent : public AZ::Component
+    {
+    public:
+        AZ_COMPONENT(TransformStubComponent, "{0E2F4A6C-1B3D-4E5F-8A9B-0C1D2E3F4A5B}", AZ::Component);
+        static void Reflect(AZ::ReflectContext* context)
+        {
+            if (auto* sc = azrtti_cast<AZ::SerializeContext*>(context))
+            {
+                sc->Class<TransformStubComponent, AZ::Component>()->Version(1);
+            }
+        }
+        static void GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided)
+        {
+            provided.push_back(AZ_CRC_CE("TransformService"));
+        }
+        void Activate() override
+        {
+        }
+        void Deactivate() override
+        {
+        }
+    };
+
+    // Full end-to-end activation test, no editor: stand up a minimal
+    // ComponentApplication, reflect the sprite types, build an entity with a
+    // SpriteComponent, activate it, and confirm that activation connects the AI
+    // request handler so a bus Event reaches it. This proves the one link the
+    // editor --runpython flow could not (component activation -> handler connect),
+    // independent of the editor's entity-creation instability.
+    class SpriteComponentActivationTest : public ::testing::Test
+    {
+    protected:
+        void SetUp() override
+        {
+            AZ::ComponentApplication::Descriptor desc;
+            AZ::ComponentApplication::StartupParameters startup;
+            startup.m_loadSettingsRegistry = false;
+            m_systemEntity = m_app.Create(desc, startup);
+            ASSERT_NE(m_systemEntity, nullptr);
+
+            // Registering the descriptor reflects the component (and, via
+            // SpriteComponent::Reflect, the config + buses), so do not call
+            // Reflect again or the types register twice (duplicate-Uuid failure).
+            m_app.RegisterComponentDescriptor(SpriteComponent::CreateDescriptor());
+            m_app.RegisterComponentDescriptor(TransformStubComponent::CreateDescriptor());
+
+            m_systemEntity->Init();
+            m_systemEntity->Activate();
+        }
+        void TearDown() override
+        {
+            if (m_entity)
+            {
+                m_entity->Deactivate();
+                delete m_entity;
+                m_entity = nullptr;
+            }
+            m_app.Destroy();
+        }
+
+        AZ::ComponentApplication m_app;
+        AZ::Entity* m_systemEntity = nullptr;
+        AZ::Entity* m_entity = nullptr;
+    };
+
+    TEST_F(SpriteComponentActivationTest, Activation_ConnectsRequestHandler_BusReaches)
+    {
+        m_entity = aznew AZ::Entity("SpriteEntity");
+        m_entity->CreateComponent<TransformStubComponent>();
+        m_entity->CreateComponent<SpriteComponent>();
+        m_entity->Init();
+        m_entity->Activate();
+        ASSERT_EQ(m_entity->GetState(), AZ::Entity::State::Active);
+
+        const AZ::EntityId id = m_entity->GetId();
+
+        // Drive the sprite purely through the bus, as an agent would.
+        DioramaSpriteRequestBus::Event(id, &DioramaSpriteRequests::SetSize, 5.0f, 6.0f);
+        DioramaSpriteRequestBus::Event(id, &DioramaSpriteRequests::SetSortOffset, 2.0f);
+
+        // If activation connected the handler, GetSpriteInfo reflects the writes.
+        SpriteInfo info;
+        DioramaSpriteRequestBus::EventResult(info, id, &DioramaSpriteRequests::GetSpriteInfo);
+        EXPECT_NEAR(info.m_width, 5.0f, 1e-5f);
+        EXPECT_NEAR(info.m_height, 6.0f, 1e-5f);
+        EXPECT_NEAR(info.m_sortOffset, 2.0f, 1e-5f);
     }
 } // namespace Diorama
