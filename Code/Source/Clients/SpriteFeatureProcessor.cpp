@@ -7,16 +7,17 @@
 
 #include <Clients/SpriteFeatureProcessor.h>
 
+#include <AzCore/Asset/AssetManager.h>
 #include <AzCore/Math/Matrix3x3.h>
 #include <AzCore/Math/Vector3.h>
 #include <AzCore/Serialization/SerializeContext.h>
 
 #include <Atom/RPI.Public/DynamicDraw/DynamicDrawInterface.h>
 #include <Atom/RPI.Public/Image/ImageSystemInterface.h>
-#include <Atom/RPI.Public/RPIUtils.h>
 #include <Atom/RPI.Public/Scene.h>
 #include <Atom/RPI.Public/Shader/Shader.h>
 #include <Atom/RPI.Public/View.h>
+#include <Atom/RPI.Reflect/Asset/AssetUtils.h>
 
 namespace Diorama
 {
@@ -54,14 +55,27 @@ namespace Diorama
 
     void SpriteFeatureProcessor::Activate()
     {
-        // The draw context is created lazily in EnsureInitialized once the shader
-        // asset is ready; nothing else to set up here.
         m_initialized = false;
+
+        // Kick off the shader load asynchronously (QueueLoad, non-blocking). The
+        // draw context is created in EnsureInitialized once the asset is ready.
+        // Crucially this never blocks: EnsureInitialized runs inside Render(),
+        // which executes as a render job the main thread waits on, so a blocking
+        // load there would deadlock the application.
+        const AZ::Data::AssetId shaderAssetId =
+            AZ::RPI::AssetUtils::GetAssetIdForProductPath(SpriteShaderPath, AZ::RPI::AssetUtils::TraceLevel::Warning);
+        if (shaderAssetId.IsValid())
+        {
+            m_shaderAsset =
+                AZ::Data::AssetManager::Instance().GetAsset<AZ::RPI::ShaderAsset>(shaderAssetId, AZ::Data::AssetLoadBehavior::PreLoad);
+            m_shaderAsset.QueueLoad();
+        }
     }
 
     void SpriteFeatureProcessor::Deactivate()
     {
         m_dynamicDraw = nullptr;
+        m_shaderAsset = {};
         m_initialized = false;
         m_sprites.clear();
 
@@ -124,7 +138,14 @@ namespace Diorama
             return false;
         }
 
-        AZ::Data::Instance<AZ::RPI::Shader> shader = AZ::RPI::LoadShader(SpriteShaderPath);
+        // Poll the async shader load; never block here (this runs in a render
+        // job). Retry on a later frame until the asset is ready.
+        if (!m_shaderAsset.IsReady())
+        {
+            return false;
+        }
+
+        AZ::Data::Instance<AZ::RPI::Shader> shader = AZ::RPI::Shader::FindOrCreate(m_shaderAsset);
         if (!shader)
         {
             return false;
@@ -240,6 +261,10 @@ namespace Diorama
         }
 
         static const AZ::u32 quadIndices[6] = { 0, 1, 2, 0, 2, 3 };
+        // Reversed winding for the back face of a double-sided sprite. With
+        // back-face culling on, emitting both windings makes exactly one face
+        // visible from either side; a single-sided sprite emits only the front.
+        static const AZ::u32 quadIndicesBack[6] = { 0, 2, 1, 0, 3, 2 };
         const AZ::u32 debugTint = AZ::Color(1.0f, 0.0f, 1.0f, 1.0f).ToU32();
 
         for (const SpriteBatchPlan::Batch& batch : m_batchScratch)
@@ -282,7 +307,7 @@ namespace Diorama
             m_indexScratch.clear();
             const AZ::u32 spriteCount = batch.Count();
             m_vertexScratch.resize(spriteCount * 4);
-            m_indexScratch.reserve(spriteCount * 6);
+            m_indexScratch.reserve(spriteCount * 12); // up to 12 indices for a double-sided quad
 
             for (AZ::u32 n = 0; n < spriteCount; ++n)
             {
@@ -302,6 +327,16 @@ namespace Diorama
                 for (int k = 0; k < 6; ++k)
                 {
                     m_indexScratch.push_back(base + quadIndices[k]);
+                }
+                // A double-sided sprite also emits the back face (reversed
+                // winding) so it stays visible when viewed from behind. A
+                // billboard always faces the camera, so it never needs the back.
+                if (entry->m_config.m_doubleSided && !entry->m_config.m_billboard)
+                {
+                    for (int k = 0; k < 6; ++k)
+                    {
+                        m_indexScratch.push_back(base + quadIndicesBack[k]);
+                    }
                 }
             }
 
