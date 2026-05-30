@@ -8,6 +8,14 @@ alpha (the 0.x line), minor releases may include breaking changes.
 
 ## [Unreleased]
 
+### Added
+- Sprite-sheet (flipbook) animation on the Sprite component: a uniform frame
+  grid (columns, rows, frame count) played on a timer, with frames-per-second,
+  looping or hold-on-last, and a start frame. Frames compose with the existing
+  atlas UV sub-region and flips. Driven through the shared presenter so it plays
+  identically at runtime and in the editor viewport.
+- Unit tests for per-frame UV regions and the frame-advance logic.
+
 ## [0.1.0-alpha] - 2026-05-29
 
 First alpha. World-space sprite rendering through Atom, with editor tooling and

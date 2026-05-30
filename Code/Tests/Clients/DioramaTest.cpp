@@ -7,6 +7,7 @@
 
 #include <AzTest/AzTest.h>
 
+#include <Clients/SpriteAnimation.h>
 #include <Diorama/SpriteComponentConfig.h>
 
 namespace Diorama
@@ -90,5 +91,126 @@ namespace Diorama
         // uMin/uMax swap to (0.75,0.25), vMin/vMax swap to (0.75,0.25).
         // BL uses (uMin', vMax') = (0.75, 0.25); etc.
         ExpectCorners(config, 0.75f, 0.25f, 0.25f, 0.25f, 0.25f, 0.75f, 0.75f, 0.75f);
+    }
+    TEST_F(SpriteUVTest, FrameRegion_DefaultGrid_IsWholeRegion)
+    {
+        SpriteComponentConfig config;
+        AZ::Vector2 min;
+        AZ::Vector2 max;
+        config.GetFrameUVRegion(0, min, max);
+
+        EXPECT_NEAR(min.GetX(), 0.0f, Eps);
+        EXPECT_NEAR(min.GetY(), 0.0f, Eps);
+        EXPECT_NEAR(max.GetX(), 1.0f, Eps);
+        EXPECT_NEAR(max.GetY(), 1.0f, Eps);
+    }
+
+    TEST_F(SpriteUVTest, FrameRegion_Frame0_Of4x4_IsTopLeftCell)
+    {
+        SpriteComponentConfig config;
+        config.m_frameColumns = 4;
+        config.m_frameRows = 4;
+        config.m_frameCount = 16;
+        AZ::Vector2 min;
+        AZ::Vector2 max;
+        config.GetFrameUVRegion(0, min, max);
+
+        EXPECT_NEAR(min.GetX(), 0.0f, Eps);
+        EXPECT_NEAR(min.GetY(), 0.0f, Eps);
+        EXPECT_NEAR(max.GetX(), 0.25f, Eps);
+        EXPECT_NEAR(max.GetY(), 0.25f, Eps);
+    }
+
+    TEST_F(SpriteUVTest, FrameRegion_Frame5_Of4x4_IsSecondRowSecondColumn)
+    {
+        SpriteComponentConfig config;
+        config.m_frameColumns = 4;
+        config.m_frameRows = 4;
+        config.m_frameCount = 16;
+        AZ::Vector2 min;
+        AZ::Vector2 max;
+        config.GetFrameUVRegion(5, min, max);
+
+        EXPECT_NEAR(min.GetX(), 0.25f, Eps);
+        EXPECT_NEAR(min.GetY(), 0.25f, Eps);
+        EXPECT_NEAR(max.GetX(), 0.5f, Eps);
+        EXPECT_NEAR(max.GetY(), 0.5f, Eps);
+    }
+
+    TEST_F(SpriteUVTest, FrameRegion_ComposesWithAtlasSubRegion)
+    {
+        // A 2x2 sheet packed inside the bottom-right quarter of a texture atlas.
+        SpriteComponentConfig config;
+        config.m_uvMin = AZ::Vector2(0.5f, 0.5f);
+        config.m_uvMax = AZ::Vector2(1.0f, 1.0f);
+        config.m_frameColumns = 2;
+        config.m_frameRows = 2;
+        config.m_frameCount = 4;
+        AZ::Vector2 min;
+        AZ::Vector2 max;
+
+        config.GetFrameUVRegion(0, min, max); // top-left cell of the sub-region
+        EXPECT_NEAR(min.GetX(), 0.5f, Eps);
+        EXPECT_NEAR(min.GetY(), 0.5f, Eps);
+        EXPECT_NEAR(max.GetX(), 0.75f, Eps);
+        EXPECT_NEAR(max.GetY(), 0.75f, Eps);
+
+        config.GetFrameUVRegion(3, min, max); // bottom-right cell of the sub-region
+        EXPECT_NEAR(min.GetX(), 0.75f, Eps);
+        EXPECT_NEAR(min.GetY(), 0.75f, Eps);
+        EXPECT_NEAR(max.GetX(), 1.0f, Eps);
+        EXPECT_NEAR(max.GetY(), 1.0f, Eps);
+    }
+
+    TEST_F(SpriteUVTest, FrameCount_ClampedToGridSize)
+    {
+        SpriteComponentConfig config;
+        config.m_frameColumns = 2;
+        config.m_frameRows = 2;
+        config.m_frameCount = 10; // more than the 4 cells available
+        EXPECT_EQ(config.GetFrameCount(), 4);
+    }
+
+    using SpriteAnimationTest = ::testing::Test;
+
+    TEST_F(SpriteAnimationTest, Advance_SingleFrame_DoesNotMove)
+    {
+        const SpriteAnimation::FrameState next = SpriteAnimation::Advance({ 0, 0.0f, false }, 1.0f, 12.0f, 1, true);
+        EXPECT_EQ(next.m_frame, 0);
+        EXPECT_FALSE(next.m_finished);
+    }
+
+    TEST_F(SpriteAnimationTest, Advance_ZeroRate_DoesNotMove)
+    {
+        const SpriteAnimation::FrameState next = SpriteAnimation::Advance({ 0, 0.0f, false }, 1.0f, 0.0f, 4, true);
+        EXPECT_EQ(next.m_frame, 0);
+    }
+
+    TEST_F(SpriteAnimationTest, Advance_SteppsOneFrame)
+    {
+        // 10 fps means 0.1s per frame.
+        const SpriteAnimation::FrameState next = SpriteAnimation::Advance({ 0, 0.0f, false }, 0.1f, 10.0f, 4, true);
+        EXPECT_EQ(next.m_frame, 1);
+        EXPECT_FALSE(next.m_finished);
+    }
+
+    TEST_F(SpriteAnimationTest, Advance_MultipleFramesForLargeDelta)
+    {
+        const SpriteAnimation::FrameState next = SpriteAnimation::Advance({ 0, 0.0f, false }, 0.25f, 10.0f, 4, true);
+        EXPECT_EQ(next.m_frame, 2);
+    }
+
+    TEST_F(SpriteAnimationTest, Advance_WrapsWhenLooping)
+    {
+        const SpriteAnimation::FrameState next = SpriteAnimation::Advance({ 3, 0.0f, false }, 0.1f, 10.0f, 4, true);
+        EXPECT_EQ(next.m_frame, 0);
+        EXPECT_FALSE(next.m_finished);
+    }
+
+    TEST_F(SpriteAnimationTest, Advance_HoldsAndFinishesWhenNotLooping)
+    {
+        const SpriteAnimation::FrameState next = SpriteAnimation::Advance({ 3, 0.0f, false }, 0.1f, 10.0f, 4, false);
+        EXPECT_EQ(next.m_frame, 3);
+        EXPECT_TRUE(next.m_finished);
     }
 } // namespace Diorama

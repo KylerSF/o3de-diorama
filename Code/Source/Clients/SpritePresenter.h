@@ -7,10 +7,12 @@
 
 #pragma once
 
+#include <Clients/SpriteAnimation.h>
 #include <Diorama/SpriteComponentConfig.h>
 
 #include <AzCore/Asset/AssetCommon.h>
 #include <AzCore/Component/EntityId.h>
+#include <AzCore/Component/TickBus.h>
 #include <AzCore/Component/TransformBus.h>
 #include <AzCore/Math/Transform.h>
 
@@ -28,6 +30,7 @@ namespace Diorama
     class SpritePresenter final
         : private AZ::TransformNotificationBus::Handler
         , private AZ::Data::AssetBus::Handler
+        , private AZ::TickBus::Handler
     {
     public:
         AZ_TYPE_INFO(Diorama::SpritePresenter, "{6F2E9B8A-2D7C-4C1E-9D3A-7E5B0C4F1A22}");
@@ -54,12 +57,22 @@ namespace Diorama
         // AZ::Data::AssetBus::Handler
         void OnAssetReady(AZ::Data::Asset<AZ::Data::AssetData> asset) override;
 
+        // AZ::TickBus::Handler
+        void OnTick(float deltaTime, AZ::ScriptTimePoint time) override;
+
         void QueueTextureLoad();
         void Push();
+
+        //! Connect or disconnect the tick bus to match the current config (only
+        //! animated, multi-frame sprites need to tick).
+        void RefreshTickConnection();
+        //! Reset playback to the configured start frame.
+        void ResetAnimation();
 
         AZ::EntityId m_entityId;
         SpriteComponentConfig m_config;
         AZ::Transform m_worldTransform = AZ::Transform::CreateIdentity();
+        SpriteAnimation::FrameState m_frameState;
         AZ::u32 m_handle = 0; // SpriteRenderer::InvalidHandle
         bool m_connected = false;
     };
