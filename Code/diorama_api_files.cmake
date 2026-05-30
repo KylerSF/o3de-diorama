@@ -2,5 +2,6 @@
 set(FILES
     Include/Diorama/DioramaBus.h
     Include/Diorama/DioramaTypeIds.h
+    Include/Diorama/SpriteBus.h
     Include/Diorama/SpriteComponentConfig.h
 )

@@ -8,6 +8,7 @@
 #pragma once
 
 #include <Clients/SpritePresenter.h>
+#include <Clients/SpriteRequestHandler.h>
 #include <Diorama/SpriteComponentConfig.h>
 
 #include <AzCore/Component/Component.h>
@@ -42,5 +43,6 @@ namespace Diorama
     private:
         SpriteComponentConfig m_config;
         SpritePresenter m_presenter;
+        SpriteRequestHandler m_requestHandler;
     };
 } // namespace Diorama

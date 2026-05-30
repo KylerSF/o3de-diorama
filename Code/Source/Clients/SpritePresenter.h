@@ -52,6 +52,13 @@ namespace Diorama
         //! changed.
         void SetConfig(const SpriteComponentConfig& config);
 
+        //! Resolved runtime state for the AI query API (GetSpriteInfo).
+        //! True when the sprite is registered with a feature processor and its
+        //! texture is ready, i.e. it is actually being drawn.
+        bool IsVisible() const;
+        //! Current animation frame (0 when not animating).
+        int GetCurrentFrame() const;
+
     private:
         // AZ::TransformNotificationBus::Handler
         void OnTransformChanged(const AZ::Transform& local, const AZ::Transform& world) override;

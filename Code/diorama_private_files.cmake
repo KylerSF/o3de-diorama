@@ -7,6 +7,9 @@ set(FILES
     Source/Clients/SpriteComponent.cpp
     Source/Clients/SpriteComponent.h
     Source/Clients/SpriteComponentConfig.cpp
+    Source/Clients/SpriteBus.cpp
+    Source/Clients/SpriteRequestHandler.cpp
+    Source/Clients/SpriteRequestHandler.h
     Source/Clients/SpriteAnimation.h
     Source/Clients/SpriteBatchPlan.h
     Source/Clients/SpriteFeatureProcessor.cpp
