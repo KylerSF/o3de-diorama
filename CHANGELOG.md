@@ -29,6 +29,11 @@ alpha (the 0.x line), minor releases may include breaking changes.
   offset (fractional 2.5D layers stay distinct), uses 32-bit indices (batches
   may exceed 16384 sprites), reuses per-frame scratch buffers, and caches each
   sprite's batch key, so the render loop performs no per-frame heap allocation.
+- The batch plan is dirty-tracked: the grouping and sort are rebuilt only when a
+  sprite is added, removed, or its texture/sort layer changes, so a static scene
+  skips the per-frame scan and sort (vertex packing and submission still run each
+  frame). Transform, animation, and texture-streaming changes do not trigger a
+  rebuild.
 - Unit tests for the batch-planning logic (grouping, sort-offset ordering,
   fractional-layer separation, invalid-texture handling, stable in-batch order,
   and buffer reuse).

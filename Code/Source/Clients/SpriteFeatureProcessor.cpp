@@ -64,18 +64,29 @@ namespace Diorama
         m_dynamicDraw = nullptr;
         m_initialized = false;
         m_sprites.clear();
+
+        // Drop the cached plan (its entry pointers are about to dangle) and force
+        // a rebuild if this processor is reactivated.
+        m_entryScratch.clear();
+        m_orderedScratch.clear();
+        m_batchScratch.clear();
+        m_planDirty = true;
     }
 
     SpriteFeatureProcessor::SpriteHandle SpriteFeatureProcessor::AcquireSprite()
     {
         const SpriteHandle handle = m_nextHandle++;
         m_sprites.emplace(handle, SpriteEntry{});
+        m_planDirty = true; // a new sprite changes the batch set
         return handle;
     }
 
     void SpriteFeatureProcessor::ReleaseSprite(SpriteHandle handle)
     {
-        m_sprites.erase(handle);
+        if (m_sprites.erase(handle) != 0)
+        {
+            m_planDirty = true; // a removed sprite changes the batch set
+        }
     }
 
     void SpriteFeatureProcessor::UpdateSprite(SpriteHandle handle, const AZ::Transform& worldTransform, const SpriteComponentConfig& config)
@@ -89,7 +100,15 @@ namespace Diorama
         SpriteEntry& entry = it->second;
         entry.m_worldTransform = worldTransform;
         entry.m_config = config;
-        entry.m_batchKey = MakeBatchKey(config);
+
+        // Only a texture or sort-layer change affects batching; transform and
+        // animation changes are read per frame and do not dirty the plan.
+        const SpriteBatchPlan::BatchKey newKey = MakeBatchKey(config);
+        if (newKey != entry.m_batchKey)
+        {
+            entry.m_batchKey = newKey;
+            m_planDirty = true;
+        }
     }
 
     bool SpriteFeatureProcessor::EnsureInitialized()
@@ -198,20 +217,27 @@ namespace Diorama
             fallbackImage = imageSystem->GetSystemImage(AZ::RPI::SystemImage::White);
         }
 
-        // Build the batch plan from the cached per-sprite batch keys. All scratch
-        // buffers are reused members, so the steady-state path allocates nothing.
-        m_itemScratch.clear();
-        m_entryScratch.clear();
-        m_itemScratch.reserve(m_sprites.size());
-        m_entryScratch.reserve(m_sprites.size());
-        for (const auto& [handle, entry] : m_sprites)
+        // Rebuild the batch plan only when the sprite set or a batch key changed.
+        // For a static scene this skips the per-frame scan and stable_sort; the
+        // vertex packing and draw below still run every frame (the draw context is
+        // immediate-mode and billboards re-orient to the camera each frame). The
+        // cached entry pointers remain valid because add/remove set m_planDirty.
+        if (m_planDirty)
         {
-            const AZ::u32 index = static_cast<AZ::u32>(m_entryScratch.size());
-            m_itemScratch.push_back(SpriteBatchPlan::Item{ entry.m_batchKey, index });
-            m_entryScratch.push_back(&entry);
-        }
+            m_itemScratch.clear();
+            m_entryScratch.clear();
+            m_itemScratch.reserve(m_sprites.size());
+            m_entryScratch.reserve(m_sprites.size());
+            for (const auto& [handle, entry] : m_sprites)
+            {
+                const AZ::u32 index = static_cast<AZ::u32>(m_entryScratch.size());
+                m_itemScratch.push_back(SpriteBatchPlan::Item{ entry.m_batchKey, index });
+                m_entryScratch.push_back(&entry);
+            }
 
-        SpriteBatchPlan::Build(m_itemScratch, m_orderedScratch, m_batchScratch);
+            SpriteBatchPlan::Build(m_itemScratch, m_orderedScratch, m_batchScratch);
+            m_planDirty = false;
+        }
 
         static const AZ::u32 quadIndices[6] = { 0, 1, 2, 0, 2, 3 };
         const AZ::u32 debugTint = AZ::Color(1.0f, 0.0f, 1.0f, 1.0f).ToU32();

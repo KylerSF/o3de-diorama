@@ -86,12 +86,24 @@ namespace Diorama
         AZStd::unordered_map<SpriteHandle, SpriteEntry> m_sprites;
         SpriteHandle m_nextHandle = 1;
 
-        // Reused per-frame scratch buffers so Render() allocates nothing on the
-        // steady-state path.
-        AZStd::vector<SpriteBatchPlan::Item> m_itemScratch;
+        // The batch plan (grouping + ordering) only changes when a sprite is
+        // added, removed, or its batch key (texture or sort layer) changes. It is
+        // rebuilt lazily on the next Render() when this is set, so static scenes
+        // skip the per-frame scan and sort. Transform moves, animation frame
+        // changes, and texture streaming do not dirty the plan; they are read
+        // through the cached entry pointers when packing vertices each frame.
+        bool m_planDirty = true;
+
+        // Cached batch plan (valid while m_planDirty is false). The entry pointers
+        // stay valid between rebuilds because add/remove set m_planDirty and
+        // AZStd::unordered_map keeps element pointers stable across insert/erase.
         AZStd::vector<const SpriteEntry*> m_entryScratch;
         AZStd::vector<SpriteBatchPlan::Item> m_orderedScratch;
         AZStd::vector<SpriteBatchPlan::Batch> m_batchScratch;
+
+        // Reused per-frame scratch buffers so Render() allocates nothing on the
+        // steady-state path.
+        AZStd::vector<SpriteBatchPlan::Item> m_itemScratch;
         AZStd::vector<SpriteVertex> m_vertexScratch;
         AZStd::vector<AZ::u32> m_indexScratch;
     };
