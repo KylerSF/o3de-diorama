@@ -141,6 +141,21 @@ Guidelines:
 - No per-frame allocations in the render loop.
 - Match the surrounding code style and the existing SPDX file headers.
 
+## Continuous integration
+
+Two workflows run in CI:
+
+- **lint** (always on, GitHub-hosted): clang-format (pinned), SPDX headers,
+  whitespace/EOF hygiene, and JSON manifest validation. This is the gate every
+  push and pull request must pass. Format C++ with clang-format **18.1.8** to
+  match it (a newer local version may format differently).
+- **build-test** (opt-in, self-hosted): compiles the gem through a host O3DE
+  project and runs the unit tests. Building needs the full O3DE SDK, so this
+  runs on a self-hosted runner with the engine, triggered manually or by adding
+  the `ci:build` label to a pull request. See
+  [Docs/ci-self-hosted-runner.md](Docs/ci-self-hosted-runner.md). The same build
+  and test steps are in `scripts/ci_build_test.sh`, which you can run locally.
+
 ## License
 
 Licensed under either of **Apache License 2.0** or **MIT** at your option. See
