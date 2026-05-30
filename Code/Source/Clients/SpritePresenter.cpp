@@ -31,28 +31,47 @@ namespace Diorama
         m_worldTransform = AZ::Transform::CreateIdentity();
         AZ::TransformBus::EventResult(m_worldTransform, m_entityId, &AZ::TransformBus::Events::GetWorldTM);
 
-        // Resolve the sprite feature processor for this entity's scene, enabling
-        // it on demand the first time a sprite appears in a scene. If there is no
-        // render scene yet the sprite simply is not drawn until a later Connect.
-        if (AZ::RPI::Scene* scene = AZ::RPI::Scene::GetSceneForEntityId(m_entityId))
-        {
-            m_featureProcessor = scene->GetFeatureProcessor<SpriteFeatureProcessor>();
-            if (m_featureProcessor == nullptr)
-            {
-                m_featureProcessor = scene->EnableFeatureProcessor<SpriteFeatureProcessor>();
-            }
-        }
-        if (m_featureProcessor != nullptr)
-        {
-            m_handle = m_featureProcessor->AcquireSprite();
-        }
+        m_connected = true;
+
+        // Resolve the feature processor now if the scene already exists. If it
+        // does not yet (common during level load / editor entity creation),
+        // RefreshTickConnection keeps the tick bus connected so OnTick can retry
+        // until the scene appears, rather than leaving the sprite invisible.
+        TryAcquireFeatureProcessor();
 
         QueueTextureLoad();
         AZ::TransformNotificationBus::Handler::BusConnect(m_entityId);
 
-        m_connected = true;
         RefreshTickConnection();
         Push();
+    }
+
+    bool SpritePresenter::TryAcquireFeatureProcessor()
+    {
+        if (m_handle != 0)
+        {
+            return true;
+        }
+
+        AZ::RPI::Scene* scene = AZ::RPI::Scene::GetSceneForEntityId(m_entityId);
+        if (scene == nullptr)
+        {
+            return false;
+        }
+
+        m_featureProcessor = scene->GetFeatureProcessor<SpriteFeatureProcessor>();
+        if (m_featureProcessor == nullptr)
+        {
+            // Enable on demand the first time a sprite appears in this scene.
+            m_featureProcessor = scene->EnableFeatureProcessor<SpriteFeatureProcessor>();
+        }
+        if (m_featureProcessor == nullptr)
+        {
+            return false;
+        }
+
+        m_handle = m_featureProcessor->AcquireSprite();
+        return m_handle != 0;
     }
 
     void SpritePresenter::Disconnect()
@@ -141,6 +160,24 @@ namespace Diorama
 
     void SpritePresenter::OnTick(float deltaTime, AZ::ScriptTimePoint /*time*/)
     {
+        // If the scene was not ready at Connect, keep retrying until the feature
+        // processor is available, then push the initial state and re-evaluate
+        // whether we still need to tick.
+        if (m_handle == 0)
+        {
+            if (TryAcquireFeatureProcessor())
+            {
+                Push();
+                RefreshTickConnection();
+            }
+            return;
+        }
+
+        if (!NeedsAnimationTick())
+        {
+            return;
+        }
+
         const int previousFrame = m_frameState.m_frame;
         m_frameState =
             SpriteAnimation::Advance(m_frameState, deltaTime, m_config.m_framesPerSecond, m_config.GetFrameCount(), m_config.m_loop);
@@ -151,9 +188,16 @@ namespace Diorama
         }
     }
 
+    bool SpritePresenter::NeedsAnimationTick() const
+    {
+        return m_config.m_animEnabled && m_config.GetFrameCount() > 1 && m_config.m_framesPerSecond > 0.0f;
+    }
+
     void SpritePresenter::RefreshTickConnection()
     {
-        const bool shouldTick = m_connected && m_config.m_animEnabled && m_config.GetFrameCount() > 1 && m_config.m_framesPerSecond > 0.0f;
+        // Tick while animating, or while still waiting to acquire a feature
+        // processor (so OnTick can retry the scene lookup).
+        const bool shouldTick = m_connected && (NeedsAnimationTick() || m_handle == 0);
         const bool isTicking = AZ::TickBus::Handler::BusIsConnected();
 
         if (shouldTick && !isTicking)

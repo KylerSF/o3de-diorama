@@ -33,6 +33,15 @@ namespace Diorama
             static const AZ::Name name{ "m_texture" };
             return name;
         }
+
+        // The batch key identifies sprites that can draw together: same texture
+        // asset and same sort layer. The full asset id is used (not a hash) so
+        // distinct textures never collide, and the sort offset is kept as a float
+        // so fractional layers stay distinct.
+        SpriteBatchPlan::BatchKey MakeBatchKey(const SpriteComponentConfig& config)
+        {
+            return SpriteBatchPlan::BatchKey{ config.m_texture.GetId(), config.m_sortOffset };
+        }
     } // namespace
 
     void SpriteFeatureProcessor::Reflect(AZ::ReflectContext* context)
@@ -80,6 +89,7 @@ namespace Diorama
         SpriteEntry& entry = it->second;
         entry.m_worldTransform = worldTransform;
         entry.m_config = config;
+        entry.m_batchKey = MakeBatchKey(config);
     }
 
     bool SpriteFeatureProcessor::EnsureInitialized()
@@ -188,33 +198,30 @@ namespace Diorama
             fallbackImage = imageSystem->GetSystemImage(AZ::RPI::SystemImage::White);
         }
 
-        // Build the batch plan keyed by (sort key, texture). The texture id is the
-        // sprite's streaming-image asset id sub-id-folded into 64 bits; sprites
-        // sharing it can draw together.
+        // Build the batch plan from the cached per-sprite batch keys. All scratch
+        // buffers are reused members, so the steady-state path allocates nothing.
         m_itemScratch.clear();
+        m_entryScratch.clear();
         m_itemScratch.reserve(m_sprites.size());
-        AZStd::vector<const SpriteEntry*> entryByIndex;
-        entryByIndex.reserve(m_sprites.size());
+        m_entryScratch.reserve(m_sprites.size());
         for (const auto& [handle, entry] : m_sprites)
         {
-            const AZ::Data::AssetId assetId = entry.m_config.m_texture.GetId();
-            const AZ::u64 textureId = assetId.IsValid() ? (assetId.m_guid.GetHash() ^ static_cast<AZ::u64>(assetId.m_subId)) : 0;
-            const AZ::u32 index = static_cast<AZ::u32>(entryByIndex.size());
-            m_itemScratch.push_back(
-                SpriteBatchPlan::Item{ SpriteBatchPlan::BatchKey{ textureId, static_cast<AZ::s64>(entry.m_config.m_sortOffset) }, index });
-            entryByIndex.push_back(&entry);
+            const AZ::u32 index = static_cast<AZ::u32>(m_entryScratch.size());
+            m_itemScratch.push_back(SpriteBatchPlan::Item{ entry.m_batchKey, index });
+            m_entryScratch.push_back(&entry);
         }
 
-        const SpriteBatchPlan::Plan plan = SpriteBatchPlan::Build(m_itemScratch);
+        SpriteBatchPlan::Build(m_itemScratch, m_orderedScratch, m_batchScratch);
 
-        static const AZ::u16 quadIndices[6] = { 0, 1, 2, 0, 2, 3 };
+        static const AZ::u32 quadIndices[6] = { 0, 1, 2, 0, 2, 3 };
+        const AZ::u32 debugTint = AZ::Color(1.0f, 0.0f, 1.0f, 1.0f).ToU32();
 
-        for (const SpriteBatchPlan::Batch& batch : plan.m_batches)
+        for (const SpriteBatchPlan::Batch& batch : m_batchScratch)
         {
             // All sprites in a batch share a texture; resolve it once from the
-            // first member. A batch never contains a zero (missing) texture
-            // because Build drops those.
-            const SpriteEntry* first = entryByIndex[plan.m_ordered[batch.m_begin].m_index];
+            // first member. Build drops invalid-texture items, so a batch always
+            // references a valid texture asset.
+            const SpriteEntry* first = m_entryScratch[m_orderedScratch[batch.m_begin].m_index];
             AZ::Data::Instance<AZ::RPI::Image> image;
             if (first->m_config.m_texture.IsReady())
             {
@@ -243,7 +250,8 @@ namespace Diorama
             drawSrg->SetImage(imageIndex, image);
             drawSrg->Compile();
 
-            // Pack all quads in this batch into one vertex/index stream.
+            // Pack all quads in this batch into one vertex/index stream. 32-bit
+            // indices so a batch can exceed 16384 sprites without overflowing.
             m_vertexScratch.clear();
             m_indexScratch.clear();
             const AZ::u32 spriteCount = batch.Count();
@@ -252,33 +260,32 @@ namespace Diorama
 
             for (AZ::u32 n = 0; n < spriteCount; ++n)
             {
-                const SpriteEntry* entry = entryByIndex[plan.m_ordered[batch.m_begin + n].m_index];
+                const SpriteEntry* entry = m_entryScratch[m_orderedScratch[batch.m_begin + n].m_index];
                 SpriteVertex* quad = &m_vertexScratch[n * 4];
                 AppendQuad(*entry, cameraTransform, quad);
 
                 if (usingFallback)
                 {
-                    const AZ::u32 debugTint = AZ::Color(1.0f, 0.0f, 1.0f, 1.0f).ToU32();
                     for (int i = 0; i < 4; ++i)
                     {
                         quad[i].m_color = debugTint;
                     }
                 }
 
-                const AZ::u16 base = static_cast<AZ::u16>(n * 4);
+                const AZ::u32 base = n * 4;
                 for (int k = 0; k < 6; ++k)
                 {
-                    m_indexScratch.push_back(static_cast<AZ::u16>(base + quadIndices[k]));
+                    m_indexScratch.push_back(base + quadIndices[k]);
                 }
             }
 
-            m_dynamicDraw->SetSortKey(static_cast<AZ::RHI::DrawItemSortKey>(batch.m_key.m_sortKey));
+            m_dynamicDraw->SetSortKey(static_cast<AZ::RHI::DrawItemSortKey>(batch.m_key.m_sortOffset));
             m_dynamicDraw->DrawIndexed(
                 m_vertexScratch.data(),
                 static_cast<uint32_t>(m_vertexScratch.size()),
                 m_indexScratch.data(),
                 static_cast<uint32_t>(m_indexScratch.size()),
-                AZ::RHI::IndexFormat::Uint16,
+                AZ::RHI::IndexFormat::Uint32,
                 drawSrg);
         }
     }

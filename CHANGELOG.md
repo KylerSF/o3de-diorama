@@ -19,12 +19,19 @@ alpha (the 0.x line), minor releases may include breaking changes.
 ### Changed
 - Sprite rendering now goes through a proper Atom scene feature processor
   (`SpriteFeatureProcessor`) instead of an immediate-mode per-sprite draw loop.
-  Sprites that share a texture and sort key are batched into a single draw call
+  Sprites that share a texture and sort layer are batched into a single draw call
   with one shader resource group, which scales to large sprite counts. The
   immediate-mode `SpriteRenderer` and its request bus are removed; components
-  register with the scene's feature processor through the shared presenter.
-- Unit tests for the batch-planning logic (grouping, sort-key ordering,
-  missing-texture handling, stable in-batch order).
+  register with the scene's feature processor through the shared presenter, which
+  retries scene resolution per tick so sprites whose scene is not ready at
+  activation still appear once it is.
+- Batching keys on the full texture asset id (no lossy hash) and a float sort
+  offset (fractional 2.5D layers stay distinct), uses 32-bit indices (batches
+  may exceed 16384 sprites), reuses per-frame scratch buffers, and caches each
+  sprite's batch key, so the render loop performs no per-frame heap allocation.
+- Unit tests for the batch-planning logic (grouping, sort-offset ordering,
+  fractional-layer separation, invalid-texture handling, stable in-batch order,
+  and buffer reuse).
 
 ## [0.1.0-alpha] - 2026-05-29
 

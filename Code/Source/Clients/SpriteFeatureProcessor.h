@@ -72,6 +72,9 @@ namespace Diorama
         {
             AZ::Transform m_worldTransform = AZ::Transform::CreateIdentity();
             SpriteComponentConfig m_config;
+            //! Cached batch key for m_config's texture, refreshed in UpdateSprite
+            //! so Render() does not recompute it per sprite per frame.
+            SpriteBatchPlan::BatchKey m_batchKey;
         };
 
         bool EnsureInitialized();
@@ -83,9 +86,13 @@ namespace Diorama
         AZStd::unordered_map<SpriteHandle, SpriteEntry> m_sprites;
         SpriteHandle m_nextHandle = 1;
 
-        // Reused per-frame scratch buffers to avoid allocations in Render().
+        // Reused per-frame scratch buffers so Render() allocates nothing on the
+        // steady-state path.
         AZStd::vector<SpriteBatchPlan::Item> m_itemScratch;
+        AZStd::vector<const SpriteEntry*> m_entryScratch;
+        AZStd::vector<SpriteBatchPlan::Item> m_orderedScratch;
+        AZStd::vector<SpriteBatchPlan::Batch> m_batchScratch;
         AZStd::vector<SpriteVertex> m_vertexScratch;
-        AZStd::vector<AZ::u16> m_indexScratch;
+        AZStd::vector<AZ::u32> m_indexScratch;
     };
 } // namespace Diorama

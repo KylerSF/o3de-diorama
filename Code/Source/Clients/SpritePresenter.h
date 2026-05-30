@@ -65,19 +65,38 @@ namespace Diorama
         void QueueTextureLoad();
         void Push();
 
-        //! Connect or disconnect the tick bus to match the current config (only
-        //! animated, multi-frame sprites need to tick).
+        //! Connect or disconnect the tick bus to match current needs: a sprite
+        //! ticks if it is animating, or if it has not yet acquired a feature
+        //! processor (so it can keep retrying until its scene exists).
         void RefreshTickConnection();
         //! Reset playback to the configured start frame.
         void ResetAnimation();
+
+        //! Try to resolve the entity's scene feature processor and acquire a draw
+        //! handle. Safe to call repeatedly; a no-op once a handle is held. Returns
+        //! true once the sprite is registered. The scene may not exist yet at
+        //! Activate (level load / editor ordering), so this is retried per tick
+        //! until it succeeds.
+        bool TryAcquireFeatureProcessor();
+
+        //! True while the animation clip needs per-frame stepping.
+        bool NeedsAnimationTick() const;
 
         AZ::EntityId m_entityId;
         SpriteComponentConfig m_config;
         AZ::Transform m_worldTransform = AZ::Transform::CreateIdentity();
         SpriteAnimation::FrameState m_frameState;
-        //! Scene feature processor that owns this sprite's draw data. Resolved at
-        //! Connect from the entity's scene; null if the sprite has no render scene
-        //! (in which case the sprite is simply not drawn).
+        //! Scene feature processor that owns this sprite's draw data. Resolved
+        //! lazily (see TryAcquireFeatureProcessor) and held as a non-owning
+        //! pointer for the presenter's connected lifetime.
+        //!
+        //! KNOWN LIMITATION: this assumes the scene (and its feature processor)
+        //! outlives the sprite component, which holds for normal entity/level
+        //! teardown order (components deactivate before their scene is destroyed).
+        //! If a scene were torn down while a sprite stayed connected, this would
+        //! dangle. A fully robust fix would observe SceneNotificationBus /
+        //! feature-processor lifetime and null this out; deferred until a use case
+        //! actually exercises mid-lifetime scene destruction.
         SpriteFeatureProcessor* m_featureProcessor = nullptr;
         AZ::u32 m_handle = 0; // SpriteFeatureProcessor::InvalidHandle
         bool m_connected = false;

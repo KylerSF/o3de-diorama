@@ -215,87 +215,124 @@ namespace Diorama
         EXPECT_TRUE(next.m_finished);
     }
 
-    using SpriteBatchPlanTest = ::testing::Test;
-
-    namespace
+    class SpriteBatchPlanTest : public ::testing::Test
     {
-        SpriteBatchPlan::Item MakeItem(AZ::u64 textureId, AZ::s64 sortKey, AZ::u32 index)
+    protected:
+        // Synthesize a distinct, valid AssetId from a small integer so tests can
+        // talk about "texture N" without real assets. id 0 yields an invalid id.
+        static AZ::Data::AssetId Tex(AZ::u32 n)
         {
-            return SpriteBatchPlan::Item{ SpriteBatchPlan::BatchKey{ textureId, sortKey }, index };
+            if (n == 0)
+            {
+                return AZ::Data::AssetId();
+            }
+            return AZ::Data::AssetId(AZ::Uuid::CreateName(AZStd::string::format("tex%u", n).c_str()), 0);
         }
-    } // namespace
+
+        SpriteBatchPlan::Item MakeItem(AZ::u32 texNum, float sortOffset, AZ::u32 index)
+        {
+            return SpriteBatchPlan::Item{ SpriteBatchPlan::BatchKey{ Tex(texNum), sortOffset }, index };
+        }
+
+        // Caller-owned output buffers, reused across calls like the renderer does.
+        AZStd::vector<SpriteBatchPlan::Item> m_ordered;
+        AZStd::vector<SpriteBatchPlan::Batch> m_batches;
+
+        void Build(const AZStd::vector<SpriteBatchPlan::Item>& items)
+        {
+            SpriteBatchPlan::Build(items, m_ordered, m_batches);
+        }
+    };
 
     TEST_F(SpriteBatchPlanTest, Empty_ProducesNoBatches)
     {
-        const SpriteBatchPlan::Plan plan = SpriteBatchPlan::Build({});
-        EXPECT_TRUE(plan.m_batches.empty());
-        EXPECT_TRUE(plan.m_ordered.empty());
+        Build({});
+        EXPECT_TRUE(m_batches.empty());
+        EXPECT_TRUE(m_ordered.empty());
     }
 
     TEST_F(SpriteBatchPlanTest, SameTextureAndSort_CoalesceIntoOneBatch)
     {
-        AZStd::vector<SpriteBatchPlan::Item> items{ MakeItem(7, 0, 0), MakeItem(7, 0, 1), MakeItem(7, 0, 2) };
-        const SpriteBatchPlan::Plan plan = SpriteBatchPlan::Build(items);
+        Build({ MakeItem(7, 0.0f, 0), MakeItem(7, 0.0f, 1), MakeItem(7, 0.0f, 2) });
 
-        ASSERT_EQ(plan.m_batches.size(), 1u);
-        EXPECT_EQ(plan.m_batches[0].Count(), 3u);
-        EXPECT_EQ(plan.m_batches[0].m_key.m_textureId, 7u);
+        ASSERT_EQ(m_batches.size(), 1u);
+        EXPECT_EQ(m_batches[0].Count(), 3u);
+        EXPECT_EQ(m_batches[0].m_key.m_textureId, Tex(7));
     }
 
     TEST_F(SpriteBatchPlanTest, DifferentTextures_SplitIntoSeparateBatches)
     {
-        AZStd::vector<SpriteBatchPlan::Item> items{ MakeItem(1, 0, 0), MakeItem(2, 0, 1), MakeItem(1, 0, 2) };
-        const SpriteBatchPlan::Plan plan = SpriteBatchPlan::Build(items);
-
-        // Three sprites, two textures at the same sort key: texture 1 has two
+        // Three sprites, two textures at the same sort layer: texture 1 has two
         // sprites that coalesce, texture 2 has one. Two batches total.
-        ASSERT_EQ(plan.m_batches.size(), 2u);
-        EXPECT_EQ(plan.m_batches[0].m_key.m_textureId, 1u);
-        EXPECT_EQ(plan.m_batches[0].Count(), 2u);
-        EXPECT_EQ(plan.m_batches[1].m_key.m_textureId, 2u);
-        EXPECT_EQ(plan.m_batches[1].Count(), 1u);
+        Build({ MakeItem(1, 0.0f, 0), MakeItem(2, 0.0f, 1), MakeItem(1, 0.0f, 2) });
+
+        ASSERT_EQ(m_batches.size(), 2u);
+        // Ordering between equal-sort, different-texture batches follows AssetId
+        // ordering, so assert on counts/identity rather than a fixed sequence.
+        AZ::u32 total = 0;
+        for (const auto& b : m_batches)
+        {
+            total += b.Count();
+        }
+        EXPECT_EQ(total, 3u);
     }
 
-    TEST_F(SpriteBatchPlanTest, OrdersBySortKeyAscending)
+    TEST_F(SpriteBatchPlanTest, OrdersBySortOffsetAscending)
     {
-        // Provide out of order; expect ordering by sort key (back to front).
-        AZStd::vector<SpriteBatchPlan::Item> items{ MakeItem(1, 5, 0), MakeItem(1, -3, 1), MakeItem(1, 0, 2) };
-        const SpriteBatchPlan::Plan plan = SpriteBatchPlan::Build(items);
+        Build({ MakeItem(1, 5.0f, 0), MakeItem(1, -3.0f, 1), MakeItem(1, 0.0f, 2) });
 
-        ASSERT_EQ(plan.m_batches.size(), 3u);
-        EXPECT_EQ(plan.m_batches[0].m_key.m_sortKey, -3);
-        EXPECT_EQ(plan.m_batches[1].m_key.m_sortKey, 0);
-        EXPECT_EQ(plan.m_batches[2].m_key.m_sortKey, 5);
+        ASSERT_EQ(m_batches.size(), 3u);
+        EXPECT_FLOAT_EQ(m_batches[0].m_key.m_sortOffset, -3.0f);
+        EXPECT_FLOAT_EQ(m_batches[1].m_key.m_sortOffset, 0.0f);
+        EXPECT_FLOAT_EQ(m_batches[2].m_key.m_sortOffset, 5.0f);
     }
 
     TEST_F(SpriteBatchPlanTest, SameTextureDifferentSort_DoesNotCoalesce)
     {
-        // Same texture must NOT merge across sort keys, or 2.5D layering breaks.
-        AZStd::vector<SpriteBatchPlan::Item> items{ MakeItem(9, 0, 0), MakeItem(9, 1, 1) };
-        const SpriteBatchPlan::Plan plan = SpriteBatchPlan::Build(items);
-        EXPECT_EQ(plan.m_batches.size(), 2u);
+        // Same texture must NOT merge across sort layers, or 2.5D layering breaks.
+        Build({ MakeItem(9, 0.0f, 0), MakeItem(9, 1.0f, 1) });
+        EXPECT_EQ(m_batches.size(), 2u);
     }
 
-    TEST_F(SpriteBatchPlanTest, ZeroTextureItems_AreDropped)
+    TEST_F(SpriteBatchPlanTest, FractionalSortOffsets_StayDistinct)
     {
-        AZStd::vector<SpriteBatchPlan::Item> items{ MakeItem(0, 0, 0), MakeItem(5, 0, 1), MakeItem(0, 0, 2) };
-        const SpriteBatchPlan::Plan plan = SpriteBatchPlan::Build(items);
+        // Regression: fractional offsets must not collapse to one layer. With an
+        // integer sort key, 0.25 and 0.75 would both truncate to 0 and wrongly
+        // coalesce; with a float key they remain two batches.
+        Build({ MakeItem(4, 0.25f, 0), MakeItem(4, 0.75f, 1) });
+        EXPECT_EQ(m_batches.size(), 2u);
+    }
 
-        ASSERT_EQ(plan.m_ordered.size(), 1u);
-        EXPECT_EQ(plan.m_ordered[0].m_index, 1u);
-        ASSERT_EQ(plan.m_batches.size(), 1u);
-        EXPECT_EQ(plan.m_batches[0].m_key.m_textureId, 5u);
+    TEST_F(SpriteBatchPlanTest, InvalidTextureItems_AreDropped)
+    {
+        Build({ MakeItem(0, 0.0f, 0), MakeItem(5, 0.0f, 1), MakeItem(0, 0.0f, 2) });
+
+        ASSERT_EQ(m_ordered.size(), 1u);
+        EXPECT_EQ(m_ordered[0].m_index, 1u);
+        ASSERT_EQ(m_batches.size(), 1u);
+        EXPECT_EQ(m_batches[0].m_key.m_textureId, Tex(5));
     }
 
     TEST_F(SpriteBatchPlanTest, StableWithinBatch_PreservesRegistrationOrder)
     {
         // Two sprites, same key, given indices 4 then 2; ordering within the
         // batch must keep their input order (stable), not sort by index.
-        AZStd::vector<SpriteBatchPlan::Item> items{ MakeItem(3, 0, 4), MakeItem(3, 0, 2) };
-        const SpriteBatchPlan::Plan plan = SpriteBatchPlan::Build(items);
+        Build({ MakeItem(3, 0.0f, 4), MakeItem(3, 0.0f, 2) });
 
-        ASSERT_EQ(plan.m_ordered.size(), 2u);
-        EXPECT_EQ(plan.m_ordered[0].m_index, 4u);
-        EXPECT_EQ(plan.m_ordered[1].m_index, 2u);
+        ASSERT_EQ(m_ordered.size(), 2u);
+        EXPECT_EQ(m_ordered[0].m_index, 4u);
+        EXPECT_EQ(m_ordered[1].m_index, 2u);
+    }
+
+    TEST_F(SpriteBatchPlanTest, ReusedBuffers_ClearedAcrossCalls)
+    {
+        // Build into the same buffers twice; the second result must not retain
+        // stale entries from the first (the renderer reuses these every frame).
+        Build({ MakeItem(1, 0.0f, 0), MakeItem(2, 0.0f, 1) });
+        Build({ MakeItem(3, 0.0f, 0) });
+
+        EXPECT_EQ(m_ordered.size(), 1u);
+        ASSERT_EQ(m_batches.size(), 1u);
+        EXPECT_EQ(m_batches[0].m_key.m_textureId, Tex(3));
     }
 } // namespace Diorama
