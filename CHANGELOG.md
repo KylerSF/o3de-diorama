@@ -15,6 +15,9 @@ alpha (the 0.x line), minor releases may include breaking changes.
   atlas UV sub-region and flips. Driven through the shared presenter so it plays
   identically at runtime and in the editor viewport.
 - Unit tests for per-frame UV regions and the frame-advance logic.
+- How-to guide and runnable example for the Sprite Atlas (teaching ladder rung
+  3): sharing one atlas texture across sprites via UV sub-regions, with a
+  scripted four-cell example scene and a how-to index.
 
 ## [0.1.0-alpha] - 2026-05-29
 
