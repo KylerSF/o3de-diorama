@@ -7,9 +7,12 @@
 
 #include "DioramaSystemComponent.h"
 
+#include <Clients/SpriteFeatureProcessor.h>
 #include <Diorama/DioramaTypeIds.h>
 
 #include <AzCore/Serialization/SerializeContext.h>
+
+#include <Atom/RPI.Public/FeatureProcessorFactory.h>
 
 namespace Diorama
 {
@@ -17,6 +20,8 @@ namespace Diorama
 
     void DioramaSystemComponent::Reflect(AZ::ReflectContext* context)
     {
+        SpriteFeatureProcessor::Reflect(context);
+
         if (auto serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
         {
             serializeContext->Class<DioramaSystemComponent, AZ::Component>()->Version(0);
@@ -64,42 +69,18 @@ namespace Diorama
     void DioramaSystemComponent::Activate()
     {
         DioramaRequestBus::Handler::BusConnect();
-        DioramaSpriteRendererRequestBus::Handler::BusConnect();
-        AZ::TickBus::Handler::BusConnect();
+
+        // Register the sprite feature processor so each render scene can enable
+        // it. Scenes that have it enabled will create an instance and call its
+        // Render() every frame.
+        AZ::RPI::FeatureProcessorFactory::Get()->RegisterFeatureProcessor<SpriteFeatureProcessor>();
     }
 
     void DioramaSystemComponent::Deactivate()
     {
-        AZ::TickBus::Handler::BusDisconnect();
-        DioramaSpriteRendererRequestBus::Handler::BusDisconnect();
+        AZ::RPI::FeatureProcessorFactory::Get()->UnregisterFeatureProcessor<SpriteFeatureProcessor>();
+
         DioramaRequestBus::Handler::BusDisconnect();
-    }
-
-    void DioramaSystemComponent::OnTick([[maybe_unused]] float deltaTime, [[maybe_unused]] AZ::ScriptTimePoint time)
-    {
-        // Immediate-mode submission: sprites cached their latest transform and
-        // configuration through the renderer bus; here we issue the per-frame
-        // draw calls. DrawSprites lazily initializes the draw context and is a
-        // no-op until the scene and shader assets are ready.
-        if (m_spriteRenderer.HasSprites())
-        {
-            m_spriteRenderer.DrawSprites();
-        }
-    }
-
-    SpriteRenderer::SpriteHandle DioramaSystemComponent::RegisterSprite()
-    {
-        return m_spriteRenderer.RegisterSprite();
-    }
-
-    void DioramaSystemComponent::UnregisterSprite(SpriteHandle handle)
-    {
-        m_spriteRenderer.UnregisterSprite(handle);
-    }
-
-    void DioramaSystemComponent::UpdateSprite(SpriteHandle handle, const AZ::Transform& worldTransform, const SpriteComponentConfig& config)
-    {
-        m_spriteRenderer.UpdateSprite(handle, worldTransform, config);
     }
 
 } // namespace Diorama

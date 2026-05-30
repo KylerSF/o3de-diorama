@@ -8,19 +8,17 @@
 #pragma once
 
 #include <AzCore/Component/Component.h>
-#include <AzCore/Component/TickBus.h>
 #include <Diorama/DioramaBus.h>
-
-#include <Clients/SpriteRenderer.h>
-#include <Clients/SpriteRendererBus.h>
 
 namespace Diorama
 {
+    //! System component for the Diorama runtime. Its sole runtime job is to
+    //! register the SpriteFeatureProcessor with Atom's feature processor factory
+    //! so each render scene can enable it; per-sprite drawing then lives entirely
+    //! in the feature processor. It holds no renderer state of its own.
     class DioramaSystemComponent
         : public AZ::Component
         , protected DioramaRequestBus::Handler
-        , protected DioramaSpriteRendererRequestBus::Handler
-        , public AZ::TickBus::Handler
     {
     public:
         AZ_COMPONENT_DECL(DioramaSystemComponent);
@@ -36,32 +34,10 @@ namespace Diorama
         ~DioramaSystemComponent();
 
     protected:
-        ////////////////////////////////////////////////////////////////////////
-        // DioramaRequestBus interface implementation
-
-        ////////////////////////////////////////////////////////////////////////
-
-        ////////////////////////////////////////////////////////////////////////
-        // AZ::Component interface implementation
+        // AZ::Component
         void Init() override;
         void Activate() override;
         void Deactivate() override;
-        ////////////////////////////////////////////////////////////////////////
-
-        ////////////////////////////////////////////////////////////////////////
-        // AZTickBus interface implementation
-        void OnTick(float deltaTime, AZ::ScriptTimePoint time) override;
-        ////////////////////////////////////////////////////////////////////////
-
-        ////////////////////////////////////////////////////////////////////////
-        // DioramaSpriteRendererRequestBus interface implementation
-        SpriteHandle RegisterSprite() override;
-        void UnregisterSprite(SpriteHandle handle) override;
-        void UpdateSprite(SpriteHandle handle, const AZ::Transform& worldTransform, const SpriteComponentConfig& config) override;
-        ////////////////////////////////////////////////////////////////////////
-
-    private:
-        SpriteRenderer m_spriteRenderer;
     };
 
 } // namespace Diorama
