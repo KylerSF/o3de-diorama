@@ -18,6 +18,10 @@ alpha (the 0.x line), minor releases may include breaking changes.
 - How-to guide and runnable example for the Sprite Atlas (teaching ladder rung
   3): sharing one atlas texture across sprites via UV sub-regions, with a
   scripted four-cell example scene and a how-to index.
+- Build/test CI: a self-hosted `build-test` workflow that compiles the gem
+  through a host O3DE project and runs the unit tests, plus a reusable
+  `scripts/ci_build_test.sh` and a self-hosted runner setup guide. Complements
+  the always-on lint workflow.
 
 ## [0.1.0-alpha] - 2026-05-29
 
