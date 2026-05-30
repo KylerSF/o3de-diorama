@@ -32,9 +32,16 @@ tool-side special-casing. This document specifies the API that makes that true.
    catalog entry is needed.
 4. Verifiable. A query verb returns resolved runtime state so the agent closes
    its own loop without screenshots.
-5. One config, two faces. The EditContext inspector (for humans) and this bus
-   (for agents) are two faces of the same `SpriteComponentConfig`. Neither
-   duplicates state, and parity between them is an invariant (see below).
+5. One config, two faces, both first-class. The EditContext inspector (for
+   humans) and this bus (for agents) are two faces of the same
+   `SpriteComponentConfig`. They are peers: neither is built on the other and
+   neither is degraded to serve the other. AI-friendliness must not cost any
+   quality in the human authoring experience, and vice versa. The bus uses
+   scalar args so an LLM never builds a math type, but the inspector keeps its
+   rich handlers (color swatch, vector widgets, grouped sections, min/max/suffix,
+   live preview); no AI plumbing leaks into the human UI. Human-only authoring
+   polish (gizmos, in-viewport editing, preview affordances) is encouraged; the
+   parity invariant forbids capability gaps, not extra polish on either side.
 
 ## Addressing model
 
@@ -180,11 +187,21 @@ adds no parallel state and rewrites nothing.
 
 ## Invariant: config-field parity (definition of done)
 
-Every field on `SpriteComponentConfig` that a human can set in the inspector must
-be settable through this bus, and reported by `SpriteInfo`. From now on a new
-sprite feature is not "done" until it is exposed through both faces (inspector
-and bus) in the same change. A unit test asserts that the verb set and
-`SpriteInfo` cover the config (caught when a new field is added without a verb).
+Parity cuts both ways, so neither face falls behind the other:
+
+- Every field a human can set in the inspector must also be settable through this
+  bus and reported by `SpriteInfo` (the agent is never behind the human).
+- Every capability exposed through this bus must have a first-class inspector
+  representation (the human is never behind the agent).
+
+From now on a new sprite feature is not "done" until it is exposed through both
+faces in the same change, each at full quality for its audience (rich widgets and
+live preview for the inspector; typed, described verbs for the bus). A unit test
+asserts the verb set and `SpriteInfo` cover the config, so adding a field without
+an AI verb fails CI; the human-side half is enforced by review. This invariant
+forbids capability gaps, not extra polish: human-only authoring niceties (gizmos,
+in-viewport editing) and bus-only conveniences (one-shot combos like
+`PlaySpriteSheet`) are both fine.
 
 ## Creation note
 
