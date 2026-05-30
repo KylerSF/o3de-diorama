@@ -71,10 +71,44 @@ namespace Diorama
         //! without moving them in depth.
         float m_sortOffset = 0.0f;
 
+        //! Play frames from a sprite sheet on a timer. When false the sprite is
+        //! static and the animation fields below are ignored.
+        bool m_animEnabled = false;
+
+        //! Sprite-sheet grid. Frames are laid out left-to-right, top-to-bottom in
+        //! a uniform grid of m_frameColumns by m_frameRows cells inside the
+        //! [m_uvMin, m_uvMax] region, so animation composes with an atlas sub-rect.
+        int m_frameColumns = 1;
+        int m_frameRows = 1;
+
+        //! Number of active frames played, allowing a partial last row. Clamped to
+        //! [1, m_frameColumns * m_frameRows].
+        int m_frameCount = 1;
+
+        //! Playback rate in frames per second.
+        float m_framesPerSecond = 12.0f;
+
+        //! Loop back to the first frame after the last, or hold the last frame.
+        bool m_loop = true;
+
+        //! Frame shown first (and in the editor when not playing). Clamped to range.
+        int m_startFrame = 0;
+
         //! Compute the effective UV coordinates for the four quad corners in
         //! winding order (bottom-left, bottom-right, top-right, top-left),
         //! applying the sub-rectangle and the flip flags. Output layout matches
         //! the renderer's vertex order.
         void GetCornerUVs(float outU[4], float outV[4]) const;
+
+        //! Normalized columns/rows clamped to at least 1.
+        int GetFrameColumns() const;
+        int GetFrameRows() const;
+        //! Active frame count clamped to [1, columns * rows].
+        int GetFrameCount() const;
+
+        //! Sub-rectangle of the texture for a given frame index, expressed in the
+        //! same normalized space as m_uvMin/m_uvMax. The frame grid lives inside
+        //! [m_uvMin, m_uvMax]. frameIndex is clamped to the valid range.
+        void GetFrameUVRegion(int frameIndex, AZ::Vector2& outMin, AZ::Vector2& outMax) const;
     };
 } // namespace Diorama

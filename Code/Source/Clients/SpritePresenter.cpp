@@ -24,6 +24,7 @@ namespace Diorama
 
         m_entityId = entityId;
         m_config = config;
+        ResetAnimation();
 
         m_worldTransform = AZ::Transform::CreateIdentity();
         AZ::TransformBus::EventResult(m_worldTransform, m_entityId, &AZ::TransformBus::Events::GetWorldTM);
@@ -35,6 +36,7 @@ namespace Diorama
         AZ::TransformNotificationBus::Handler::BusConnect(m_entityId);
 
         m_connected = true;
+        RefreshTickConnection();
         Push();
     }
 
@@ -47,6 +49,7 @@ namespace Diorama
 
         AZ::TransformNotificationBus::Handler::BusDisconnect();
         AZ::Data::AssetBus::Handler::BusDisconnect();
+        AZ::TickBus::Handler::BusDisconnect();
 
         if (m_handle != 0)
         {
@@ -68,6 +71,10 @@ namespace Diorama
             QueueTextureLoad();
         }
 
+        // An edit may have changed the grid or playback, so restart the clip and
+        // re-evaluate whether this sprite needs to tick.
+        ResetAnimation();
+        RefreshTickConnection();
         Push();
     }
 
@@ -102,6 +109,60 @@ namespace Diorama
             return;
         }
 
-        DioramaSpriteRendererRequestBus::Broadcast(&DioramaSpriteRendererRequests::UpdateSprite, m_handle, m_worldTransform, m_config);
+        // Static sprite: send the configuration as-is, no copy.
+        if (!m_config.m_animEnabled)
+        {
+            DioramaSpriteRendererRequestBus::Broadcast(&DioramaSpriteRendererRequests::UpdateSprite, m_handle, m_worldTransform, m_config);
+            return;
+        }
+
+        // Animated sprite: override the UV region with the current frame's cell.
+        // Flips still apply on top through the renderer's GetCornerUVs.
+        SpriteComponentConfig frameConfig = m_config;
+        m_config.GetFrameUVRegion(m_frameState.m_frame, frameConfig.m_uvMin, frameConfig.m_uvMax);
+        DioramaSpriteRendererRequestBus::Broadcast(&DioramaSpriteRendererRequests::UpdateSprite, m_handle, m_worldTransform, frameConfig);
+    }
+
+    void SpritePresenter::OnTick(float deltaTime, AZ::ScriptTimePoint /*time*/)
+    {
+        const int previousFrame = m_frameState.m_frame;
+        m_frameState =
+            SpriteAnimation::Advance(m_frameState, deltaTime, m_config.m_framesPerSecond, m_config.GetFrameCount(), m_config.m_loop);
+
+        if (m_frameState.m_frame != previousFrame)
+        {
+            Push();
+        }
+    }
+
+    void SpritePresenter::RefreshTickConnection()
+    {
+        const bool shouldTick = m_connected && m_config.m_animEnabled && m_config.GetFrameCount() > 1 && m_config.m_framesPerSecond > 0.0f;
+        const bool isTicking = AZ::TickBus::Handler::BusIsConnected();
+
+        if (shouldTick && !isTicking)
+        {
+            AZ::TickBus::Handler::BusConnect();
+        }
+        else if (!shouldTick && isTicking)
+        {
+            AZ::TickBus::Handler::BusDisconnect();
+        }
+    }
+
+    void SpritePresenter::ResetAnimation()
+    {
+        const int count = m_config.GetFrameCount();
+        int start = m_config.m_startFrame;
+        if (start < 0)
+        {
+            start = 0;
+        }
+        else if (start >= count)
+        {
+            start = count - 1;
+        }
+
+        m_frameState = SpriteAnimation::FrameState{ start, 0.0f, false };
     }
 } // namespace Diorama

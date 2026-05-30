@@ -20,7 +20,7 @@ namespace Diorama
         if (auto* serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
         {
             serializeContext->Class<SpriteComponentConfig, AZ::ComponentConfig>()
-                ->Version(2)
+                ->Version(3)
                 ->Field("Texture", &SpriteComponentConfig::m_texture)
                 ->Field("Size", &SpriteComponentConfig::m_size)
                 ->Field("Pivot", &SpriteComponentConfig::m_pivot)
@@ -30,7 +30,14 @@ namespace Diorama
                 ->Field("UvMax", &SpriteComponentConfig::m_uvMax)
                 ->Field("FlipHorizontal", &SpriteComponentConfig::m_flipHorizontal)
                 ->Field("FlipVertical", &SpriteComponentConfig::m_flipVertical)
-                ->Field("SortOffset", &SpriteComponentConfig::m_sortOffset);
+                ->Field("SortOffset", &SpriteComponentConfig::m_sortOffset)
+                ->Field("AnimEnabled", &SpriteComponentConfig::m_animEnabled)
+                ->Field("FrameColumns", &SpriteComponentConfig::m_frameColumns)
+                ->Field("FrameRows", &SpriteComponentConfig::m_frameRows)
+                ->Field("FrameCount", &SpriteComponentConfig::m_frameCount)
+                ->Field("FramesPerSecond", &SpriteComponentConfig::m_framesPerSecond)
+                ->Field("Loop", &SpriteComponentConfig::m_loop)
+                ->Field("StartFrame", &SpriteComponentConfig::m_startFrame);
 
             if (auto* editContext = serializeContext->GetEditContext())
             {
@@ -82,7 +89,31 @@ namespace Diorama
                         AZ::Edit::UIHandlers::Default,
                         &SpriteComponentConfig::m_sortOffset,
                         "Sort Offset",
-                        "Transparent draw-order bias; larger draws on top");
+                        "Transparent draw-order bias; larger draws on top")
+                    ->ClassElement(AZ::Edit::ClassElements::Group, "Animation")
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &SpriteComponentConfig::m_animEnabled,
+                        "Animated",
+                        "Play frames from a sprite sheet on a timer")
+                    ->DataElement(AZ::Edit::UIHandlers::Default, &SpriteComponentConfig::m_frameColumns, "Columns", "Sprite-sheet columns")
+                    ->Attribute(AZ::Edit::Attributes::Min, 1)
+                    ->DataElement(AZ::Edit::UIHandlers::Default, &SpriteComponentConfig::m_frameRows, "Rows", "Sprite-sheet rows")
+                    ->Attribute(AZ::Edit::Attributes::Min, 1)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &SpriteComponentConfig::m_frameCount,
+                        "Frame Count",
+                        "Number of frames played (allows a partial last row)")
+                    ->Attribute(AZ::Edit::Attributes::Min, 1)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default, &SpriteComponentConfig::m_framesPerSecond, "Frames Per Second", "Playback rate")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                    ->Attribute(AZ::Edit::Attributes::Suffix, " fps")
+                    ->DataElement(AZ::Edit::UIHandlers::Default, &SpriteComponentConfig::m_loop, "Loop", "Loop or hold the last frame")
+                    ->DataElement(AZ::Edit::UIHandlers::Default, &SpriteComponentConfig::m_startFrame, "Start Frame", "Frame shown first")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0);
             }
         }
     }
@@ -114,5 +145,52 @@ namespace Diorama
         outV[2] = vMin; // top-right
         outU[3] = uMin;
         outV[3] = vMin; // top-left
+    }
+
+    int SpriteComponentConfig::GetFrameColumns() const
+    {
+        return m_frameColumns < 1 ? 1 : m_frameColumns;
+    }
+
+    int SpriteComponentConfig::GetFrameRows() const
+    {
+        return m_frameRows < 1 ? 1 : m_frameRows;
+    }
+
+    int SpriteComponentConfig::GetFrameCount() const
+    {
+        const int maxFrames = GetFrameColumns() * GetFrameRows();
+        if (m_frameCount < 1)
+        {
+            return 1;
+        }
+        return m_frameCount > maxFrames ? maxFrames : m_frameCount;
+    }
+
+    void SpriteComponentConfig::GetFrameUVRegion(int frameIndex, AZ::Vector2& outMin, AZ::Vector2& outMax) const
+    {
+        const int columns = GetFrameColumns();
+        const int rows = GetFrameRows();
+        const int count = GetFrameCount();
+
+        // Clamp the requested frame into the valid range.
+        if (frameIndex < 0)
+        {
+            frameIndex = 0;
+        }
+        else if (frameIndex >= count)
+        {
+            frameIndex = count - 1;
+        }
+
+        // Frames fill the grid left-to-right, top-to-bottom, inside the base region.
+        const int column = frameIndex % columns;
+        const int row = frameIndex / columns;
+
+        const float cellWidth = (m_uvMax.GetX() - m_uvMin.GetX()) / static_cast<float>(columns);
+        const float cellHeight = (m_uvMax.GetY() - m_uvMin.GetY()) / static_cast<float>(rows);
+
+        outMin.Set(m_uvMin.GetX() + cellWidth * column, m_uvMin.GetY() + cellHeight * row);
+        outMax.Set(m_uvMin.GetX() + cellWidth * (column + 1), m_uvMin.GetY() + cellHeight * (row + 1));
     }
 } // namespace Diorama
