@@ -5,10 +5,11 @@
  * SPDX-License-Identifier: Apache-2.0 OR MIT
  */
 
-#include <Clients/SpriteRenderer.h>
+#include <Clients/SpriteFeatureProcessor.h>
 
 #include <AzCore/Math/Matrix3x3.h>
 #include <AzCore/Math/Vector3.h>
+#include <AzCore/Serialization/SerializeContext.h>
 
 #include <Atom/RPI.Public/DynamicDraw/DynamicDrawInterface.h>
 #include <Atom/RPI.Public/Image/ImageSystemInterface.h>
@@ -16,26 +17,17 @@
 #include <Atom/RPI.Public/Scene.h>
 #include <Atom/RPI.Public/Shader/Shader.h>
 #include <Atom/RPI.Public/View.h>
-#include <Atom/RPI.Public/ViewportContext.h>
-#include <Atom/RPI.Public/ViewportContextBus.h>
 
 namespace Diorama
 {
     namespace
     {
         // Product path of the sprite shader compiled from Assets/Diorama/Shaders.
-        // The gem's asset scan folder watches @GEMROOT:Diorama@/Assets, so the
-        // product path is rooted at "diorama/" (the gem name), lowercased.
         constexpr const char* SpriteShaderPath = "diorama/shaders/dioramasprite.azshader";
 
-        // Lazily constructed on first use rather than at namespace scope. A
-        // static AZ::Name constructs during shared-library load (_dl_init),
-        // before the AzCore NameDictionary singleton exists, so MakeName
-        // dereferences uninitialized state and crashes. This surfaces as a
-        // SIGSEGV when AzTestRunner dlopens the gem before the AZ environment is
-        // attached; in the editor the module loads post-bootstrap so it happened
-        // to survive. A function-local static defers construction until after
-        // bootstrap and is thread-safe.
+        // Lazily constructed: a static AZ::Name constructed at namespace scope
+        // would run before the NameDictionary exists and crash on load. See the
+        // matching note that prompted this pattern across the gem.
         const AZ::Name& TextureSrgInput()
         {
             static const AZ::Name name{ "m_texture" };
@@ -43,19 +35,41 @@ namespace Diorama
         }
     } // namespace
 
-    SpriteRenderer::SpriteHandle SpriteRenderer::RegisterSprite()
+    void SpriteFeatureProcessor::Reflect(AZ::ReflectContext* context)
+    {
+        if (auto* serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
+        {
+            serializeContext->Class<SpriteFeatureProcessor, AZ::RPI::FeatureProcessor>()->Version(0);
+        }
+    }
+
+    void SpriteFeatureProcessor::Activate()
+    {
+        // The draw context is created lazily in EnsureInitialized once the shader
+        // asset is ready; nothing else to set up here.
+        m_initialized = false;
+    }
+
+    void SpriteFeatureProcessor::Deactivate()
+    {
+        m_dynamicDraw = nullptr;
+        m_initialized = false;
+        m_sprites.clear();
+    }
+
+    SpriteFeatureProcessor::SpriteHandle SpriteFeatureProcessor::AcquireSprite()
     {
         const SpriteHandle handle = m_nextHandle++;
         m_sprites.emplace(handle, SpriteEntry{});
         return handle;
     }
 
-    void SpriteRenderer::UnregisterSprite(SpriteHandle handle)
+    void SpriteFeatureProcessor::ReleaseSprite(SpriteHandle handle)
     {
         m_sprites.erase(handle);
     }
 
-    void SpriteRenderer::UpdateSprite(SpriteHandle handle, const AZ::Transform& worldTransform, const SpriteComponentConfig& config)
+    void SpriteFeatureProcessor::UpdateSprite(SpriteHandle handle, const AZ::Transform& worldTransform, const SpriteComponentConfig& config)
     {
         auto it = m_sprites.find(handle);
         if (it == m_sprites.end())
@@ -66,40 +80,21 @@ namespace Diorama
         SpriteEntry& entry = it->second;
         entry.m_worldTransform = worldTransform;
         entry.m_config = config;
-        entry.m_visible = config.m_texture.IsReady();
     }
 
-    bool SpriteRenderer::EnsureInitialized()
+    bool SpriteFeatureProcessor::EnsureInitialized()
     {
         if (m_initialized)
         {
             return true;
         }
 
-        // Resolve the scene from the default viewport context. Until a viewport
-        // and its render scene exist there is nothing to draw into, so retry on a
-        // later frame rather than failing hard.
-        auto* viewportContextManager = AZ::Interface<AZ::RPI::ViewportContextRequestsInterface>::Get();
-        if (viewportContextManager == nullptr)
+        AZ::RPI::Scene* scene = GetParentScene();
+        if (scene == nullptr)
         {
             return false;
         }
 
-        AZ::RPI::ViewportContextPtr viewportContext = viewportContextManager->GetDefaultViewportContext();
-        if (!viewportContext)
-        {
-            return false;
-        }
-
-        m_scene = viewportContext->GetRenderScene().get();
-        if (m_scene == nullptr)
-        {
-            return false;
-        }
-
-        // Load the sprite shader. The asset is produced by the Asset Processor
-        // from Assets/Diorama/Shaders/DioramaSprite.shader. If it is not ready
-        // yet, retry next frame.
         AZ::Data::Instance<AZ::RPI::Shader> shader = AZ::RPI::LoadShader(SpriteShaderPath);
         if (!shader)
         {
@@ -116,44 +111,36 @@ namespace Diorama
         m_dynamicDraw->InitVertexFormat({ { "POSITION", AZ::RHI::Format::R32G32B32_FLOAT },
                                           { "COLOR", AZ::RHI::Format::R8G8B8A8_UNORM },
                                           { "TEXCOORD", AZ::RHI::Format::R32G32_FLOAT } });
-        m_dynamicDraw->SetOutputScope(m_scene);
+        m_dynamicDraw->SetOutputScope(scene);
         m_dynamicDraw->EndInit();
 
         m_initialized = m_dynamicDraw->IsReady();
         return m_initialized;
     }
 
-    void SpriteRenderer::BuildQuad(
-        const SpriteEntry& entry, bool billboard, const AZ::Transform& cameraTransform, SpriteVertex outVertices[4]) const
+    void SpriteFeatureProcessor::AppendQuad(
+        const SpriteEntry& entry, const AZ::Transform& cameraTransform, SpriteVertex outVertices[4]) const
     {
         const SpriteComponentConfig& config = entry.m_config;
 
         const float halfWidth = config.m_size.GetX() * 0.5f;
         const float halfHeight = config.m_size.GetY() * 0.5f;
 
-        // Pivot shifts the quad so the configured normalized point sits on the
-        // entity origin. A pivot of (0.5, 0.5) leaves the quad centered.
         const float pivotOffsetX = (0.5f - config.m_pivot.GetX()) * config.m_size.GetX();
         const float pivotOffsetY = (0.5f - config.m_pivot.GetY()) * config.m_size.GetY();
 
-        // Local corner offsets (right, up) before orientation, pivot applied.
         const float cornerX[4] = { -halfWidth, halfWidth, halfWidth, -halfWidth };
         const float cornerY[4] = { -halfHeight, -halfHeight, halfHeight, halfHeight };
 
-        // UVs come from the config so atlas sub-rectangles and flips are applied.
         float uvU[4];
         float uvV[4];
         config.GetCornerUVs(uvU, uvV);
 
-        // Choose the basis that orients the quad. In billboard mode the quad uses
-        // the camera right and up axes so it always faces the viewer. Otherwise
-        // it uses the entity transform basis (local X as right, local Z as up),
-        // which makes an upright card in the world.
         AZ::Vector3 right;
         AZ::Vector3 up;
         const AZ::Vector3 origin = entry.m_worldTransform.GetTranslation();
 
-        if (billboard)
+        if (config.m_billboard)
         {
             const AZ::Matrix3x3 cameraBasis = AZ::Matrix3x3::CreateFromTransform(cameraTransform);
             right = cameraBasis.GetColumn(0);
@@ -181,54 +168,62 @@ namespace Diorama
         }
     }
 
-    void SpriteRenderer::DrawSprites()
+    void SpriteFeatureProcessor::Render(const RenderPacket& packet)
     {
-        if (m_sprites.empty())
+        if (m_sprites.empty() || !EnsureInitialized())
         {
             return;
         }
 
-        if (!EnsureInitialized())
-        {
-            return;
-        }
-
-        // Camera transform is only needed for billboarded sprites. Querying it
-        // once per frame keeps non-billboard rendering free of viewport lookups.
+        // Billboarded sprites face the primary view. Query its camera once.
         AZ::Transform cameraTransform = AZ::Transform::CreateIdentity();
-        if (auto viewportContextManager = AZ::Interface<AZ::RPI::ViewportContextRequestsInterface>::Get())
+        if (!packet.m_views.empty() && packet.m_views.front())
         {
-            if (auto viewportContext = viewportContextManager->GetDefaultViewportContext())
-            {
-                if (const AZ::RPI::ViewPtr view = viewportContext->GetDefaultView())
-                {
-                    cameraTransform = view->GetCameraTransform();
-                }
-            }
+            cameraTransform = packet.m_views.front()->GetCameraTransform();
         }
 
-        // Fallback image used when a sprite's own texture has not finished
-        // loading yet. Drawing a tinted quad with the engine's white system image
-        // keeps the sprite visible (and makes missing textures obvious) instead of
-        // silently dropping the draw.
         AZ::Data::Instance<AZ::RPI::Image> fallbackImage;
         if (auto* imageSystem = AZ::RPI::ImageSystemInterface::Get())
         {
             fallbackImage = imageSystem->GetSystemImage(AZ::RPI::SystemImage::White);
         }
 
+        // Build the batch plan keyed by (sort key, texture). The texture id is the
+        // sprite's streaming-image asset id sub-id-folded into 64 bits; sprites
+        // sharing it can draw together.
+        m_itemScratch.clear();
+        m_itemScratch.reserve(m_sprites.size());
+        AZStd::vector<const SpriteEntry*> entryByIndex;
+        entryByIndex.reserve(m_sprites.size());
         for (const auto& [handle, entry] : m_sprites)
         {
+            const AZ::Data::AssetId assetId = entry.m_config.m_texture.GetId();
+            const AZ::u64 textureId = assetId.IsValid() ? (assetId.m_guid.GetHash() ^ static_cast<AZ::u64>(assetId.m_subId)) : 0;
+            const AZ::u32 index = static_cast<AZ::u32>(entryByIndex.size());
+            m_itemScratch.push_back(
+                SpriteBatchPlan::Item{ SpriteBatchPlan::BatchKey{ textureId, static_cast<AZ::s64>(entry.m_config.m_sortOffset) }, index });
+            entryByIndex.push_back(&entry);
+        }
+
+        const SpriteBatchPlan::Plan plan = SpriteBatchPlan::Build(m_itemScratch);
+
+        static const AZ::u16 quadIndices[6] = { 0, 1, 2, 0, 2, 3 };
+
+        for (const SpriteBatchPlan::Batch& batch : plan.m_batches)
+        {
+            // All sprites in a batch share a texture; resolve it once from the
+            // first member. A batch never contains a zero (missing) texture
+            // because Build drops those.
+            const SpriteEntry* first = entryByIndex[plan.m_ordered[batch.m_begin].m_index];
             AZ::Data::Instance<AZ::RPI::Image> image;
-            bool usingFallback = false;
-            if (entry.m_config.m_texture.IsReady())
+            if (first->m_config.m_texture.IsReady())
             {
-                image = AZ::RPI::StreamingImage::FindOrCreate(entry.m_config.m_texture);
+                image = AZ::RPI::StreamingImage::FindOrCreate(first->m_config.m_texture);
             }
-            if (!image)
+            const bool usingFallback = !image;
+            if (usingFallback)
             {
                 image = fallbackImage;
-                usingFallback = true;
             }
             if (!image)
             {
@@ -240,37 +235,51 @@ namespace Diorama
             {
                 continue;
             }
-
             const AZ::RHI::ShaderInputImageIndex imageIndex = drawSrg->FindShaderInputImageIndex(TextureSrgInput());
             if (!imageIndex.IsValid())
             {
                 continue;
             }
-
             drawSrg->SetImage(imageIndex, image);
             drawSrg->Compile();
 
-            SpriteVertex vertices[4];
-            BuildQuad(entry, entry.m_config.m_billboard, cameraTransform, vertices);
+            // Pack all quads in this batch into one vertex/index stream.
+            m_vertexScratch.clear();
+            m_indexScratch.clear();
+            const AZ::u32 spriteCount = batch.Count();
+            m_vertexScratch.resize(spriteCount * 4);
+            m_indexScratch.reserve(spriteCount * 6);
 
-            // Tint the fallback quad magenta so an unloaded texture is obvious in
-            // the viewport rather than looking like an intentional white sprite.
-            if (usingFallback)
+            for (AZ::u32 n = 0; n < spriteCount; ++n)
             {
-                const AZ::u32 debugTint = AZ::Color(1.0f, 0.0f, 1.0f, 1.0f).ToU32();
-                for (int i = 0; i < 4; ++i)
+                const SpriteEntry* entry = entryByIndex[plan.m_ordered[batch.m_begin + n].m_index];
+                SpriteVertex* quad = &m_vertexScratch[n * 4];
+                AppendQuad(*entry, cameraTransform, quad);
+
+                if (usingFallback)
                 {
-                    vertices[i].m_color = debugTint;
+                    const AZ::u32 debugTint = AZ::Color(1.0f, 0.0f, 1.0f, 1.0f).ToU32();
+                    for (int i = 0; i < 4; ++i)
+                    {
+                        quad[i].m_color = debugTint;
+                    }
+                }
+
+                const AZ::u16 base = static_cast<AZ::u16>(n * 4);
+                for (int k = 0; k < 6; ++k)
+                {
+                    m_indexScratch.push_back(static_cast<AZ::u16>(base + quadIndices[k]));
                 }
             }
 
-            static const AZ::u16 indices[6] = { 0, 1, 2, 0, 2, 3 };
-
-            // Bias the draw order for 2.5D layering. The sort key is consumed by
-            // the transparent pass so larger offsets draw on top of smaller ones.
-            m_dynamicDraw->SetSortKey(static_cast<AZ::RHI::DrawItemSortKey>(entry.m_config.m_sortOffset));
-
-            m_dynamicDraw->DrawIndexed(vertices, 4, indices, 6, AZ::RHI::IndexFormat::Uint16, drawSrg);
+            m_dynamicDraw->SetSortKey(static_cast<AZ::RHI::DrawItemSortKey>(batch.m_key.m_sortKey));
+            m_dynamicDraw->DrawIndexed(
+                m_vertexScratch.data(),
+                static_cast<uint32_t>(m_vertexScratch.size()),
+                m_indexScratch.data(),
+                static_cast<uint32_t>(m_indexScratch.size()),
+                AZ::RHI::IndexFormat::Uint16,
+                drawSrg);
         }
     }
 } // namespace Diorama

@@ -8,6 +8,7 @@
 #include <AzTest/AzTest.h>
 
 #include <Clients/SpriteAnimation.h>
+#include <Clients/SpriteBatchPlan.h>
 #include <Diorama/SpriteComponentConfig.h>
 
 namespace Diorama
@@ -212,5 +213,89 @@ namespace Diorama
         const SpriteAnimation::FrameState next = SpriteAnimation::Advance({ 3, 0.0f, false }, 0.1f, 10.0f, 4, false);
         EXPECT_EQ(next.m_frame, 3);
         EXPECT_TRUE(next.m_finished);
+    }
+
+    using SpriteBatchPlanTest = ::testing::Test;
+
+    namespace
+    {
+        SpriteBatchPlan::Item MakeItem(AZ::u64 textureId, AZ::s64 sortKey, AZ::u32 index)
+        {
+            return SpriteBatchPlan::Item{ SpriteBatchPlan::BatchKey{ textureId, sortKey }, index };
+        }
+    } // namespace
+
+    TEST_F(SpriteBatchPlanTest, Empty_ProducesNoBatches)
+    {
+        const SpriteBatchPlan::Plan plan = SpriteBatchPlan::Build({});
+        EXPECT_TRUE(plan.m_batches.empty());
+        EXPECT_TRUE(plan.m_ordered.empty());
+    }
+
+    TEST_F(SpriteBatchPlanTest, SameTextureAndSort_CoalesceIntoOneBatch)
+    {
+        AZStd::vector<SpriteBatchPlan::Item> items{ MakeItem(7, 0, 0), MakeItem(7, 0, 1), MakeItem(7, 0, 2) };
+        const SpriteBatchPlan::Plan plan = SpriteBatchPlan::Build(items);
+
+        ASSERT_EQ(plan.m_batches.size(), 1u);
+        EXPECT_EQ(plan.m_batches[0].Count(), 3u);
+        EXPECT_EQ(plan.m_batches[0].m_key.m_textureId, 7u);
+    }
+
+    TEST_F(SpriteBatchPlanTest, DifferentTextures_SplitIntoSeparateBatches)
+    {
+        AZStd::vector<SpriteBatchPlan::Item> items{ MakeItem(1, 0, 0), MakeItem(2, 0, 1), MakeItem(1, 0, 2) };
+        const SpriteBatchPlan::Plan plan = SpriteBatchPlan::Build(items);
+
+        // Three sprites, two textures at the same sort key: texture 1 has two
+        // sprites that coalesce, texture 2 has one. Two batches total.
+        ASSERT_EQ(plan.m_batches.size(), 2u);
+        EXPECT_EQ(plan.m_batches[0].m_key.m_textureId, 1u);
+        EXPECT_EQ(plan.m_batches[0].Count(), 2u);
+        EXPECT_EQ(plan.m_batches[1].m_key.m_textureId, 2u);
+        EXPECT_EQ(plan.m_batches[1].Count(), 1u);
+    }
+
+    TEST_F(SpriteBatchPlanTest, OrdersBySortKeyAscending)
+    {
+        // Provide out of order; expect ordering by sort key (back to front).
+        AZStd::vector<SpriteBatchPlan::Item> items{ MakeItem(1, 5, 0), MakeItem(1, -3, 1), MakeItem(1, 0, 2) };
+        const SpriteBatchPlan::Plan plan = SpriteBatchPlan::Build(items);
+
+        ASSERT_EQ(plan.m_batches.size(), 3u);
+        EXPECT_EQ(plan.m_batches[0].m_key.m_sortKey, -3);
+        EXPECT_EQ(plan.m_batches[1].m_key.m_sortKey, 0);
+        EXPECT_EQ(plan.m_batches[2].m_key.m_sortKey, 5);
+    }
+
+    TEST_F(SpriteBatchPlanTest, SameTextureDifferentSort_DoesNotCoalesce)
+    {
+        // Same texture must NOT merge across sort keys, or 2.5D layering breaks.
+        AZStd::vector<SpriteBatchPlan::Item> items{ MakeItem(9, 0, 0), MakeItem(9, 1, 1) };
+        const SpriteBatchPlan::Plan plan = SpriteBatchPlan::Build(items);
+        EXPECT_EQ(plan.m_batches.size(), 2u);
+    }
+
+    TEST_F(SpriteBatchPlanTest, ZeroTextureItems_AreDropped)
+    {
+        AZStd::vector<SpriteBatchPlan::Item> items{ MakeItem(0, 0, 0), MakeItem(5, 0, 1), MakeItem(0, 0, 2) };
+        const SpriteBatchPlan::Plan plan = SpriteBatchPlan::Build(items);
+
+        ASSERT_EQ(plan.m_ordered.size(), 1u);
+        EXPECT_EQ(plan.m_ordered[0].m_index, 1u);
+        ASSERT_EQ(plan.m_batches.size(), 1u);
+        EXPECT_EQ(plan.m_batches[0].m_key.m_textureId, 5u);
+    }
+
+    TEST_F(SpriteBatchPlanTest, StableWithinBatch_PreservesRegistrationOrder)
+    {
+        // Two sprites, same key, given indices 4 then 2; ordering within the
+        // batch must keep their input order (stable), not sort by index.
+        AZStd::vector<SpriteBatchPlan::Item> items{ MakeItem(3, 0, 4), MakeItem(3, 0, 2) };
+        const SpriteBatchPlan::Plan plan = SpriteBatchPlan::Build(items);
+
+        ASSERT_EQ(plan.m_ordered.size(), 2u);
+        EXPECT_EQ(plan.m_ordered[0].m_index, 4u);
+        EXPECT_EQ(plan.m_ordered[1].m_index, 2u);
     }
 } // namespace Diorama

@@ -16,6 +16,16 @@ alpha (the 0.x line), minor releases may include breaking changes.
   identically at runtime and in the editor viewport.
 - Unit tests for per-frame UV regions and the frame-advance logic.
 
+### Changed
+- Sprite rendering now goes through a proper Atom scene feature processor
+  (`SpriteFeatureProcessor`) instead of an immediate-mode per-sprite draw loop.
+  Sprites that share a texture and sort key are batched into a single draw call
+  with one shader resource group, which scales to large sprite counts. The
+  immediate-mode `SpriteRenderer` and its request bus are removed; components
+  register with the scene's feature processor through the shared presenter.
+- Unit tests for the batch-planning logic (grouping, sort-key ordering,
+  missing-texture handling, stable in-batch order).
+
 ## [0.1.0-alpha] - 2026-05-29
 
 First alpha. World-space sprite rendering through Atom, with editor tooling and

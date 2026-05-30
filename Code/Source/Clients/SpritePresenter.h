@@ -18,6 +18,8 @@
 
 namespace Diorama
 {
+    class SpriteFeatureProcessor;
+
     //! Shared helper that connects a sprite (runtime or editor) to the gem's
     //! SpriteRenderer. It registers a draw handle, tracks the owning entity's
     //! world transform, requests the texture load, and pushes updates to the
@@ -73,7 +75,11 @@ namespace Diorama
         SpriteComponentConfig m_config;
         AZ::Transform m_worldTransform = AZ::Transform::CreateIdentity();
         SpriteAnimation::FrameState m_frameState;
-        AZ::u32 m_handle = 0; // SpriteRenderer::InvalidHandle
+        //! Scene feature processor that owns this sprite's draw data. Resolved at
+        //! Connect from the entity's scene; null if the sprite has no render scene
+        //! (in which case the sprite is simply not drawn).
+        SpriteFeatureProcessor* m_featureProcessor = nullptr;
+        AZ::u32 m_handle = 0; // SpriteFeatureProcessor::InvalidHandle
         bool m_connected = false;
     };
 } // namespace Diorama

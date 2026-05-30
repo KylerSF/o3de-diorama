@@ -5,8 +5,10 @@
  * SPDX-License-Identifier: Apache-2.0 OR MIT
  */
 
+#include <Clients/SpriteFeatureProcessor.h>
 #include <Clients/SpritePresenter.h>
-#include <Clients/SpriteRendererBus.h>
+
+#include <Atom/RPI.Public/Scene.h>
 
 namespace Diorama
 {
@@ -29,8 +31,21 @@ namespace Diorama
         m_worldTransform = AZ::Transform::CreateIdentity();
         AZ::TransformBus::EventResult(m_worldTransform, m_entityId, &AZ::TransformBus::Events::GetWorldTM);
 
-        // Register with the shared renderer and keep the returned handle.
-        DioramaSpriteRendererRequestBus::BroadcastResult(m_handle, &DioramaSpriteRendererRequests::RegisterSprite);
+        // Resolve the sprite feature processor for this entity's scene, enabling
+        // it on demand the first time a sprite appears in a scene. If there is no
+        // render scene yet the sprite simply is not drawn until a later Connect.
+        if (AZ::RPI::Scene* scene = AZ::RPI::Scene::GetSceneForEntityId(m_entityId))
+        {
+            m_featureProcessor = scene->GetFeatureProcessor<SpriteFeatureProcessor>();
+            if (m_featureProcessor == nullptr)
+            {
+                m_featureProcessor = scene->EnableFeatureProcessor<SpriteFeatureProcessor>();
+            }
+        }
+        if (m_featureProcessor != nullptr)
+        {
+            m_handle = m_featureProcessor->AcquireSprite();
+        }
 
         QueueTextureLoad();
         AZ::TransformNotificationBus::Handler::BusConnect(m_entityId);
@@ -51,11 +66,12 @@ namespace Diorama
         AZ::Data::AssetBus::Handler::BusDisconnect();
         AZ::TickBus::Handler::BusDisconnect();
 
-        if (m_handle != 0)
+        if (m_featureProcessor != nullptr && m_handle != 0)
         {
-            DioramaSpriteRendererRequestBus::Broadcast(&DioramaSpriteRendererRequests::UnregisterSprite, m_handle);
-            m_handle = 0;
+            m_featureProcessor->ReleaseSprite(m_handle);
         }
+        m_featureProcessor = nullptr;
+        m_handle = 0;
 
         m_connected = false;
     }
@@ -104,7 +120,7 @@ namespace Diorama
 
     void SpritePresenter::Push()
     {
-        if (!m_connected || m_handle == 0)
+        if (!m_connected || m_featureProcessor == nullptr || m_handle == 0)
         {
             return;
         }
@@ -112,7 +128,7 @@ namespace Diorama
         // Static sprite: send the configuration as-is, no copy.
         if (!m_config.m_animEnabled)
         {
-            DioramaSpriteRendererRequestBus::Broadcast(&DioramaSpriteRendererRequests::UpdateSprite, m_handle, m_worldTransform, m_config);
+            m_featureProcessor->UpdateSprite(m_handle, m_worldTransform, m_config);
             return;
         }
 
@@ -120,7 +136,7 @@ namespace Diorama
         // Flips still apply on top through the renderer's GetCornerUVs.
         SpriteComponentConfig frameConfig = m_config;
         m_config.GetFrameUVRegion(m_frameState.m_frame, frameConfig.m_uvMin, frameConfig.m_uvMax);
-        DioramaSpriteRendererRequestBus::Broadcast(&DioramaSpriteRendererRequests::UpdateSprite, m_handle, m_worldTransform, frameConfig);
+        m_featureProcessor->UpdateSprite(m_handle, m_worldTransform, frameConfig);
     }
 
     void SpritePresenter::OnTick(float deltaTime, AZ::ScriptTimePoint /*time*/)
