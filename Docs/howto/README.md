@@ -13,7 +13,7 @@ example under [../examples](../examples).
 | 2 | Animated Sprite | Planned |
 | 3 | [Sprite Atlas](03-sprite-atlas.md) | Written |
 | 4 | [Tilemap](04-tilemap.md) | Written |
-| 5 | Parallax and Layers (2.5D) | Planned |
+| 5 | [Parallax and Layers (2.5D)](05-parallax-layers.md) | Written |
 | 6 | [Twin-Stick Shooter (capstone)](06-twin-stick.md) | Written |
 
 Guides are being written alongside the features they teach. Rungs 1 and 2 cover
@@ -26,6 +26,8 @@ animation); their written guides are still to come.
 | ------- | ------ |
 | Sprite Atlas | [../examples/sprite_atlas.py](../examples/sprite_atlas.py) |
 | Tilemap | [../examples/tilemap.py](../examples/tilemap.py) |
+| Parallax and Layers | [../examples/parallax_layers.py](../examples/parallax_layers.py) |
+| Twin-Stick Shooter | [../../Samples/TwinStick](../../Samples/TwinStick) |
 
 Run an example in the editor:
 
