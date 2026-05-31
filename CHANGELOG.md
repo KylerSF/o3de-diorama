@@ -9,6 +9,14 @@ alpha (the 0.x line), minor releases may include breaking changes.
 ## [Unreleased]
 
 ### Added
+- Twin-stick shooter sample game (teaching ladder rung 6), step 1: the player.
+  A Diorama-sprite player with top-down twin-stick movement built the standard
+  O3DE way (PhysX velocity, an input-bindings asset, a Lua controller). The Lua
+  expresses facing by flipping the sprite through `DioramaSpriteRequestBus`, so
+  ordinary gameplay drives the same AI-native bus an agent would. Ships the Lua
+  controller, the input bindings (WASD / mouse / gamepad, plus a fire binding for
+  later), and an editor build script under `Samples/TwinStick`. Enemies,
+  projectiles, and a HUD follow in later steps.
 - Tilemap component (teaching ladder rung 4): a world-space grid of cells, each
   drawing one cell of a shared atlas, rendered through the same batched sprite
   feature processor so a whole layer collapses into one draw call. Authored in
