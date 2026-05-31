@@ -9,6 +9,11 @@ alpha (the 0.x line), minor releases may include breaking changes.
 ## [Unreleased]
 
 ### Added
+- Parallax and Layers guide (teaching ladder rung 5): how to order overlapping
+  sprites and tilemaps into layers with Sort Offset, and a reusable parallax
+  script (`Assets/Diorama/Scripts/parallax_layer.lua`) that scrolls a layer at a
+  fraction of the camera's motion for a 2.5D depth effect. Includes a runnable
+  example that builds background/midground/foreground layers.
 - Twin-stick shooter sample game, step 4: scoring, HUD, and capstone assembly.
   A game/HUD controller (`twin_stick_game.lua`) tracks the score and drives a
   LyShine HUD; projectiles award score on a kill through `GameplayNotificationBus`
