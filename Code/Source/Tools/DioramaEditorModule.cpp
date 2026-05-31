@@ -9,6 +9,7 @@
 #include <Diorama/DioramaTypeIds.h>
 #include <DioramaModuleInterface.h>
 #include <Tools/EditorSpriteComponent.h>
+#include <Tools/EditorTilemapComponent.h>
 
 namespace Diorama
 {
@@ -29,6 +30,7 @@ namespace Diorama
                 {
                     DioramaEditorSystemComponent::CreateDescriptor(),
                     EditorSpriteComponent::CreateDescriptor(),
+                    EditorTilemapComponent::CreateDescriptor(),
                 });
         }
 

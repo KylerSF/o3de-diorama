@@ -1,0 +1,90 @@
+# How-To: Tilemap
+
+Teaching ladder rung 4. Builds on the [Sprite Atlas](03-sprite-atlas.md) guide:
+a tilemap is an atlas applied across a grid of cells, drawn as one batched layer.
+
+## What you will build
+
+A `Tilemap` component that fills a grid of cells, each showing one cell of a
+shared atlas texture, and an arena floor painted entirely through the AI-native
+`DioramaTilemapRequestBus`. This is the arena foundation for the twin-stick
+shooter capstone (rung 6).
+
+## The tilemap model
+
+A tilemap has two grids:
+
+- The **atlas grid** (`atlasColumns` x `atlasRows`) divides the atlas texture
+  into tile cells, numbered left-to-right, top-to-bottom starting at 0. This is
+  exactly the UV sub-region model from the atlas guide.
+- The **tilemap grid** (`columns` x `rows`) is the layout in the world. Each
+  cell holds an atlas cell index, or `-1` for an empty (undrawn) cell.
+
+Each tile is `tileSize` world units. Cells lie in the entity's local X (columns)
+and Z (rows) plane, centered on the entity origin, with row 0 at the top (+Z).
+Rotate the entity -90 degrees about X to lay the map flat as a floor, or leave it
+upright as a wall.
+
+## Why a tilemap (and not many sprites)
+
+You could place one Sprite per cell, but a tilemap is a single component that
+owns the whole grid, authors compactly (one atlas + an index per cell), and,
+because every cell shares the atlas and sort key, renders in **one draw call**.
+Internally the tilemap registers each non-empty cell with the same batched
+sprite feature processor the Sprite component uses, so it reuses that entire
+tested render path; the batching collapses the layer into one draw.
+
+## The API
+
+The `DioramaTilemapRequestBus` mirrors the inspector with typed, forgiving verbs:
+
+| Verb | Effect |
+| ---- | ------ |
+| `SetAtlasByPath(productPath)` | Assign the atlas texture |
+| `SetAtlasGrid(columns, rows)` | Divide the atlas into cells |
+| `SetGridSize(columns, rows)` | Set the tilemap dimensions |
+| `SetTileSize(width, height)` | World size of one tile |
+| `SetTile(column, row, tileIndex)` | Set one cell (`-1` clears it) |
+| `Fill(tileIndex)` | Set every cell |
+| `Clear()` | Empty every cell |
+| `SetTint(r, g, b, a)` | Tint the whole layer |
+| `SetSortOffset(sortOffset)` | Transparent draw-order bias |
+| `GetTilemapInfo()` | Resolved state (loaded, visible, filled count) |
+
+Every value is validated and clamped (dimensions to at least 1, tile size to at
+least 0), so a bad argument is corrected rather than crashing.
+
+## Steps (in the editor)
+
+1. Create an entity and add the **Tilemap** component (Diorama category).
+2. In **Atlas**, set the atlas texture and its columns/rows.
+3. In **Grid**, set the tilemap columns/rows and the tile size.
+4. Paint cells. Cell contents are authored through the request bus or a build
+   script (see the runnable example); the inspector exposes the atlas, grid, and
+   appearance, not the raw cell array.
+
+## Runnable example
+
+[`../examples/tilemap.py`](../examples/tilemap.py) builds an 8x8 checkerboard
+arena with a blue border from the 2x2 sample atlas, entirely through the bus,
+then verifies the result with `GetTilemapInfo` (no screenshot needed):
+
+```bash
+<engine>/bin/Linux/profile/Default/Editor \
+  --project-path=/path/to/YourProject \
+  --runpython /path/to/o3de-diorama/Docs/examples/tilemap.py
+```
+
+## Verifying without a screenshot
+
+`GetTilemapInfo` returns the resolved state: the resolved atlas path, whether the
+atlas has loaded, whether the layer is drawing (`visible`), the grid and atlas
+dimensions, the tile size, and `filledTileCount` (how many cells are non-empty).
+An agent paints cells and confirms `filledTileCount` matches its intent, closing
+the loop without eyeballing pixels.
+
+## Next
+
+Rung 5 (Parallax and Layers) stacks tilemaps and sprites at different sort
+offsets and depths for a 2.5D look. Rung 6 (the twin-stick capstone) uses a
+tilemap as the arena floor under sprite-based players, enemies, and projectiles.
