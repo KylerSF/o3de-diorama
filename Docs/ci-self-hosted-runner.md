@@ -10,6 +10,17 @@ This is opt-in by design: the always-on gate is lint. Build/test runs when a
 maintainer triggers it manually or labels a PR, so contributors without the
 hardware are never blocked.
 
+**Current posture (on-demand).** No always-on self-hosted runner is registered.
+The practical pre-merge gate for a code change is running
+`scripts/ci_build_test.sh` locally (see [Running the script locally](#running-the-script-locally)),
+which performs the same build and tests as the workflow. The `ci:build` label
+and the `O3DE_ENGINE_PATH` / `DIORAMA_PROJECT` repository variables are already
+configured, so the workflow can run as soon as a runner is brought online on
+demand. A persistent runner is intentionally avoided while the repository is
+public-facing, because a self-hosted runner that executes pull-request code is a
+security risk for fork contributions; bring one online only for trusted runs and
+take it offline afterward.
+
 ## What the runner needs
 
 - A machine with O3DE **26.05** installed (the SDK, with `scripts/o3de.sh` and

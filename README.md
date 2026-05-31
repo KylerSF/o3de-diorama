@@ -156,12 +156,15 @@ Two workflows run in CI:
   whitespace/EOF hygiene, and JSON manifest validation. This is the gate every
   push and pull request must pass. Format C++ with clang-format **18.1.8** to
   match it (a newer local version may format differently).
-- **build-test** (opt-in, self-hosted): compiles the gem through a host O3DE
-  project and runs the unit tests. Building needs the full O3DE SDK, so this
-  runs on a self-hosted runner with the engine, triggered manually or by adding
-  the `ci:build` label to a pull request. See
-  [Docs/ci-self-hosted-runner.md](Docs/ci-self-hosted-runner.md). The same build
-  and test steps are in `scripts/ci_build_test.sh`, which you can run locally.
+- **build-test** (on-demand, self-hosted): compiles the gem through a host O3DE
+  project and runs the unit tests. Building needs the full O3DE SDK, which does
+  not fit on a hosted runner, so there is no always-on build runner. In practice
+  the build and test gate is run **on demand** before merging a code change, by
+  running `scripts/ci_build_test.sh` locally (it does the same configure, build,
+  and `AzTestRunner` steps as the workflow). The `build-test` workflow stays
+  available for a runner brought online on demand: trigger it manually or add the
+  `ci:build` label to a pull request. See
+  [Docs/ci-self-hosted-runner.md](Docs/ci-self-hosted-runner.md).
 
 ## License
 
