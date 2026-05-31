@@ -11,8 +11,8 @@ It is built incrementally; each step adds a piece and is runnable on its own:
 | ---- | ---- | ------ |
 | 1 | Player: sprite + twin-stick movement | Done |
 | 2 | Enemies, chase AI, waves | Done |
-| 3 | Projectiles and collision | This step |
-| 4 | Scoring and HUD (LyShine) | Planned |
+| 3 | Projectiles and collision | Done |
+| 4 | Scoring and HUD (LyShine) | Done |
 
 The arena floor is a Diorama [Tilemap](../../Docs/howto/04-tilemap.md).
 
@@ -37,8 +37,13 @@ The arena floor is a Diorama [Tilemap](../../Docs/howto/04-tilemap.md).
 - `Samples/TwinStick/build_player.py` -- assembles the player entity.
 - `Samples/TwinStick/build_enemy.py` -- assembles the enemy entity (save it as a
   spawnable prefab for the spawner to use).
+- `Assets/Diorama/TwinStick/Scripts/twin_stick_game.lua` -- game/HUD controller:
+  tracks the score, loads the LyShine HUD canvas, and updates it when it receives
+  `EnemyKilled` events.
 - `Samples/TwinStick/build_projectile.py` -- assembles the projectile entity
   (save it as a spawnable prefab for the player to fire).
+- `Samples/TwinStick/build_game.py` -- the capstone assembler: builds the whole
+  scene (arena, player, camera, game controller, spawner) in one run.
 
 ## Player entity spec
 
@@ -152,3 +157,38 @@ Build the projectile, save it as a prefab, and wire it to the player:
 Save the `Projectile` entity as a prefab and set the player's `ProjectilePrefab`
 property to it. Enter game mode: aim and hold fire to shoot; projectiles destroy
 enemies on contact.
+
+## Game controller and HUD spec
+
+A single controller entity runs the score and HUD:
+
+| Component | Key settings |
+| --------- | ------------ |
+| Transform | Anywhere |
+| Lua Script | Script `twin_stick_game.lua` |
+| Tag | `Game` (so projectiles can find it) |
+
+Set the script's `HudCanvas` to a LyShine canvas (e.g. `hud.uicanvas`) that
+contains a UI **Text** element named `ScoreText`. Create the canvas in the UI
+Editor; the controller loads it with `UiCanvasManagerBus.LoadCanvas` and updates
+the text with `UiTextBus.SetText`, guarding gracefully if the canvas is absent.
+
+Score is decoupled: a projectile sends an `EnemyKilled` event on
+`GameplayNotificationBus` to the `Game`-tagged entity, and the controller adds
+`PointsPerKill` and refreshes the HUD. This is the Diorama (world) vs LyShine
+(UI) split in action.
+
+## Building the whole game at once
+
+`build_game.py` assembles the arena, player, camera, game controller, and spawner
+in one run, configuring all Diorama parts through the typed buses:
+
+```bash
+<engine>/bin/Linux/profile/Default/Editor \
+  --project-path=/path/to/YourProject \
+  --runpython /path/to/o3de-diorama/Samples/TwinStick/build_game.py
+```
+
+It logs the remaining standard-O3DE wiring checklist (Lua/input/prefab/canvas
+references). See [the rung 6 guide](../../Docs/howto/06-twin-stick.md) for how the
+pieces fit together.

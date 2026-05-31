@@ -14,7 +14,7 @@ example under [../examples](../examples).
 | 3 | [Sprite Atlas](03-sprite-atlas.md) | Written |
 | 4 | [Tilemap](04-tilemap.md) | Written |
 | 5 | Parallax and Layers (2.5D) | Planned |
-| 6 | Twin-Stick Shooter (capstone) | Planned |
+| 6 | [Twin-Stick Shooter (capstone)](06-twin-stick.md) | Written |
 
 Guides are being written alongside the features they teach. Rungs 1 and 2 cover
 functionality that already ships (the Sprite component and sprite-sheet

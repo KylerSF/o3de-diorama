@@ -23,6 +23,7 @@ local TwinStickProjectile = {
 function TwinStickProjectile:OnActivate()
     self.age = 0.0
     self.enemyTag = Crc32("Enemy")
+    self.gameTag = Crc32("Game")
 
     -- Launch along the entity's forward (local +X), which the spawner aimed by
     -- setting the spawn yaw.
@@ -62,6 +63,11 @@ function TwinStickProjectile:OnCollisionBegin(otherEntityId, contacts)
     -- Only react to enemies; ignore walls and the player.
     local isEnemy = TagComponentRequestBus.Event.HasTag(otherEntityId, self.enemyTag)
     if isEnemy then
+        -- Award score: tell the "Game"-tagged controller an enemy was killed.
+        local game = TagGlobalRequestBus.Event.RequestTaggedEntities(self.gameTag)
+        if game ~= nil and game:IsValid() then
+            GameplayNotificationBus.Event.OnEventBegin(GameplayNotificationId(game, "EnemyKilled", "float"), 1.0)
+        end
         GameEntityContextRequestBus.Broadcast.DestroyGameEntityAndDescendants(otherEntityId)
         self:Destroy()
     end
