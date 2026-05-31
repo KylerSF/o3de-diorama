@@ -9,6 +9,13 @@ alpha (the 0.x line), minor releases may include breaking changes.
 ## [Unreleased]
 
 ### Added
+- Twin-stick shooter sample game, step 4: scoring, HUD, and capstone assembly.
+  A game/HUD controller (`twin_stick_game.lua`) tracks the score and drives a
+  LyShine HUD; projectiles award score on a kill through `GameplayNotificationBus`
+  (the standard decoupled gameplay-event path), demonstrating the Diorama (world)
+  vs LyShine (UI) division of labor. Adds `build_game.py`, which assembles the
+  whole scene (tilemap arena, player, top-down camera, controller, spawner) in
+  one run, and the teaching-ladder rung 6 how-to that ties the capstone together.
 - Twin-stick shooter sample game, step 3: projectiles and collision. A
   projectile (`twin_stick_projectile.lua`) launches along its spawn direction
   through PhysX, lives briefly, and destroys any `Enemy`-tagged body it hits (and
