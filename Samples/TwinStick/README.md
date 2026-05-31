@@ -10,8 +10,8 @@ It is built incrementally; each step adds a piece and is runnable on its own:
 | Step | Adds | Status |
 | ---- | ---- | ------ |
 | 1 | Player: sprite + twin-stick movement | Done |
-| 2 | Enemies, chase AI, waves | This step |
-| 3 | Projectiles and collision | Planned |
+| 2 | Enemies, chase AI, waves | Done |
+| 3 | Projectiles and collision | This step |
 | 4 | Scoring and HUD (LyShine) | Planned |
 
 The arena floor is a Diorama [Tilemap](../../Docs/howto/04-tilemap.md).
@@ -31,9 +31,14 @@ The arena floor is a Diorama [Tilemap](../../Docs/howto/04-tilemap.md).
 - `Assets/Diorama/TwinStick/Scripts/twin_stick_spawner.lua` -- wave spawner:
   spawns the enemy prefab on a timer around the arena edge using the standard
   spawnable system (`SpawnableScriptMediator`), ramping the rate up over time.
+- `Assets/Diorama/TwinStick/Scripts/twin_stick_projectile.lua` -- launches along
+  its spawn direction, lives briefly, and destroys any `Enemy`-tagged body it
+  hits (and itself) via PhysX collision notifications.
 - `Samples/TwinStick/build_player.py` -- assembles the player entity.
 - `Samples/TwinStick/build_enemy.py` -- assembles the enemy entity (save it as a
   spawnable prefab for the spawner to use).
+- `Samples/TwinStick/build_projectile.py` -- assembles the projectile entity
+  (save it as a spawnable prefab for the player to fire).
 
 ## Player entity spec
 
@@ -87,6 +92,26 @@ shape the difficulty curve. The spawner uses `SpawnableScriptMediator` -- the
 standard O3DE runtime-spawning API -- so this is ordinary O3DE, not a Diorama
 special case.
 
+## Projectile entity spec
+
+Built by `build_projectile.py`, then **saved as a spawnable prefab** the player
+fires:
+
+| Component | Key settings |
+| --------- | ------------ |
+| Transform | Any (the player sets position and aim yaw at spawn) |
+| Diorama Sprite | Texture `sample_sprite.png`; Billboard on; small; bright tint |
+| PhysX Dynamic Rigid Body | Gravity **off** |
+| PhysX Collider | Small; **Report collisions** enabled |
+| Lua Script | Script `twin_stick_projectile.lua` |
+| Tag | `Projectile` |
+
+The player gets two new properties on `twin_stick_player.lua`: set
+**ProjectilePrefab** to this prefab and tune **FireCooldown**. The `fire` input
+(left mouse / right trigger) spawns a projectile facing the current aim; the
+projectile launches itself along that direction and destroys the first enemy it
+touches.
+
 ## Running step 1
 
 ```bash
@@ -113,3 +138,17 @@ Save the resulting `Enemy` entity as a prefab, create an entity with the
 `twin_stick_spawner.lua` script, and point its `EnemyPrefab` at that prefab.
 Enter game mode: enemies spawn around the edge and chase the player, with the
 wave rate ramping up over time.
+
+## Running step 3
+
+Build the projectile, save it as a prefab, and wire it to the player:
+
+```bash
+<engine>/bin/Linux/profile/Default/Editor \
+  --project-path=/path/to/YourProject \
+  --runpython /path/to/o3de-diorama/Samples/TwinStick/build_projectile.py
+```
+
+Save the `Projectile` entity as a prefab and set the player's `ProjectilePrefab`
+property to it. Enter game mode: aim and hold fire to shoot; projectiles destroy
+enemies on contact.

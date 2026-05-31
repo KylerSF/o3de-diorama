@@ -9,6 +9,13 @@ alpha (the 0.x line), minor releases may include breaking changes.
 ## [Unreleased]
 
 ### Added
+- Twin-stick shooter sample game, step 3: projectiles and collision. A
+  projectile (`twin_stick_projectile.lua`) launches along its spawn direction
+  through PhysX, lives briefly, and destroys any `Enemy`-tagged body it hits (and
+  itself) via PhysX collision notifications. The player gains fire input: holding
+  fire spawns projectiles toward the aim direction (rate-limited), spawned via
+  the standard spawnable system. Adds a projectile build script and the
+  projectile spec to the sample README.
 - Twin-stick shooter sample game, step 2: enemies and waves. A chase-AI enemy
   (`twin_stick_enemy.lua`) that finds the `Player`-tagged entity and pursues it
   through PhysX, facing its movement by flipping its Diorama sprite, and a wave
