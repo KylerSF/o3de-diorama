@@ -9,6 +9,10 @@ alpha (the 0.x line), minor releases may include breaking changes.
 ## [Unreleased]
 
 ### Added
+- Hello Sprite (rung 1) and Animated Sprite (rung 2) how-to guides with runnable
+  examples, completing the written teaching ladder (rungs 1-6). Rung 1 builds a
+  single sprite through the typed bus; rung 2 plays the 2x2 sample atlas as a
+  four-frame sheet via `PlaySpriteSheet`.
 - Parallax and Layers guide (teaching ladder rung 5): how to order overlapping
   sprites and tilemaps into layers with Sort Offset, and a reusable parallax
   script (`Assets/Diorama/Scripts/parallax_layer.lua`) that scrolls a layer at a
