@@ -80,20 +80,87 @@ namespace Diorama
             ->Attribute(AZ::Script::Attributes::Scope, AZ::Script::Attributes::ScopeFlags::Common)
             ->Attribute(AZ::Script::Attributes::Category, "Diorama")
             ->Attribute(AZ::Script::Attributes::Module, "diorama")
-            ->Event("SetTextureByPath", &DioramaSpriteRequestBus::Events::SetTextureByPath)
-            ->Event("SetSize", &DioramaSpriteRequestBus::Events::SetSize)
-            ->Event("SetPivot", &DioramaSpriteRequestBus::Events::SetPivot)
-            ->Event("SetTint", &DioramaSpriteRequestBus::Events::SetTint)
-            ->Event("SetBillboard", &DioramaSpriteRequestBus::Events::SetBillboard)
-            ->Event("SetDoubleSided", &DioramaSpriteRequestBus::Events::SetDoubleSided)
-            ->Event("SetUVRegion", &DioramaSpriteRequestBus::Events::SetUVRegion)
-            ->Event("SetFlip", &DioramaSpriteRequestBus::Events::SetFlip)
-            ->Event("SetSortOffset", &DioramaSpriteRequestBus::Events::SetSortOffset)
-            ->Event("SetFrameGrid", &DioramaSpriteRequestBus::Events::SetFrameGrid)
-            ->Event("SetAnimationEnabled", &DioramaSpriteRequestBus::Events::SetAnimationEnabled)
-            ->Event("SetPlayback", &DioramaSpriteRequestBus::Events::SetPlayback)
-            ->Event("SetStartFrame", &DioramaSpriteRequestBus::Events::SetStartFrame)
-            ->Event("PlaySpriteSheet", &DioramaSpriteRequestBus::Events::PlaySpriteSheet)
+            // Each Event passes per-argument {name, tooltip} metadata. This names
+            // and documents every argument in the BehaviorContext, where it
+            // surfaces in Script Canvas node pins and is readable by any tool
+            // that introspects the context (GetArgumentName / GetArgumentToolTip)
+            // to build an agent-facing schema. Note the editor's generated Python
+            // stub (azlmbr/diorama.pyi) lists EBus event arguments by type only,
+            // so this metadata does not reach that stub; it is the C++ reflection,
+            // not the .pyi, that carries the names.
+            ->Event(
+                "SetTextureByPath",
+                &DioramaSpriteRequestBus::Events::SetTextureByPath,
+                { { { "productPath",
+                      "Texture product path, e.g. 'diorama/textures/hero.png'. Returns false if it does not resolve to an asset." } } })
+            ->Event(
+                "SetSize",
+                &DioramaSpriteRequestBus::Events::SetSize,
+                { { { "width", "Quad width in world units; negative is clamped to zero." },
+                    { "height", "Quad height in world units; negative is clamped to zero." } } })
+            ->Event(
+                "SetPivot",
+                &DioramaSpriteRequestBus::Events::SetPivot,
+                { { { "x", "Normalized horizontal pivot, clamped to 0..1 (0.5 is centered)." },
+                    { "y", "Normalized vertical pivot, clamped to 0..1 (0.5 is centered)." } } })
+            ->Event(
+                "SetTint",
+                &DioramaSpriteRequestBus::Events::SetTint,
+                { { { "r", "Red tint multiplier, clamped to 0..1." },
+                    { "g", "Green tint multiplier, clamped to 0..1." },
+                    { "b", "Blue tint multiplier, clamped to 0..1." },
+                    { "a", "Alpha (opacity) multiplier, clamped to 0..1." } } })
+            ->Event(
+                "SetBillboard",
+                &DioramaSpriteRequestBus::Events::SetBillboard,
+                { { { "enabled", "When true the sprite always faces the camera." } } })
+            ->Event(
+                "SetDoubleSided",
+                &DioramaSpriteRequestBus::Events::SetDoubleSided,
+                { { { "enabled", "When true the sprite is visible from both sides; when false it is hidden when viewed from behind." } } })
+            ->Event(
+                "SetUVRegion",
+                &DioramaSpriteRequestBus::Events::SetUVRegion,
+                { { { "uMin", "Left edge of the texture sub-rectangle, normalized and clamped to 0..1." },
+                    { "vMin", "Top edge of the texture sub-rectangle, normalized and clamped to 0..1." },
+                    { "uMax", "Right edge of the texture sub-rectangle, normalized and clamped to 0..1." },
+                    { "vMax", "Bottom edge of the texture sub-rectangle, normalized and clamped to 0..1." } } })
+            ->Event(
+                "SetFlip",
+                &DioramaSpriteRequestBus::Events::SetFlip,
+                { { { "horizontal", "Mirror the sampled region left-to-right." },
+                    { "vertical", "Mirror the sampled region top-to-bottom." } } })
+            ->Event(
+                "SetSortOffset",
+                &DioramaSpriteRequestBus::Events::SetSortOffset,
+                { { { "sortOffset", "Transparent draw-order bias; larger values draw on top." } } })
+            ->Event(
+                "SetFrameGrid",
+                &DioramaSpriteRequestBus::Events::SetFrameGrid,
+                { { { "columns", "Number of columns in the sprite sheet grid." },
+                    { "rows", "Number of rows in the sprite sheet grid." },
+                    { "frameCount", "Number of frames to play; clamped to columns * rows." } } })
+            ->Event(
+                "SetAnimationEnabled",
+                &DioramaSpriteRequestBus::Events::SetAnimationEnabled,
+                { { { "enabled", "Enable or disable sprite-sheet playback." } } })
+            ->Event(
+                "SetPlayback",
+                &DioramaSpriteRequestBus::Events::SetPlayback,
+                { { { "framesPerSecond", "Playback rate in frames per second." },
+                    { "loop", "When true the clip repeats; when false it holds the last frame." } } })
+            ->Event(
+                "SetStartFrame",
+                &DioramaSpriteRequestBus::Events::SetStartFrame,
+                { { { "frame", "Frame shown first and while not playing; clamped to range." } } })
+            ->Event(
+                "PlaySpriteSheet",
+                &DioramaSpriteRequestBus::Events::PlaySpriteSheet,
+                { { { "columns", "Number of columns in the sprite sheet grid." },
+                    { "rows", "Number of rows in the sprite sheet grid." },
+                    { "frameCount", "Number of frames to play; clamped to columns * rows." },
+                    { "framesPerSecond", "Playback rate in frames per second." },
+                    { "loop", "When true the clip repeats; when false it holds the last frame." } } })
             ->Event("GetSpriteInfo", &DioramaSpriteRequestBus::Events::GetSpriteInfo);
 
         behaviorContext->EBus<DioramaSpriteNotificationBus>("DioramaSpriteNotificationBus")
