@@ -30,6 +30,12 @@ alpha (the 0.x line), minor releases may include breaking changes.
   editor-scripted verb application still depends on the sprite component being
   active, which the current editor `--runpython` flow does not guarantee; that
   activation path is the remaining follow-up.
+- Per-argument names and descriptions on every `DioramaSpriteRequestBus` verb,
+  reflected to the BehaviorContext. These name and document each argument for
+  Script Canvas node pins and for any tool that introspects the reflection to
+  build an agent-facing API schema. (The editor's generated Python stub lists
+  EBus arguments by type only, so the names live in the C++ reflection rather
+  than the `.pyi`.)
 - Per-sprite "Double Sided" toggle (default on): a flat sprite is visible from
   both sides, matching how 2D sprite renderers behave elsewhere. Implemented
   geometrically (the renderer emits back-facing triangles for double-sided,
