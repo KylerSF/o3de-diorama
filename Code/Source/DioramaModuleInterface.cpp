@@ -12,6 +12,7 @@
 
 #include <Clients/DioramaSystemComponent.h>
 #include <Clients/SpriteComponent.h>
+#include <Clients/TilemapComponent.h>
 
 namespace Diorama
 {
@@ -30,6 +31,7 @@ namespace Diorama
             {
                 DioramaSystemComponent::CreateDescriptor(),
                 SpriteComponent::CreateDescriptor(),
+                TilemapComponent::CreateDescriptor(),
             });
     }
 

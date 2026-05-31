@@ -16,4 +16,12 @@ set(FILES
     Source/Clients/SpriteFeatureProcessor.h
     Source/Clients/SpritePresenter.cpp
     Source/Clients/SpritePresenter.h
+    Source/Clients/TilemapComponent.cpp
+    Source/Clients/TilemapComponent.h
+    Source/Clients/TilemapComponentConfig.cpp
+    Source/Clients/TilemapBus.cpp
+    Source/Clients/TilemapRequestHandler.cpp
+    Source/Clients/TilemapRequestHandler.h
+    Source/Clients/TilemapPresenter.cpp
+    Source/Clients/TilemapPresenter.h
 )

@@ -9,6 +9,15 @@ alpha (the 0.x line), minor releases may include breaking changes.
 ## [Unreleased]
 
 ### Added
+- Tilemap component (teaching ladder rung 4): a world-space grid of cells, each
+  drawing one cell of a shared atlas, rendered through the same batched sprite
+  feature processor so a whole layer collapses into one draw call. Authored in
+  the editor inspector (atlas/grid/appearance) and driven by an AI-native
+  `DioramaTilemapRequestBus` (SetGridSize, SetAtlasGrid, SetTile, Fill, Clear,
+  SetTileSize, SetTint, SetSortOffset, GetTilemapInfo) with named, documented,
+  clamped verbs. Runtime and editor components share one config and presenter,
+  so it draws identically in game and in the editor viewport. Unit-tested tile
+  UV / grid layout math and EBus dispatch; how-to guide and runnable example.
 - Sprite-sheet (flipbook) animation on the Sprite component: a uniform frame
   grid (columns, rows, frame count) played on a timer, with frames-per-second,
   looping or hold-on-last, and a start frame. Frames compose with the existing

@@ -12,7 +12,7 @@ example under [../examples](../examples).
 | 1 | Hello Sprite | Planned |
 | 2 | Animated Sprite | Planned |
 | 3 | [Sprite Atlas](03-sprite-atlas.md) | Written |
-| 4 | Tilemap | Planned |
+| 4 | [Tilemap](04-tilemap.md) | Written |
 | 5 | Parallax and Layers (2.5D) | Planned |
 | 6 | Twin-Stick Shooter (capstone) | Planned |
 
@@ -25,6 +25,7 @@ animation); their written guides are still to come.
 | Example | Script |
 | ------- | ------ |
 | Sprite Atlas | [../examples/sprite_atlas.py](../examples/sprite_atlas.py) |
+| Tilemap | [../examples/tilemap.py](../examples/tilemap.py) |
 
 Run an example in the editor:
 

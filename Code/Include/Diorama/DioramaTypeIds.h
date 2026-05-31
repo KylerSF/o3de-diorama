@@ -32,4 +32,13 @@ namespace Diorama
     inline constexpr const char* DioramaSpriteRequestsTypeId = "{4A2E6B1C-9F3D-4C8A-B1E7-5D0A2C3F4B60}";
     inline constexpr const char* DioramaSpriteNotificationsTypeId = "{5B3F7C2D-0A4E-4D9B-C2F8-6E1B3D4F5C71}";
     inline constexpr const char* SpriteInfoTypeId = "{6C408D3E-1B5F-4EAC-D309-7F2C4E506D82}";
+
+    // Tilemap Component TypeIds (teaching ladder rung 4)
+    inline constexpr const char* TilemapComponentConfigTypeId = "{EAD6109D-2DAF-4F05-884C-C5867AF0214B}";
+    inline constexpr const char* TilemapComponentTypeId = "{161C3B81-803E-41D3-B095-2E9E3F3BD32E}";
+    inline constexpr const char* EditorTilemapComponentTypeId = "{A706DF64-A627-4CF9-9F95-4CB88D779E0C}";
+
+    // AI-facing tilemap API TypeIds (DioramaTilemapRequestBus / TilemapInfo)
+    inline constexpr const char* DioramaTilemapRequestsTypeId = "{7FA050C4-146C-4837-802B-CE3187BA6B3A}";
+    inline constexpr const char* TilemapInfoTypeId = "{B966AD30-B56F-4F1B-B25D-3DB243F1B16C}";
 } // namespace Diorama
