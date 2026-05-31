@@ -9,6 +9,13 @@ alpha (the 0.x line), minor releases may include breaking changes.
 ## [Unreleased]
 
 ### Added
+- Twin-stick shooter sample game, step 2: enemies and waves. A chase-AI enemy
+  (`twin_stick_enemy.lua`) that finds the `Player`-tagged entity and pursues it
+  through PhysX, facing its movement by flipping its Diorama sprite, and a wave
+  spawner (`twin_stick_spawner.lua`) that instantiates the enemy prefab around
+  the arena edge on a ramping timer via the standard O3DE spawnable system
+  (`SpawnableScriptMediator`). Adds an enemy build script and the enemy/spawner
+  specs to the sample README.
 - Twin-stick shooter sample game (teaching ladder rung 6), step 1: the player.
   A Diorama-sprite player with top-down twin-stick movement built the standard
   O3DE way (PhysX velocity, an input-bindings asset, a Lua controller). The Lua
