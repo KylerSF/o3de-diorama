@@ -17,10 +17,12 @@ alpha (the 0.x line), minor releases may include breaking changes.
   OnTriggerEnter/Exit), the per-collider `Diorama2DColliderRequestBus`, and the
   global `Diorama2DCollisionRequestBus` (OverlapCircle, OverlapBox, Raycast2D). This
   is the launcher-reachable contact path PhysX's collision bus is not (it is
-  Automation-scope only). Decoupled from PhysX and authored on the X-Z ground plane,
-  so it fits Diorama's transform-driven gameplay. The collision math (overlap,
-  raycast, sort-and-sweep broadphase, begin/stay/end tracking) is a pure,
-  header-only core; unit tests plus component/system integration tests cover it.
+  Automation-scope only). Decoupled from PhysX, with a configurable collision plane
+  (XY / XZ / YZ, default the XY screen plane) so it matches whichever plane a 2.5D
+  game moves on. The collision math (overlap, raycast, sort-and-sweep broadphase,
+  begin/stay/end tracking) is a pure, header-only core; unit tests plus
+  component/system integration tests cover it, and the twin-stick sample uses it for
+  befriend-on-contact (validated in a running GameLauncher).
 - Pure, header-only math cores for the upcoming camera and particle features, the
   parts verifiable without a viewport: frame-rate-independent camera follow,
   deadzone, bounds, lookahead, pixel snap, and trauma-based screen shake; and

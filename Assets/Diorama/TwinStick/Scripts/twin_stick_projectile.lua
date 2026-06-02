@@ -9,15 +9,15 @@
 --
 -- The player spawns this prefab facing the aim direction (a yaw rotation about
 -- Z). On activate it captures its forward axis, then each tick it flies along
--- that axis through the TransformBus, tests its distance to every live enemy, and
--- destroys the first enemy it overlaps (and itself). It despawns after a short
--- lifetime or once it leaves the arena.
+-- that axis through the TransformBus. It despawns after a short lifetime or once
+-- it leaves the arena.
 --
--- Hit detection is by distance, not PhysX collision, because the only reflected
--- collision-notification handler in O3DE 26.05 is in the Automation script scope
--- and is therefore invisible to a launcher Lua script (CollisionNotificationBus
--- is a nil global at runtime). Enemies publish themselves into the shared
--- TwinStickEnemies table (see twin_stick_enemy.lua); we read that table here.
+-- Hit detection uses the gem-native 2D collision bus: the heart carries a Diorama
+-- 2D collider and befriends the first hater its collider overlaps, via
+-- Diorama2DCollisionNotificationBus:OnContactBegin. Collision layers are set in the
+-- prefabs so hearts only ever contact creatures. This is the launcher-reachable
+-- contact path PhysX's collision bus is not (that one is Automation-scope only),
+-- and it replaces the earlier per-tick distance scan over the enemy table.
 
 TwinStickEnemies = rawget(_G, "TwinStickEnemies") or {}
 
@@ -89,6 +89,17 @@ function TwinStickProjectile:OnActivate()
     end
 
     self.tickHandler = TickBus.Connect(self)
+
+    -- Befriend on contact: the heart's 2D collider reports overlaps with haters
+    -- through this bus (layers keep it from contacting anything else).
+    self.contactHandler = Diorama2DCollisionNotificationBus.Connect(self, self.entityId)
+end
+
+function TwinStickProjectile:OnContactBegin(other)
+    if self.dead then
+        return
+    end
+    self:RegisterHit(other)
 end
 
 function TwinStickProjectile:OnDeactivate()
@@ -97,6 +108,9 @@ function TwinStickProjectile:OnDeactivate()
     end
     if self.tickHandler then
         self.tickHandler:Disconnect()
+    end
+    if self.contactHandler then
+        self.contactHandler:Disconnect()
     end
 end
 
@@ -156,19 +170,8 @@ function TwinStickProjectile:OnTick(deltaTime, scriptTime)
         return
     end
 
-    -- Hit test against every live enemy by distance. Destroy the first overlap and
-    -- ourselves, then stop (we are being destroyed; do not keep iterating).
-    for key, enemyId in pairs(TwinStickEnemies) do
-        if enemyId ~= nil and enemyId:IsValid() then
-            local epos = TransformBus.Event.GetWorldTranslation(enemyId)
-            local ddx = epos.x - self.px
-            local ddy = epos.y - self.py
-            if (ddx * ddx + ddy * ddy) <= self.hitRadiusSq then
-                self:RegisterHit(enemyId)
-                return
-            end
-        end
-    end
+    -- Hits are now delivered by the 2D collision bus (OnContactBegin), so there is
+    -- no per-tick distance scan here; the tick only moves the heart and bounds it.
 end
 
 return TwinStickProjectile

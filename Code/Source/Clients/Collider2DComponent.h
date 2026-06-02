@@ -19,9 +19,19 @@
 
 namespace Diorama
 {
+    //! Which pair of world axes the collider lives in. A 2.5D game picks the plane
+    //! its gameplay moves on: XY is the conventional screen plane (top-down looking
+    //! along Z, the twin-stick sample), XZ is the horizontal ground plane (Y up).
+    enum class CollisionPlane : AZ::u8
+    {
+        XY = 0,
+        XZ = 1,
+        YZ = 2
+    };
+
     //! Shared configuration for a 2D collider. Authored by the editor twin and
-    //! handed to the runtime Collider2DComponent. The collision plane is X, Z
-    //! (the ground plane); m_offset shifts the shape within that plane.
+    //! handed to the runtime Collider2DComponent. m_plane selects which world axes
+    //! the shape lives in; m_offset shifts the shape within that plane.
     class Collider2DConfig final : public AZ::ComponentConfig
     {
     public:
@@ -31,6 +41,8 @@ namespace Diorama
         static void Reflect(AZ::ReflectContext* context);
         ~Collider2DConfig() override = default;
 
+        //! World plane the collider lives in (default XY, the screen plane).
+        CollisionPlane m_plane = CollisionPlane::XY;
         //! true: circle of m_radius; false: axis-aligned box of m_halfExtents.
         bool m_isCircle = true;
         float m_radius = 0.5f;

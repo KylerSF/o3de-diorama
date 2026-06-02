@@ -148,8 +148,10 @@ sprites. The twin-stick sample's manual distance loop collapses into
 
 ## Open questions
 
-- The collision plane: confirm the sample's movement plane and pick the default
-  (sprite plane) plus an optional band limit for 2.5D height separation.
+- The collision plane: RESOLVED. The collider has a configurable plane (XY / XZ /
+  YZ); the default is the XY screen plane, which is what the twin-stick moves on
+  (confirmed in-game). A band limit for 2.5D height separation on the third axis is
+  a possible future refinement.
 - `SceneHandle` acquisition from launcher Lua for the *PhysX* scene-query fallback
   (if we ever want gem colliders to also see PhysX geometry): document how to obtain
   it, or keep the two worlds separate in v1.

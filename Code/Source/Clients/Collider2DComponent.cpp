@@ -27,7 +27,8 @@ namespace Diorama
         if (auto* serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
         {
             serializeContext->Class<Collider2DConfig>()
-                ->Version(1)
+                ->Version(2)
+                ->Field("plane", &Collider2DConfig::m_plane)
                 ->Field("isCircle", &Collider2DConfig::m_isCircle)
                 ->Field("radius", &Collider2DConfig::m_radius)
                 ->Field("halfExtents", &Collider2DConfig::m_halfExtents)
@@ -42,6 +43,10 @@ namespace Diorama
                 editContext->Class<Collider2DConfig>("2D Collider Config", "Shape and filtering for a 2D collider")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
+                    ->DataElement(AZ::Edit::UIHandlers::ComboBox, &Collider2DConfig::m_plane, "Plane", "World axes the collider lives in (XY screen, XZ ground)")
+                        ->EnumAttribute(CollisionPlane::XY, "XY (screen)")
+                        ->EnumAttribute(CollisionPlane::XZ, "XZ (ground)")
+                        ->EnumAttribute(CollisionPlane::YZ, "YZ")
                     ->DataElement(AZ::Edit::UIHandlers::CheckBox, &Collider2DConfig::m_isCircle, "Circle", "Circle when on, axis-aligned box when off")
                     ->DataElement(AZ::Edit::UIHandlers::Default, &Collider2DConfig::m_radius, "Radius", "Circle radius (used when Circle is on)")
                     ->DataElement(AZ::Edit::UIHandlers::Default, &Collider2DConfig::m_halfExtents, "Half Extents", "Box half width and height (used when Circle is off)")
@@ -124,7 +129,21 @@ namespace Diorama
     {
         Collision2D::Collider c;
         c.m_id = static_cast<AZ::u64>(GetEntityId());
-        c.m_center = AZ::Vector2(m_worldTranslation.GetX(), m_worldTranslation.GetZ()) + m_config.m_offset;
+        AZ::Vector2 planeCenter;
+        switch (m_config.m_plane)
+        {
+        case CollisionPlane::XZ:
+            planeCenter = AZ::Vector2(m_worldTranslation.GetX(), m_worldTranslation.GetZ());
+            break;
+        case CollisionPlane::YZ:
+            planeCenter = AZ::Vector2(m_worldTranslation.GetY(), m_worldTranslation.GetZ());
+            break;
+        case CollisionPlane::XY:
+        default:
+            planeCenter = AZ::Vector2(m_worldTranslation.GetX(), m_worldTranslation.GetY());
+            break;
+        }
+        c.m_center = planeCenter + m_config.m_offset;
         c.m_shape.m_type = m_config.m_isCircle ? Collision2D::ShapeType::Circle : Collision2D::ShapeType::Box;
         c.m_shape.m_radius = m_config.m_radius;
         c.m_shape.m_halfExtents = m_config.m_halfExtents;
