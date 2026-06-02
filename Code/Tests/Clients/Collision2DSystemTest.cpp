@@ -1,0 +1,307 @@
+/*
+ * Copyright (c) Contributors to the Open 3D Engine Project.
+ * For complete copyright and license terms please see the LICENSE at the root of this distribution.
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR MIT
+ */
+
+#include <AzTest/AzTest.h>
+
+#include <AzCore/Component/ComponentApplication.h>
+#include <AzCore/Component/Entity.h>
+
+#include <Clients/Collider2DComponent.h>
+#include <Clients/Collision2DSystemComponent.h>
+#include <Diorama/Collision2DBus.h>
+
+namespace Diorama
+{
+    // Minimal component that only provides TransformService, so a Collider2DComponent
+    // (which requires it) can activate on a bare entity. It does not implement
+    // TransformBus, so colliders read an identity world transform and are positioned
+    // in these tests via SetOffset through the request bus.
+    class Collider2DTransformStub : public AZ::Component
+    {
+    public:
+        AZ_COMPONENT(Collider2DTransformStub, "{CC156F8C-D730-4712-AEE0-0C836F186A41}", AZ::Component);
+        static void Reflect(AZ::ReflectContext* context)
+        {
+            if (auto* sc = azrtti_cast<AZ::SerializeContext*>(context))
+            {
+                sc->Class<Collider2DTransformStub, AZ::Component>()->Version(1);
+            }
+        }
+        static void GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided)
+        {
+            provided.push_back(AZ_CRC_CE("TransformService"));
+        }
+        void Activate() override
+        {
+        }
+        void Deactivate() override
+        {
+        }
+    };
+
+    // Counting handler for collision notifications at one entity.
+    class TestContactListener : public Diorama2DCollisionNotificationBus::Handler
+    {
+    public:
+        void Listen(AZ::EntityId id)
+        {
+            Diorama2DCollisionNotificationBus::Handler::BusConnect(id);
+        }
+        void Stop()
+        {
+            Diorama2DCollisionNotificationBus::Handler::BusDisconnect();
+        }
+
+        void OnContactBegin(AZ::EntityId other) override
+        {
+            ++m_beginCount;
+            m_lastOther = other;
+        }
+        void OnContactStay(AZ::EntityId) override
+        {
+            ++m_stayCount;
+        }
+        void OnContactEnd(AZ::EntityId other) override
+        {
+            ++m_endCount;
+            m_lastOther = other;
+        }
+        void OnTriggerEnter(AZ::EntityId other) override
+        {
+            ++m_triggerEnterCount;
+            m_lastOther = other;
+        }
+        void OnTriggerExit(AZ::EntityId) override
+        {
+            ++m_triggerExitCount;
+        }
+
+        int m_beginCount = 0;
+        int m_stayCount = 0;
+        int m_endCount = 0;
+        int m_triggerEnterCount = 0;
+        int m_triggerExitCount = 0;
+        AZ::EntityId m_lastOther;
+    };
+
+    class Collision2DSystemTest : public ::testing::Test
+    {
+    protected:
+        void SetUp() override
+        {
+            AZ::ComponentApplication::Descriptor desc;
+            AZ::ComponentApplication::StartupParameters startup;
+            startup.m_loadSettingsRegistry = false;
+            m_systemEntity = m_app.Create(desc, startup);
+            ASSERT_NE(m_systemEntity, nullptr);
+
+            m_app.RegisterComponentDescriptor(Collision2DSystemComponent::CreateDescriptor());
+            m_app.RegisterComponentDescriptor(Collider2DComponent::CreateDescriptor());
+            m_app.RegisterComponentDescriptor(Collider2DTransformStub::CreateDescriptor());
+
+            m_systemEntity->Init();
+            m_systemEntity->Activate();
+
+            // The collision world lives on its own entity, activated before any
+            // colliders so Collision2DWorld::Get() is valid when they register.
+            m_worldEntity = aznew AZ::Entity("Collision2DWorld");
+            m_system = m_worldEntity->CreateComponent<Collision2DSystemComponent>();
+            m_worldEntity->Init();
+            m_worldEntity->Activate();
+        }
+
+        void TearDown() override
+        {
+            for (AZ::Entity* e : m_colliderEntities)
+            {
+                e->Deactivate();
+                delete e;
+            }
+            m_colliderEntities.clear();
+
+            m_worldEntity->Deactivate();
+            delete m_worldEntity;
+            m_app.Destroy();
+        }
+
+        //! Create and activate an entity with a default-circle collider (radius 0.5
+        //! at the origin). Position it afterwards with SetOffset.
+        AZ::EntityId MakeCollider(const char* name)
+        {
+            AZ::Entity* e = aznew AZ::Entity(name);
+            e->CreateComponent<Collider2DTransformStub>();
+            e->CreateComponent<Collider2DComponent>();
+            e->Init();
+            e->Activate();
+            m_colliderEntities.push_back(e);
+            return e->GetId();
+        }
+
+        void SetPos(AZ::EntityId id, float x, float z)
+        {
+            Diorama2DColliderRequestBus::Event(id, &Diorama2DColliderRequests::SetOffset, x, z);
+        }
+        void Step()
+        {
+            m_system->StepSimulation();
+        }
+
+        AZ::ComponentApplication m_app;
+        AZ::Entity* m_systemEntity = nullptr;
+        AZ::Entity* m_worldEntity = nullptr;
+        Collision2DSystemComponent* m_system = nullptr;
+        AZStd::vector<AZ::Entity*> m_colliderEntities;
+    };
+
+    TEST_F(Collision2DSystemTest, Overlap_FiresContactBeginOnBothEntities)
+    {
+        const AZ::EntityId a = MakeCollider("A");
+        const AZ::EntityId b = MakeCollider("B");
+        SetPos(a, 0.0f, 0.0f);
+        SetPos(b, 0.5f, 0.0f); // centers 0.5 apart, radii 0.5+0.5=1.0 -> overlap
+
+        TestContactListener la;
+        TestContactListener lb;
+        la.Listen(a);
+        lb.Listen(b);
+
+        Step();
+
+        EXPECT_EQ(la.m_beginCount, 1);
+        EXPECT_EQ(lb.m_beginCount, 1);
+        EXPECT_EQ(la.m_lastOther, b);
+        EXPECT_EQ(lb.m_lastOther, a);
+
+        la.Stop();
+        lb.Stop();
+    }
+
+    TEST_F(Collision2DSystemTest, Separated_FiresNothing)
+    {
+        const AZ::EntityId a = MakeCollider("A");
+        const AZ::EntityId b = MakeCollider("B");
+        SetPos(a, 0.0f, 0.0f);
+        SetPos(b, 10.0f, 0.0f);
+
+        TestContactListener la;
+        la.Listen(a);
+        Step();
+        EXPECT_EQ(la.m_beginCount, 0);
+        EXPECT_EQ(la.m_stayCount, 0);
+        la.Stop();
+    }
+
+    TEST_F(Collision2DSystemTest, PersistThenSeparate_BeginThenEnd)
+    {
+        const AZ::EntityId a = MakeCollider("A");
+        const AZ::EntityId b = MakeCollider("B");
+        SetPos(a, 0.0f, 0.0f);
+        SetPos(b, 0.5f, 0.0f);
+
+        TestContactListener la;
+        la.Listen(a);
+
+        Step(); // begin
+        EXPECT_EQ(la.m_beginCount, 1);
+        Step(); // stay
+        EXPECT_EQ(la.m_stayCount, 1);
+        EXPECT_EQ(la.m_endCount, 0);
+
+        SetPos(b, 20.0f, 0.0f); // move apart
+        Step(); // end
+        EXPECT_EQ(la.m_endCount, 1);
+        EXPECT_EQ(la.m_lastOther, b);
+
+        la.Stop();
+    }
+
+    TEST_F(Collision2DSystemTest, Trigger_FiresTriggerEnterNotContact)
+    {
+        const AZ::EntityId a = MakeCollider("A");
+        const AZ::EntityId b = MakeCollider("B");
+        SetPos(a, 0.0f, 0.0f);
+        SetPos(b, 0.5f, 0.0f);
+        Diorama2DColliderRequestBus::Event(b, &Diorama2DColliderRequests::SetTrigger, true);
+
+        TestContactListener la;
+        la.Listen(a);
+        Step();
+
+        EXPECT_EQ(la.m_triggerEnterCount, 1);
+        EXPECT_EQ(la.m_beginCount, 0);
+        la.Stop();
+    }
+
+    TEST_F(Collision2DSystemTest, DisjointLayers_DoNotContact)
+    {
+        const AZ::EntityId a = MakeCollider("A");
+        const AZ::EntityId b = MakeCollider("B");
+        SetPos(a, 0.0f, 0.0f);
+        SetPos(b, 0.5f, 0.0f);
+        // a: category 1, only collides with 1; b: category 2, only collides with 2.
+        Diorama2DColliderRequestBus::Event(a, &Diorama2DColliderRequests::SetLayer, AZ::u32(0x1));
+        Diorama2DColliderRequestBus::Event(a, &Diorama2DColliderRequests::SetCollidesWith, AZ::u32(0x1));
+        Diorama2DColliderRequestBus::Event(b, &Diorama2DColliderRequests::SetLayer, AZ::u32(0x2));
+        Diorama2DColliderRequestBus::Event(b, &Diorama2DColliderRequests::SetCollidesWith, AZ::u32(0x2));
+
+        TestContactListener la;
+        la.Listen(a);
+        Step();
+        EXPECT_EQ(la.m_beginCount, 0);
+        la.Stop();
+    }
+
+    TEST_F(Collision2DSystemTest, OverlapCircleQuery_ReturnsOverlappingEntity)
+    {
+        const AZ::EntityId a = MakeCollider("A");
+        SetPos(a, 3.0f, 4.0f);
+
+        AZStd::vector<AZ::EntityId> hits;
+        Diorama2DCollisionRequestBus::BroadcastResult(
+            hits, &Diorama2DCollisionRequests::OverlapCircle, 3.0f, 4.0f, 1.0f, AZ::u32(0));
+
+        ASSERT_EQ(hits.size(), 1u);
+        EXPECT_EQ(hits[0], a);
+
+        // A query far away finds nothing.
+        Diorama2DCollisionRequestBus::BroadcastResult(
+            hits, &Diorama2DCollisionRequests::OverlapCircle, 100.0f, 0.0f, 1.0f, AZ::u32(0));
+        EXPECT_TRUE(hits.empty());
+    }
+
+    TEST_F(Collision2DSystemTest, Raycast2DQuery_HitsCollider)
+    {
+        const AZ::EntityId a = MakeCollider("A");
+        SetPos(a, 5.0f, 0.0f); // circle radius 0.5 at (5,0)
+
+        Raycast2DResult result;
+        Diorama2DCollisionRequestBus::BroadcastResult(
+            result, &Diorama2DCollisionRequests::Raycast2D, 0.0f, 0.0f, 1.0f, 0.0f, 100.0f, AZ::u32(0));
+
+        EXPECT_TRUE(result.m_hit);
+        EXPECT_EQ(result.m_entityId, a);
+        EXPECT_NEAR(result.m_distance, 4.5f, 1e-3f); // enters at x = 4.5
+    }
+
+    TEST_F(Collision2DSystemTest, ColliderRequestBus_SetCircleAndInfoReflectsContacts)
+    {
+        const AZ::EntityId a = MakeCollider("A");
+        const AZ::EntityId b = MakeCollider("B");
+        SetPos(a, 0.0f, 0.0f);
+        SetPos(b, 0.5f, 0.0f);
+
+        Diorama2DColliderRequestBus::Event(a, &Diorama2DColliderRequests::SetCircle, 2.0f);
+
+        Step(); // populates contact counts
+
+        Collider2DInfo info;
+        Diorama2DColliderRequestBus::EventResult(info, a, &Diorama2DColliderRequests::GetColliderInfo);
+        EXPECT_TRUE(info.m_isCircle);
+        EXPECT_NEAR(info.m_radius, 2.0f, 1e-5f);
+        EXPECT_EQ(info.m_contactCount, 1);
+    }
+} // namespace Diorama

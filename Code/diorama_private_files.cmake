@@ -14,6 +14,11 @@ set(FILES
     Source/Clients/SpriteAnimation.h
     Source/Clients/SpriteBatchPlan.h
     Source/Clients/Collision2D.h
+    Source/Clients/Collision2DBus.cpp
+    Source/Clients/Collision2DSystemComponent.cpp
+    Source/Clients/Collision2DSystemComponent.h
+    Source/Clients/Collider2DComponent.cpp
+    Source/Clients/Collider2DComponent.h
     Source/Clients/SpriteFeatureProcessor.cpp
     Source/Clients/SpriteFeatureProcessor.h
     Source/Clients/SpritePresenter.cpp
