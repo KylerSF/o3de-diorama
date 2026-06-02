@@ -53,6 +53,7 @@ namespace Diorama
     inline constexpr const char* DioramaLightComponentTypeId = "{5FE91F03-CEC3-4367-B05A-1F35E4A12B58}";
     inline constexpr const char* EditorDioramaLightComponentTypeId = "{0781B582-E88E-4EEF-BD26-3BB7F7EA25CC}";
     inline constexpr const char* DioramaLightRequestsTypeId = "{2D3D5429-D3C6-4769-80D8-424478630B23}";
+    inline constexpr const char* DioramaLightInfoTypeId = "{7A1C4B9E-3D52-4F8A-9C16-2E8B5A3D7F40}";
 
     // AI-facing 2D collision API TypeIds
     inline constexpr const char* Diorama2DColliderRequestsTypeId = "{908C687A-9799-4BD9-9E82-3368D3BAEA03}";

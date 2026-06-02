@@ -29,6 +29,9 @@ set(FILES
     Source/Clients/DioramaLightComponent.h
     Source/Clients/LightPresenter.cpp
     Source/Clients/LightPresenter.h
+    Source/Clients/LightBus.cpp
+    Source/Clients/LightRequestHandler.cpp
+    Source/Clients/LightRequestHandler.h
     Source/Clients/TilemapComponent.cpp
     Source/Clients/TilemapComponent.h
     Source/Clients/TilemapComponentConfig.cpp

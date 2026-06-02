@@ -19,6 +19,15 @@ example under [../examples](../examples).
 All rungs of the ladder now have a written guide, from a single sprite to the
 complete twin-stick capstone.
 
+## Feature demos
+
+Focused, one-feature-each demos that extend the ladder as new gem features land.
+Each has a written guide and a runnable example.
+
+| Feature | Guide | Status |
+| ------- | ----- | ------ |
+| 2D Dynamic Lighting | [07-lighting.md](07-lighting.md) | Written |
+
 ## Reference
 
 The guides teach by building. For exhaustive, parameter-by-parameter detail and
@@ -43,6 +52,7 @@ the design, see:
 | Tilemap | [../examples/tilemap.py](../examples/tilemap.py) |
 | Parallax and Layers | [../examples/parallax_layers.py](../examples/parallax_layers.py) |
 | Twin-Stick Shooter | [../../Samples/TwinStick](../../Samples/TwinStick) |
+| 2D Dynamic Lighting | [../examples/lighting_demo.py](../examples/lighting_demo.py) |
 
 Run an example in the editor:
 

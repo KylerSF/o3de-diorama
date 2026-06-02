@@ -8,6 +8,7 @@
 #pragma once
 
 #include <Clients/LightPresenter.h>
+#include <Clients/LightRequestHandler.h>
 #include <Diorama/DioramaLightConfig.h>
 #include <Diorama/DioramaTypeIds.h>
 
@@ -42,8 +43,13 @@ namespace Diorama
     private:
         //! Re-push the config to the viewport preview after an inspector edit.
         AZ::u32 OnConfigChanged();
+        //! Bake a request-bus edit into the prefab so it survives a save (an
+        //! inspector edit goes through the property editor and persists on its own;
+        //! a bus edit does not). Mirrors EditorSpriteComponent::PersistConfig.
+        void PersistConfig();
 
         DioramaLightConfig m_config;
         LightPresenter m_presenter;
+        LightRequestHandler m_requestHandler;
     };
 } // namespace Diorama

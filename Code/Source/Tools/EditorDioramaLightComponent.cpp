@@ -12,6 +12,8 @@
 #include <AzCore/Serialization/EditContextConstants.inl>
 #include <AzCore/Serialization/SerializeContext.h>
 
+#include <AzToolsFramework/API/ToolsApplicationAPI.h>
+
 namespace Diorama
 {
     void EditorDioramaLightComponent::Reflect(AZ::ReflectContext* context)
@@ -47,12 +49,40 @@ namespace Diorama
     {
         AzToolsFramework::Components::EditorComponentBase::Activate();
         m_presenter.Connect(GetEntityId(), m_config);
+
+        // Expose the same AI request API in the editor. A verb edits m_config,
+        // pushes it to the live preview, refreshes the inspector so an agent-driven
+        // change shows in the human UI, and persists it so it survives a save.
+        m_requestHandler.Connect(
+            GetEntityId(),
+            m_config,
+            [this]()
+            {
+                m_presenter.SetConfig(m_config);
+                AzToolsFramework::ToolsApplicationEvents::Bus::Broadcast(
+                    &AzToolsFramework::ToolsApplicationEvents::InvalidatePropertyDisplay, AzToolsFramework::Refresh_Values);
+                PersistConfig();
+            });
     }
 
     void EditorDioramaLightComponent::Deactivate()
     {
+        m_requestHandler.Disconnect();
         m_presenter.Disconnect();
         AzToolsFramework::Components::EditorComponentBase::Deactivate();
+    }
+
+    void EditorDioramaLightComponent::PersistConfig()
+    {
+        // Only an actualized entity may touch the undo/prefab system (mirrors
+        // EditorSpriteComponent::PersistConfig and EditorComponentBase::SetDirty).
+        AZ::Entity* entity = GetEntity();
+        if (!entity || entity->GetState() != AZ::Entity::State::Active)
+        {
+            return;
+        }
+        AzToolsFramework::ScopedUndoBatch undoBatch("Edit Diorama Light");
+        undoBatch.MarkEntityDirty(GetEntityId());
     }
 
     void EditorDioramaLightComponent::BuildGameEntity(AZ::Entity* gameEntity)

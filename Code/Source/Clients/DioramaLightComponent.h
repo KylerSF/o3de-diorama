@@ -8,6 +8,7 @@
 #pragma once
 
 #include <Clients/LightPresenter.h>
+#include <Clients/LightRequestHandler.h>
 #include <Diorama/DioramaLightConfig.h>
 
 #include <AzCore/Component/Component.h>
@@ -39,5 +40,6 @@ namespace Diorama
     private:
         DioramaLightConfig m_config;
         LightPresenter m_presenter;
+        LightRequestHandler m_requestHandler;
     };
 } // namespace Diorama

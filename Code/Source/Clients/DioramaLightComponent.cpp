@@ -6,6 +6,7 @@
  */
 
 #include <Clients/DioramaLightComponent.h>
+#include <Diorama/DioramaLightBus.h>
 
 #include <AzCore/Serialization/EditContext.h>
 #include <AzCore/Serialization/EditContextConstants.inl>
@@ -54,6 +55,8 @@ namespace Diorama
     void DioramaLightComponent::Reflect(AZ::ReflectContext* context)
     {
         DioramaLightConfig::Reflect(context);
+        LightInfo::Reflect(context);
+        ReflectLightBuses(context);
 
         if (auto* serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
         {
@@ -82,10 +85,22 @@ namespace Diorama
     void DioramaLightComponent::Activate()
     {
         m_presenter.Connect(GetEntityId(), m_config);
+
+        // Expose the AI request API. A verb edits m_config in place, then the
+        // callback pushes it to the presenter (the same live-update path the editor
+        // uses), so agent-driven changes apply immediately.
+        m_requestHandler.Connect(
+            GetEntityId(),
+            m_config,
+            [this]()
+            {
+                m_presenter.SetConfig(m_config);
+            });
     }
 
     void DioramaLightComponent::Deactivate()
     {
+        m_requestHandler.Disconnect();
         m_presenter.Disconnect();
     }
 } // namespace Diorama
