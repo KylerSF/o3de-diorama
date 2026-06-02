@@ -6,8 +6,10 @@
  */
 
 #include "DioramaEditorSystemComponent.h"
+#include <Clients/Collision2DSystemComponent.h>
 #include <Diorama/DioramaTypeIds.h>
 #include <DioramaModuleInterface.h>
+#include <Tools/EditorCollider2DComponent.h>
 #include <Tools/EditorSpriteComponent.h>
 #include <Tools/EditorTilemapComponent.h>
 
@@ -31,6 +33,7 @@ namespace Diorama
                     DioramaEditorSystemComponent::CreateDescriptor(),
                     EditorSpriteComponent::CreateDescriptor(),
                     EditorTilemapComponent::CreateDescriptor(),
+                    EditorCollider2DComponent::CreateDescriptor(),
                 });
         }
 
@@ -42,6 +45,9 @@ namespace Diorama
         {
             return AZ::ComponentTypeList{
                 azrtti_typeid<DioramaEditorSystemComponent>(),
+                // Run the collision world in the editor too, so colliders simulate
+                // in play-in-editor (the runtime module supplies it in launchers).
+                azrtti_typeid<Collision2DSystemComponent>(),
             };
         }
     };

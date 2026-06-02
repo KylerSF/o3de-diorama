@@ -6,4 +6,6 @@ set(FILES
     Source/Tools/EditorSpriteComponent.h
     Source/Tools/EditorTilemapComponent.cpp
     Source/Tools/EditorTilemapComponent.h
+    Source/Tools/EditorCollider2DComponent.cpp
+    Source/Tools/EditorCollider2DComponent.h
 )
