@@ -4,5 +4,7 @@ set(FILES
     Tests/Clients/TilemapTest.cpp
     Tests/Clients/Collision2DTest.cpp
     Tests/Clients/Collision2DSystemTest.cpp
+    Tests/Clients/Camera2DTest.cpp
+    Tests/Clients/Particles2DTest.cpp
     Tests/Clients/DioramaTestMain.cpp
 )
