@@ -54,6 +54,35 @@ a newcomer can follow the ladder from a single sprite to a complete game.
   - A stress scene that exercises the batched feature processor and documents
     the performance characteristics.
 
+## Showcase and feature demos (post-alpha portfolio)
+
+A sample is most useful as a small *portfolio*, not one kitchen-sink scene. The plan:
+keep the twin-stick as the gameplay/scripting/collision capstone, add a visual hero
+piece, and ship one tiny demo per new feature for the docs. See
+[roadmap.md](roadmap.md) for the features these depend on.
+
+- **The Living Diorama (flagship hero).** A paper pop-up shadow box the camera orbits:
+  parallax cutout layers, a warm lamp (2D light), paper-puppet animation, dust and
+  fireflies, an emissive moon. Tilting the camera separates the flat cutouts into
+  layered cards, making the 2.5D idea the whole point. Exercises the differentiators
+  twin-stick cannot (parallax, lighting, skeletal/cutout, materials, particles). The
+  hero screenshot the engine is sold on. Design: [design/living-diorama.md](design/living-diorama.md).
+- **Magic Eye toggle (the surprise).** A toggle that re-renders any depth-bearing
+  scene as a single-image autostereogram, possible only because Diorama scenes have
+  real depth. Pairs with the Living Diorama. Design:
+  [design/magic-eye-autostereogram.md](design/magic-eye-autostereogram.md).
+- **Side-scroller vertical slice.** A short lit side-scroll scene (parallax forest,
+  autotiled ground with collision, an animated character, a lit torch) covering the
+  platformer-shaped features. A second complete-ish context next to the top-down
+  twin-stick.
+- **Focused per-feature demos.** One tiny scene + how-to per new feature, extending
+  the teaching ladder: a Lighting demo, a Particles demo, a Collision demo, a Camera
+  (follow/shake/pixel-perfect) demo, a Parallax demo, a Materials (flash/outline)
+  demo. Cheap, crisp, and ideal for documentation.
+
+These are tracked as designs until the underlying features are built and verified on
+screen; nothing here is a buildable-today task on its own.
+
 ## How-to guides (cross-cutting)
 
 - Install and enable the Diorama gem in a project.
