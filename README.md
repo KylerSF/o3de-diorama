@@ -46,6 +46,7 @@ freely mixed with 3D geometry, lighting, particles, and post effects. See
 | Tilemap | Atlas-grid tilemap component + typed bus | Working |
 | 2.5D | Depth-sorted layers + tilted 2.5D camera | Working |
 | Scripting | Typed Sprite/Tilemap buses (Lua, Python, ScriptCanvas) | Working |
+| Gameplay | 2D collision: colliders, triggers, and queries reachable from scripts | Working |
 | Sample | 2.5D twin-stick shooter with a LyShine HUD | Working |
 | 2.5D | Parallax background layers | Planned |
 | Camera | Orthographic / pixel-perfect camera | Planned |

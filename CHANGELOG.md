@@ -9,6 +9,23 @@ alpha (the 0.x line), minor releases may include breaking changes.
 ## [Unreleased]
 
 ### Added
+- Gem-native 2D collision reachable from gameplay scripts. A `2D Collider` component
+  (circle or box, layer/mask matrix, trigger flag) and a collision system that
+  detects overlaps each tick and dispatches contact and trigger events through
+  buses reflected at `Common` scope, so launcher Lua, Python, and Script Canvas all
+  receive them: `Diorama2DCollisionNotificationBus` (OnContactBegin/Stay/End,
+  OnTriggerEnter/Exit), the per-collider `Diorama2DColliderRequestBus`, and the
+  global `Diorama2DCollisionRequestBus` (OverlapCircle, OverlapBox, Raycast2D). This
+  is the launcher-reachable contact path PhysX's collision bus is not (it is
+  Automation-scope only). Decoupled from PhysX and authored on the X-Z ground plane,
+  so it fits Diorama's transform-driven gameplay. The collision math (overlap,
+  raycast, sort-and-sweep broadphase, begin/stay/end tracking) is a pure,
+  header-only core; unit tests plus component/system integration tests cover it.
+- Pure, header-only math cores for the upcoming camera and particle features, the
+  parts verifiable without a viewport: frame-rate-independent camera follow,
+  deadzone, bounds, lookahead, pixel snap, and trauma-based screen shake; and
+  per-particle integration (velocity, gravity, drag), aging, and size/color over
+  life with a pooled step. Both unit tested.
 - Post-alpha feature roadmap ([Docs/roadmap.md](Docs/roadmap.md)) and a set of
   vetted design docs under [Docs/design/](Docs/design/) for the next 2D/2.5D
   features: dynamic lighting, collision-from-scripts, post-processing, per-sprite
