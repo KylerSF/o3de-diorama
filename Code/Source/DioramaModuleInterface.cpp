@@ -12,6 +12,7 @@
 
 #include <Clients/Collider2DComponent.h>
 #include <Clients/Collision2DSystemComponent.h>
+#include <Clients/DioramaLightComponent.h>
 #include <Clients/DioramaSystemComponent.h>
 #include <Clients/SpriteComponent.h>
 #include <Clients/TilemapComponent.h>
@@ -36,6 +37,7 @@ namespace Diorama
                 SpriteComponent::CreateDescriptor(),
                 TilemapComponent::CreateDescriptor(),
                 Collider2DComponent::CreateDescriptor(),
+                DioramaLightComponent::CreateDescriptor(),
             });
     }
 

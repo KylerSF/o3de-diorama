@@ -11,6 +11,7 @@
 #include <AzCore/Console/IConsole.h>
 #include <AzCore/Math/Matrix3x3.h>
 #include <AzCore/Math/Vector3.h>
+#include <AzCore/Math/Vector4.h>
 #include <AzCore/Serialization/SerializeContext.h>
 
 #include <Atom/RPI.Public/DynamicDraw/DynamicDrawInterface.h>
@@ -66,6 +67,17 @@ namespace Diorama
     AZ_CVAR(
         float, r_dioramaShadowAlpha, 0.35f, nullptr, AZ::ConsoleFunctorFlags::Null,
         "Opacity of Diorama sprite ground shadows (0..1).");
+
+    // Gem-native 2D lighting: sprites are modulated by the registered DioramaLight
+    // components (gathered into the per-draw lighting constants). Off, or a scene
+    // with no lights, leaves sprites at full brightness (ambient forced to 1), so
+    // existing unlit scenes are unchanged.
+    AZ_CVAR(
+        bool, r_dioramaSpriteLighting, true, nullptr, AZ::ConsoleFunctorFlags::Null,
+        "Modulate Diorama sprites by registered 2D lights (no effect in scenes without DioramaLight).");
+    AZ_CVAR(
+        float, r_dioramaSpriteAmbient, 0.35f, nullptr, AZ::ConsoleFunctorFlags::Null,
+        "Ambient light level for Diorama sprites when a scene has 2D lights (0..1).");
 
     void SpriteFeatureProcessor::Reflect(AZ::ReflectContext* context)
     {
@@ -155,6 +167,100 @@ namespace Diorama
         {
             entry.m_batchKey = newKey;
             m_planDirty = true;
+        }
+    }
+
+    SpriteFeatureProcessor::LightHandle SpriteFeatureProcessor::AcquireLight()
+    {
+        const LightHandle handle = m_nextLightHandle++;
+        m_lights.emplace(handle, LightData2D{});
+        return handle;
+    }
+
+    void SpriteFeatureProcessor::ReleaseLight(LightHandle handle)
+    {
+        m_lights.erase(handle);
+    }
+
+    void SpriteFeatureProcessor::UpdateLight(LightHandle handle, const LightData2D& light)
+    {
+        auto it = m_lights.find(handle);
+        if (it != m_lights.end())
+        {
+            it->second = light;
+        }
+    }
+
+    void SpriteFeatureProcessor::SetLightingConstants(AZ::RPI::ShaderResourceGroup* drawSrg)
+    {
+        // Pack up to MaxLights enabled lights into parallel float4 arrays matching
+        // the DioramaSprite shader's SpriteSrg lighting constants.
+        float posDir[MaxLights * 4] = {};
+        float color[MaxLights * 4] = {};
+        int count = 0;
+
+        const bool lightingOn = static_cast<bool>(r_dioramaSpriteLighting);
+        if (lightingOn)
+        {
+            for (const auto& [handle, light] : m_lights)
+            {
+                if (!light.m_enabled || count >= MaxLights)
+                {
+                    continue;
+                }
+                const int b = count * 4;
+                const float r = light.m_color.GetR() * light.m_intensity;
+                const float g = light.m_color.GetG() * light.m_intensity;
+                const float bl = light.m_color.GetB() * light.m_intensity;
+                if (light.m_isDirectional)
+                {
+                    const AZ::Vector3 toLight = (-light.m_direction).GetNormalizedSafe();
+                    posDir[b + 0] = toLight.GetX();
+                    posDir[b + 1] = toLight.GetY();
+                    posDir[b + 2] = toLight.GetZ();
+                    posDir[b + 3] = 1.0f; // directional marker
+                    color[b + 0] = r;
+                    color[b + 1] = g;
+                    color[b + 2] = bl;
+                    color[b + 3] = 0.0f;
+                }
+                else
+                {
+                    posDir[b + 0] = light.m_position.GetX();
+                    posDir[b + 1] = light.m_position.GetY();
+                    posDir[b + 2] = light.m_position.GetZ();
+                    posDir[b + 3] = 0.0f; // point marker
+                    color[b + 0] = r;
+                    color[b + 1] = g;
+                    color[b + 2] = bl;
+                    color[b + 3] = light.m_radius > 0.0f ? 1.0f / (light.m_radius * light.m_radius) : 0.0f;
+                }
+                ++count;
+            }
+        }
+
+        // No lights (or lighting off) -> full-bright ambient, so unlit scenes are
+        // unchanged; otherwise the configured ambient floor under the lights.
+        const float ambient = (!lightingOn || count == 0) ? 1.0f : static_cast<float>(r_dioramaSpriteAmbient);
+        if (!lightingOn)
+        {
+            count = 0;
+        }
+
+        const AZ::RHI::ShaderInputConstantIndex ambientIdx = drawSrg->FindShaderInputConstantIndex(AZ::Name{ "m_ambientAndCount" });
+        if (ambientIdx.IsValid())
+        {
+            drawSrg->SetConstant(ambientIdx, AZ::Vector4(ambient, ambient, ambient, static_cast<float>(count)));
+        }
+        const AZ::RHI::ShaderInputConstantIndex posDirIdx = drawSrg->FindShaderInputConstantIndex(AZ::Name{ "m_lightPosDir" });
+        if (posDirIdx.IsValid())
+        {
+            drawSrg->SetConstantRaw(posDirIdx, posDir, sizeof(posDir));
+        }
+        const AZ::RHI::ShaderInputConstantIndex colorIdx = drawSrg->FindShaderInputConstantIndex(AZ::Name{ "m_lightColor" });
+        if (colorIdx.IsValid())
+        {
+            drawSrg->SetConstantRaw(colorIdx, color, sizeof(color));
         }
     }
 
@@ -324,6 +430,7 @@ namespace Diorama
             return;
         }
         drawSrg->SetImage(imageIndex, shadowImage);
+        SetLightingConstants(drawSrg.get());
         drawSrg->Compile();
 
         m_dynamicDraw->SetSortKey(sortKey);
@@ -445,6 +552,7 @@ namespace Diorama
                 continue;
             }
             drawSrg->SetImage(imageIndex, image);
+            SetLightingConstants(drawSrg.get());
             drawSrg->Compile();
 
             // Pack all quads in this batch into one vertex/index stream. 32-bit

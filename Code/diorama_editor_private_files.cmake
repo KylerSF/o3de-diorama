@@ -8,4 +8,6 @@ set(FILES
     Source/Tools/EditorTilemapComponent.h
     Source/Tools/EditorCollider2DComponent.cpp
     Source/Tools/EditorCollider2DComponent.h
+    Source/Tools/EditorDioramaLightComponent.cpp
+    Source/Tools/EditorDioramaLightComponent.h
 )

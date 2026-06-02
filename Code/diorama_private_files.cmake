@@ -25,6 +25,10 @@ set(FILES
     Source/Clients/SpriteFeatureProcessor.h
     Source/Clients/SpritePresenter.cpp
     Source/Clients/SpritePresenter.h
+    Source/Clients/DioramaLightComponent.cpp
+    Source/Clients/DioramaLightComponent.h
+    Source/Clients/LightPresenter.cpp
+    Source/Clients/LightPresenter.h
     Source/Clients/TilemapComponent.cpp
     Source/Clients/TilemapComponent.h
     Source/Clients/TilemapComponentConfig.cpp

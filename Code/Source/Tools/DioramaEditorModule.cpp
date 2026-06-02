@@ -10,6 +10,7 @@
 #include <Diorama/DioramaTypeIds.h>
 #include <DioramaModuleInterface.h>
 #include <Tools/EditorCollider2DComponent.h>
+#include <Tools/EditorDioramaLightComponent.h>
 #include <Tools/EditorSpriteComponent.h>
 #include <Tools/EditorTilemapComponent.h>
 
@@ -34,6 +35,7 @@ namespace Diorama
                     EditorSpriteComponent::CreateDescriptor(),
                     EditorTilemapComponent::CreateDescriptor(),
                     EditorCollider2DComponent::CreateDescriptor(),
+                    EditorDioramaLightComponent::CreateDescriptor(),
                 });
         }
 

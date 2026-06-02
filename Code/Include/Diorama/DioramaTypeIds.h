@@ -48,6 +48,12 @@ namespace Diorama
     inline constexpr const char* EditorCollider2DComponentTypeId = "{D779B83E-01A4-42E2-BB82-18ED5BF33AB5}";
     inline constexpr const char* Collision2DSystemComponentTypeId = "{ADF0673F-459E-4A05-BCE0-F02A7C31A166}";
 
+    // 2D dynamic lighting TypeIds (gem-native light components gathered by the FP)
+    inline constexpr const char* DioramaLightConfigTypeId = "{F8A96840-C2CE-4367-BE1C-EF3B0D1024AB}";
+    inline constexpr const char* DioramaLightComponentTypeId = "{5FE91F03-CEC3-4367-B05A-1F35E4A12B58}";
+    inline constexpr const char* EditorDioramaLightComponentTypeId = "{0781B582-E88E-4EEF-BD26-3BB7F7EA25CC}";
+    inline constexpr const char* DioramaLightRequestsTypeId = "{2D3D5429-D3C6-4769-80D8-424478630B23}";
+
     // AI-facing 2D collision API TypeIds
     inline constexpr const char* Diorama2DColliderRequestsTypeId = "{908C687A-9799-4BD9-9E82-3368D3BAEA03}";
     inline constexpr const char* Diorama2DCollisionNotificationsTypeId = "{3E9FB4C7-C577-450B-8CCA-9CEDF0964E06}";

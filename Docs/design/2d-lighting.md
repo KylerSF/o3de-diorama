@@ -1,8 +1,24 @@
 # Design: 2D dynamic lighting for Diorama sprites
 
-Status: design (Tier-1 roadmap item, task #26). No implementation yet. This
-document records the approach, the Atom integration decision behind it, and a
-phased plan, so the build is fast and low-risk once verification is possible.
+Status: **v1a implemented** (Tier-1 roadmap item, task #26). Directional + point
+lights, distance-attenuated colored modulation of sprites, CVar-gated, with
+gem-native `DioramaLightComponent` / `EditorDioramaLightComponent` placed in the
+scene and gathered by the `SpriteFeatureProcessor`. Normal-mapped shading (per the
+original v1 "wow" goal) is deferred to v1b. This document records the approach, the
+Atom integration decision behind it, and the phased plan.
+
+## Implementation status
+
+- **v1a (done):** `DioramaLightType` (Directional/Point), color, intensity,
+  direction/radius; up to `MaxLights` (8) gathered into the per-draw `SpriteSrg`
+  lighting constants each frame; self-contained Lambert-free distance falloff (a
+  point light brightens nearby sprites in its color). CVars `r_dioramaSpriteLighting`
+  and `r_dioramaSpriteAmbient`. Unlit scenes are byte-for-byte unchanged (ambient
+  forced to 1, count 0). Verified: C++ + tests build green, shader passes the AZSL
+  semantic check, SRG constant layout matches CPU packing exactly. Visual sign-off
+  pending on a monitor (no unit-testable core for the look itself).
+- **v1b (next):** per-sprite normal map for shape/relief (the headline look).
+- **v2+:** spot lights, nearest-N selection, emissive channel (see Phasing).
 
 ## Goal
 
@@ -178,13 +194,30 @@ the look needs it.
 - Confirm SceneSrg-independence: lighting works without relying on any Atom pass
   SRG being bound to our dynamic draw.
 
+## Resolved: Diorama ships its own light components
+
+Investigating the concrete feature processors settled the open question:
+`DirectionalLightFeatureProcessor::m_lightData` and
+`SimplePointLightFeatureProcessor::m_lightData` are **private with no CPU read
+accessor** (the interface exposes only a GPU `RPI::Buffer` + a count), and `SceneSrg`
+(where directional lights live) is **not guaranteed to bind** to a `DynamicDrawContext`
+draw. So we can neither read Atom's lights on the CPU nor reliably sample them in the
+sprite shader.
+
+Therefore Diorama **ships its own light components** rather than consuming Atom's
+CoreLights: a `DioramaLightComponent` (directional or point: color, intensity,
+direction or radius) that users place. The `SpriteFeatureProcessor` gathers the
+registered Diorama lights each frame into the `DioramaLightSrg` and the lit shader
+loops them. This is fully decoupled, fully CPU-readable, and avoids any dependency on
+Atom light internals or uncertain SRG binding. (`ViewSrg` *is* bound to our draws,
+confirmed by the existing `ViewSrg::m_viewProjectionMatrix` use, but it does not carry
+what we need.) Lights register with the feature processor through a small interface,
+the same pattern the 2D collision world uses for colliders.
+
 ## Open questions
 
-- Does `SimplePointLightFeatureProcessorInterface::GetLightBuffer()` give a
-  CPU-readable view, or must we read positions via the feature-processor's own
-  accessors? If only a GPU buffer, gather from the light data we set, or add a thin
-  CPU mirror. (Resolve at implementation: inspect the concrete feature processor,
-  not just the interface.)
+- Light selection when more than `DIORAMA_MAX_LIGHTS` exist: v1 takes the first N
+  (plus the directional sun); nearest-N per sprite is a later refinement.
 - Billboard normal mapping: since a billboard always faces the camera, tangent-space
   normal mapping lights it as if facing the viewer; confirm that reads as intended
   for upright billboards vs. a fixed world normal. Cheap to try both behind the CVar.

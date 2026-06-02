@@ -7,4 +7,5 @@ set(FILES
     Include/Diorama/TilemapBus.h
     Include/Diorama/TilemapComponentConfig.h
     Include/Diorama/Collision2DBus.h
+    Include/Diorama/DioramaLightConfig.h
 )

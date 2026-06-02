@@ -13,9 +13,24 @@
 
 #include <viewsrg_all.srgi>
 
+// Must match MaxLights in SpriteFeatureProcessor.h: the CPU packs exactly this
+// many float4 entries into m_lightPosDir / m_lightColor each frame.
+#define DIORAMA_MAX_LIGHTS 8
+
 ShaderResourceGroup SpriteSrg : SRG_PerDraw
 {
     Texture2D m_texture;
+
+    // Gem-native 2D lighting, gathered on the CPU once per frame (see
+    // SpriteFeatureProcessor::SetLightingConstants). xyz of m_ambientAndCount is
+    // the ambient floor; w is the active light count (0 = unlit, full bright).
+    // For each light i: m_lightPosDir[i].xyz is the point world position, or the
+    // normalized direction-to-light when m_lightPosDir[i].w > 0.5 (directional).
+    // m_lightColor[i].rgb is linear color * intensity; m_lightColor[i].a is the
+    // inverse-radius-squared attenuation term for point lights (unused directional).
+    float4 m_ambientAndCount;
+    float4 m_lightPosDir[DIORAMA_MAX_LIGHTS];
+    float4 m_lightColor[DIORAMA_MAX_LIGHTS];
 
     Sampler m_sampler
     {
@@ -39,7 +54,10 @@ struct VSOutput
 {
     float4 m_position : SV_Position;
     float4 m_color : COLOR;
-    float2 m_uv : TEXCOORD;
+    float2 m_uv : TEXCOORD0;
+    // World-space position of the vertex (already world-space on input), passed
+    // through so the pixel stage can attenuate point lights by distance.
+    float3 m_worldPos : TEXCOORD1;
 };
 
 VSOutput MainVS(VSInput vsInput)
@@ -48,6 +66,7 @@ VSOutput MainVS(VSInput vsInput)
     OUT.m_position = mul(ViewSrg::m_viewProjectionMatrix, float4(vsInput.m_position, 1.0));
     OUT.m_color = vsInput.m_color;
     OUT.m_uv = vsInput.m_uv;
+    OUT.m_worldPos = vsInput.m_position;
     return OUT;
 }
 
@@ -60,6 +79,31 @@ PSOutput MainPS(VSOutput input)
 {
     PSOutput OUT;
     float4 sampled = SpriteSrg::m_texture.Sample(SpriteSrg::m_sampler, input.m_uv);
-    OUT.m_color = sampled * input.m_color;
+
+    // v1 lighting: distance-attenuated colored fill, no normal map yet. The CPU
+    // forces ambient = 1 and count = 0 for unlit scenes, so this collapses to the
+    // exact albedo * vertex-tint look when lighting is off or no lights exist.
+    float3 lit = SpriteSrg::m_ambientAndCount.xyz;
+    int lightCount = (int)SpriteSrg::m_ambientAndCount.w;
+    for (int i = 0; i < lightCount; ++i)
+    {
+        float4 posDir = SpriteSrg::m_lightPosDir[i];
+        float3 col = SpriteSrg::m_lightColor[i].rgb;
+        if (posDir.w > 0.5)
+        {
+            // Directional: no attenuation, full contribution everywhere.
+            lit += col;
+        }
+        else
+        {
+            // Point: quadratic falloff via the inverse-radius-squared term in .a.
+            float3 toLight = posDir.xyz - input.m_worldPos;
+            float distSq = dot(toLight, toLight);
+            float atten = saturate(1.0 - distSq * SpriteSrg::m_lightColor[i].a);
+            lit += col * atten;
+        }
+    }
+
+    OUT.m_color = float4(sampled.rgb * input.m_color.rgb * lit, sampled.a * input.m_color.a);
     return OUT;
 }

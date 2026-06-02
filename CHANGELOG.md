@@ -9,6 +9,19 @@ alpha (the 0.x line), minor releases may include breaking changes.
 ## [Unreleased]
 
 ### Added
+- Gem-native 2D dynamic lighting (v1a). A `2D Light` component (directional sun or
+  point light: color, intensity, direction or attenuation radius, on/off) placed in
+  the scene and gathered by the sprite feature processor each frame into the sprite
+  shader's per-draw lighting constants, so sprites are modulated by the lights:
+  a point light brightens nearby sprites in its color with distance falloff, a
+  directional light tints the whole sprite layer. Bounded to 8 lights (the count is
+  clamped on the CPU before it ever sizes a loop). CVar-gated by
+  `r_dioramaSpriteLighting` (default on) and `r_dioramaSpriteAmbient`; a scene with
+  no lights, or lighting off, renders the exact prior unlit look. Decoupled from
+  Atom's CoreLights (whose CPU light data is private and whose SRGs are not
+  guaranteed to bind to a dynamic draw), so it is self-contained and verifiable. The
+  editor component drives a live viewport preview. Normal-mapped relief is the next
+  increment (v1b); see [Docs/design/2d-lighting.md](Docs/design/2d-lighting.md).
 - Gem-native 2D collision reachable from gameplay scripts. A `2D Collider` component
   (circle or box, layer/mask matrix, trigger flag) and a collision system that
   detects overlaps each tick and dispatches contact and trigger events through

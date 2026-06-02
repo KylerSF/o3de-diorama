@@ -10,7 +10,9 @@
 #include <Clients/SpriteBatchPlan.h>
 #include <Diorama/SpriteComponentConfig.h>
 
+#include <AzCore/Math/Color.h>
 #include <AzCore/Math/Transform.h>
+#include <AzCore/Math/Vector3.h>
 #include <AzCore/std/containers/unordered_map.h>
 #include <AzCore/std/containers/vector.h>
 
@@ -46,6 +48,27 @@ namespace Diorama
         using SpriteHandle = AZ::u32;
         static constexpr SpriteHandle InvalidHandle = 0;
 
+        using LightHandle = AZ::u32;
+        //! Max gem-native lights gathered into the per-draw lighting constants each
+        //! frame. Fixed + small (the shader loops it); bounded so no scene value
+        //! sizes a GPU buffer. Must match DIORAMA_MAX_LIGHTS in DioramaSprite.azsl.
+        static constexpr int MaxLights = 8;
+
+        //! A gem-native 2D light, gathered by the feature processor into the sprite
+        //! shader's per-draw lighting constants. Diorama owns its lights because
+        //! Atom's light feature processors keep their CPU data private and SceneSrg
+        //! is not guaranteed for our dynamic draws (see Docs/design/2d-lighting.md).
+        struct LightData2D
+        {
+            bool m_isDirectional = false;
+            AZ::Vector3 m_position = AZ::Vector3::CreateZero(); //!< point light world position
+            AZ::Vector3 m_direction = AZ::Vector3(0.0f, 0.0f, -1.0f); //!< directional: travel direction
+            AZ::Color m_color = AZ::Color(1.0f, 1.0f, 1.0f, 1.0f);
+            float m_intensity = 1.0f;
+            float m_radius = 10.0f; //!< point light attenuation radius (world units)
+            bool m_enabled = true;
+        };
+
         SpriteFeatureProcessor() = default;
         virtual ~SpriteFeatureProcessor() = default;
 
@@ -62,6 +85,13 @@ namespace Diorama
 
         //! Update the world transform and configuration of a registered sprite.
         void UpdateSprite(SpriteHandle handle, const AZ::Transform& worldTransform, const SpriteComponentConfig& config);
+
+        //! Register a 2D light. Returns a stable handle (0 on failure).
+        LightHandle AcquireLight();
+        //! Stop using the light for the given handle.
+        void ReleaseLight(LightHandle handle);
+        //! Update a registered light's parameters.
+        void UpdateLight(LightHandle handle, const LightData2D& light);
 
     private:
         struct SpriteVertex
@@ -107,6 +137,18 @@ namespace Diorama
 
         AZStd::unordered_map<SpriteHandle, SpriteEntry> m_sprites;
         SpriteHandle m_nextHandle = 1;
+
+        // Gem-native 2D lights. Components register here through AcquireLight and
+        // push parameters via UpdateLight; Render() gathers up to MaxLights into the
+        // per-draw lighting constants each frame and binds them on every batch.
+        AZStd::unordered_map<LightHandle, LightData2D> m_lights;
+        LightHandle m_nextLightHandle = 1;
+
+        //! Pack the active lights + ambient into the given draw SRG's lighting
+        //! constants. Reads the r_dioramaSpriteLighting / r_dioramaSpriteAmbient
+        //! CVars; when lighting is off it writes ambient=1 and zero lights so the
+        //! shader's lit math collapses to the unlit albedo * vertex color.
+        void SetLightingConstants(AZ::RPI::ShaderResourceGroup* drawSrg);
 
         // The batch plan (grouping + ordering) only changes when a sprite is
         // added, removed, or its batch key (texture or sort layer) changes. It is
