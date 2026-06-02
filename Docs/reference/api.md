@@ -261,6 +261,37 @@ the same path a human's Inspector change takes. See
 [the architecture document](../architecture.md) for the editor-component to
 config to presenter mechanism.
 
+## Rendering console variables (CVars)
+
+Scene-wide rendering toggles, set from the console, a `.cfg`, or the settings
+registry. See [the architecture document](../architecture.md#25d-depth-ordering-and-shadows)
+for how they work.
+
+| CVar | Default | Effect |
+| ---- | ------- | ------ |
+| `r_dioramaSpriteDepthSort` | `1` | Order sprites by camera distance each frame so nearer sprites draw in front, within their sort layer. |
+| `r_dioramaSpriteShadows` | `1` | Draw soft ground shadows under billboarded sprites (above the floor, below the sprites). |
+| `r_dioramaShadowAlpha` | `0.35` | Opacity of those ground shadows, `0..1`. |
+
+## Runtime scripting notes
+
+Gotchas when driving these buses from a gameplay (launcher) Lua `ScriptComponent`,
+as opposed to from the editor:
+
+- **Property defaults are not applied at runtime.** A runtime `ScriptComponent`
+  does not inject a `.lua` property's declared default (only the editor does), so
+  guard every property read with a fallback: `local speed = self.Properties.Speed or 8.0`.
+  An unguarded read of an unbaked property is `nil` in a launcher build.
+- **Spawned entities have no transform on their first tick.** An entity created
+  via `SpawnableScriptMediator:SpawnAndParentAndTransform` reads the world origin
+  on its first tick (the spawn transform is applied later). Publish the intended
+  position yourself (a shared global or the ticket) and set it in `OnActivate`,
+  rather than reading the transform back.
+- **Mouse gives deltas, not a cursor position.** Game scripts receive mouse
+  deltas only; no absolute cursor position or screen-to-world is reflected to
+  scripts, so point-to-cursor aim is not available. Steer aim relatively off the
+  deltas, or use a gamepad stick for absolute aim.
+
 ## See also
 
 - [Architecture](../architecture.md): how the config, presenter, and feature

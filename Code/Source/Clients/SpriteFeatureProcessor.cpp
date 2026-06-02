@@ -8,6 +8,7 @@
 #include <Clients/SpriteFeatureProcessor.h>
 
 #include <AzCore/Asset/AssetManager.h>
+#include <AzCore/Console/IConsole.h>
 #include <AzCore/Math/Matrix3x3.h>
 #include <AzCore/Math/Vector3.h>
 #include <AzCore/Serialization/SerializeContext.h>
@@ -25,6 +26,9 @@ namespace Diorama
     {
         // Product path of the sprite shader compiled from Assets/Diorama/Shaders.
         constexpr const char* SpriteShaderPath = "diorama/shaders/dioramasprite.azshader";
+
+        // Shared soft shadow blob shipped with the gem (Assets/Diorama/Textures/shadow.png).
+        constexpr const char* ShadowTexturePath = "diorama/textures/shadow.png.streamingimage";
 
         // Lazily constructed: a static AZ::Name constructed at namespace scope
         // would run before the NameDictionary exists and crash on load. See the
@@ -44,6 +48,24 @@ namespace Diorama
             return SpriteBatchPlan::BatchKey{ config.m_texture.GetId(), config.m_sortOffset };
         }
     } // namespace
+
+    // When on, sprites are ordered by distance to the camera every frame so nearer
+    // ones draw in front (2.5D depth ordering), since the sprite shader does not
+    // depth-test. Ordering is within each sort layer, so give the ground/background
+    // a lower sort offset to keep it behind. Off restores the cached static order
+    // driven solely by sort offset + texture.
+    AZ_CVAR(
+        bool, r_dioramaSpriteDepthSort, true, nullptr, AZ::ConsoleFunctorFlags::Null,
+        "Order Diorama sprites by camera distance each frame so nearer sprites draw in front (within their sort layer).");
+
+    // Soft ground shadows under billboarded sprites: a 2.5D grounding cue. Drawn in
+    // one batch just above the floor, below the sprites.
+    AZ_CVAR(
+        bool, r_dioramaSpriteShadows, true, nullptr, AZ::ConsoleFunctorFlags::Null,
+        "Render soft drop shadows on the ground under billboarded Diorama sprites.");
+    AZ_CVAR(
+        float, r_dioramaShadowAlpha, 0.35f, nullptr, AZ::ConsoleFunctorFlags::Null,
+        "Opacity of Diorama sprite ground shadows (0..1).");
 
     void SpriteFeatureProcessor::Reflect(AZ::ReflectContext* context)
     {
@@ -70,12 +92,23 @@ namespace Diorama
                 AZ::Data::AssetManager::Instance().GetAsset<AZ::RPI::ShaderAsset>(shaderAssetId, AZ::Data::AssetLoadBehavior::PreLoad);
             m_shaderAsset.QueueLoad();
         }
+
+        // Soft shadow texture (non-blocking load, same pattern as the shader).
+        const AZ::Data::AssetId shadowImageId =
+            AZ::RPI::AssetUtils::GetAssetIdForProductPath(ShadowTexturePath, AZ::RPI::AssetUtils::TraceLevel::Warning);
+        if (shadowImageId.IsValid())
+        {
+            m_shadowImageAsset = AZ::Data::AssetManager::Instance().GetAsset<AZ::RPI::StreamingImageAsset>(
+                shadowImageId, AZ::Data::AssetLoadBehavior::PreLoad);
+            m_shadowImageAsset.QueueLoad();
+        }
     }
 
     void SpriteFeatureProcessor::Deactivate()
     {
         m_dynamicDraw = nullptr;
         m_shaderAsset = {};
+        m_shadowImageAsset = {};
         m_initialized = false;
         m_sprites.clear();
 
@@ -218,6 +251,91 @@ namespace Diorama
         }
     }
 
+    void SpriteFeatureProcessor::AppendShadowQuad(const SpriteEntry& entry, float alpha, SpriteVertex outVertices[4]) const
+    {
+        const AZ::Vector3 c = entry.m_worldTransform.GetTranslation();
+        // Footprint sized off the sprite width, squashed in world Y into a ground ellipse.
+        const float halfW = entry.m_config.m_size.GetX() * 0.42f;
+        const float halfH = entry.m_config.m_size.GetX() * 0.20f;
+        const float cornerX[4] = { -halfW, halfW, halfW, -halfW };
+        const float cornerY[4] = { -halfH, -halfH, halfH, halfH };
+        static const float uvU[4] = { 0.0f, 1.0f, 1.0f, 0.0f };
+        static const float uvV[4] = { 0.0f, 0.0f, 1.0f, 1.0f };
+        const AZ::u32 packed = AZ::Color(0.0f, 0.0f, 0.0f, alpha).ToU32();
+        for (int i = 0; i < 4; ++i)
+        {
+            outVertices[i].m_position[0] = c.GetX() + cornerX[i];
+            outVertices[i].m_position[1] = c.GetY() + cornerY[i];
+            outVertices[i].m_position[2] = c.GetZ();
+            outVertices[i].m_color = packed;
+            outVertices[i].m_uv[0] = uvU[i];
+            outVertices[i].m_uv[1] = uvV[i];
+        }
+    }
+
+    void SpriteFeatureProcessor::DrawShadows(AZ::RHI::DrawItemSortKey sortKey)
+    {
+        if (!m_shadowImageAsset.IsReady())
+        {
+            return; // texture not loaded yet; shadows simply do not draw
+        }
+        AZ::Data::Instance<AZ::RPI::Image> shadowImage = AZ::RPI::StreamingImage::FindOrCreate(m_shadowImageAsset);
+        if (!shadowImage)
+        {
+            return;
+        }
+        float alpha = static_cast<float>(r_dioramaShadowAlpha);
+        alpha = alpha < 0.0f ? 0.0f : (alpha > 1.0f ? 1.0f : alpha);
+
+        m_shadowVertexScratch.clear();
+        m_shadowIndexScratch.clear();
+        static const AZ::u32 shadowIndices[6] = { 0, 1, 2, 0, 2, 3 };
+        AZ::u32 n = 0;
+        for (const auto& [handle, entry] : m_sprites)
+        {
+            // Only billboarded sprites with a real (loaded) texture cast a shadow --
+            // this excludes the flat tilemap floor and any fallback-textured sprite.
+            if (!entry.m_config.m_billboard || !entry.m_config.m_texture.IsReady())
+            {
+                continue;
+            }
+            m_shadowVertexScratch.resize((n + 1) * 4);
+            AppendShadowQuad(entry, alpha, &m_shadowVertexScratch[n * 4]);
+            const AZ::u32 base = n * 4;
+            for (int k = 0; k < 6; ++k)
+            {
+                m_shadowIndexScratch.push_back(base + shadowIndices[k]);
+            }
+            ++n;
+        }
+        if (n == 0)
+        {
+            return;
+        }
+
+        AZ::Data::Instance<AZ::RPI::ShaderResourceGroup> drawSrg = m_dynamicDraw->NewDrawSrg();
+        if (!drawSrg)
+        {
+            return;
+        }
+        const AZ::RHI::ShaderInputImageIndex imageIndex = drawSrg->FindShaderInputImageIndex(TextureSrgInput());
+        if (!imageIndex.IsValid())
+        {
+            return;
+        }
+        drawSrg->SetImage(imageIndex, shadowImage);
+        drawSrg->Compile();
+
+        m_dynamicDraw->SetSortKey(sortKey);
+        m_dynamicDraw->DrawIndexed(
+            m_shadowVertexScratch.data(),
+            static_cast<uint32_t>(m_shadowVertexScratch.size()),
+            m_shadowIndexScratch.data(),
+            static_cast<uint32_t>(m_shadowIndexScratch.size()),
+            AZ::RHI::IndexFormat::Uint32,
+            drawSrg);
+    }
+
     void SpriteFeatureProcessor::Render(const RenderPacket& packet)
     {
         if (m_sprites.empty() || !EnsureInitialized())
@@ -238,12 +356,17 @@ namespace Diorama
             fallbackImage = imageSystem->GetSystemImage(AZ::RPI::SystemImage::White);
         }
 
-        // Rebuild the batch plan only when the sprite set or a batch key changed.
-        // For a static scene this skips the per-frame scan and stable_sort; the
-        // vertex packing and draw below still run every frame (the draw context is
-        // immediate-mode and billboards re-orient to the camera each frame). The
-        // cached entry pointers remain valid because add/remove set m_planDirty.
-        if (m_planDirty)
+        const AZ::Vector3 cameraPosition = cameraTransform.GetTranslation();
+        const bool depthSort = static_cast<bool>(r_dioramaSpriteDepthSort);
+
+        // Rebuild the batch plan when the sprite set or a batch key changed -- or
+        // every frame when depth sorting, since the order then depends on the live
+        // sprite and camera positions. For a static scene without depth sort this
+        // skips the per-frame scan and stable_sort; the vertex packing and draw
+        // below still run every frame (the draw context is immediate-mode and
+        // billboards re-orient to the camera each frame). The cached entry pointers
+        // remain valid because add/remove set m_planDirty.
+        if (depthSort || m_planDirty)
         {
             m_itemScratch.clear();
             m_entryScratch.clear();
@@ -252,12 +375,22 @@ namespace Diorama
             for (const auto& [handle, entry] : m_sprites)
             {
                 const AZ::u32 index = static_cast<AZ::u32>(m_entryScratch.size());
-                m_itemScratch.push_back(SpriteBatchPlan::Item{ entry.m_batchKey, index });
+                SpriteBatchPlan::Item item{ entry.m_batchKey, index };
+                if (depthSort)
+                {
+                    // Squared distance to the camera (cheaper than the true
+                    // distance and monotonic, so it orders identically). Sorting
+                    // far-to-near within a layer puts nearer sprites on top.
+                    item.m_depth = (entry.m_worldTransform.GetTranslation() - cameraPosition).GetLengthSq();
+                }
+                m_itemScratch.push_back(item);
                 m_entryScratch.push_back(&entry);
             }
 
-            SpriteBatchPlan::Build(m_itemScratch, m_orderedScratch, m_batchScratch);
-            m_planDirty = false;
+            SpriteBatchPlan::Build(m_itemScratch, m_orderedScratch, m_batchScratch, depthSort);
+            // The depth-sorted plan is per-frame; keep it marked dirty so a clean
+            // rebuild happens at once if depth sort is later turned off.
+            m_planDirty = depthSort;
         }
 
         static const AZ::u32 quadIndices[6] = { 0, 1, 2, 0, 2, 3 };
@@ -267,8 +400,21 @@ namespace Diorama
         static const AZ::u32 quadIndicesBack[6] = { 0, 2, 1, 0, 3, 2 };
         const AZ::u32 debugTint = AZ::Color(1.0f, 0.0f, 1.0f, 1.0f).ToU32();
 
+        // Draw batches in their computed order, giving each an increasing sort key
+        // so the transparent pass keeps that order (earlier batch = drawn behind).
+        const bool drawShadows = static_cast<bool>(r_dioramaSpriteShadows);
+        bool shadowsDrawn = false;
+        AZ::RHI::DrawItemSortKey batchSortKey = 0;
         for (const SpriteBatchPlan::Batch& batch : m_batchScratch)
         {
+            // Shadows draw once, between the ground (sort offset < 0) and the sprites
+            // (>= 0), so the soft blobs sit on the floor beneath the billboards.
+            if (drawShadows && !shadowsDrawn && batch.m_key.m_sortOffset >= 0.0f)
+            {
+                DrawShadows(batchSortKey++);
+                shadowsDrawn = true;
+            }
+
             // All sprites in a batch share a texture; resolve it once from the
             // first member. Build drops invalid-texture items, so a batch always
             // references a valid texture asset.
@@ -340,7 +486,7 @@ namespace Diorama
                 }
             }
 
-            m_dynamicDraw->SetSortKey(static_cast<AZ::RHI::DrawItemSortKey>(batch.m_key.m_sortOffset));
+            m_dynamicDraw->SetSortKey(batchSortKey++);
             m_dynamicDraw->DrawIndexed(
                 m_vertexScratch.data(),
                 static_cast<uint32_t>(m_vertexScratch.size()),

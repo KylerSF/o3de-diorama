@@ -9,6 +9,19 @@ alpha (the 0.x line), minor releases may include breaking changes.
 ## [Unreleased]
 
 ### Added
+- Post-alpha feature roadmap ([Docs/roadmap.md](Docs/roadmap.md)) and a set of
+  vetted design docs under [Docs/design/](Docs/design/) for the next 2D/2.5D
+  features: dynamic lighting, collision-from-scripts, post-processing, per-sprite
+  materials, a 2D camera component, particles, tilemap painting/autotiling,
+  skeletal animation, Aseprite import, an in-editor slicer, a starter template, and
+  an editor live-preview audit. Each is grounded in engine investigation with a
+  chosen approach, security/performance notes, and a phased plan.
+- Tween / easing library for gameplay scripts
+  (`Assets/Diorama/Scripts/tween.lua`): a dependency-free helper that animates a
+  value over time with easing (linear, quad, cubic, sine, back, elastic, bounce),
+  with a per-owner tween group you update each tick. Pure logic, so it behaves
+  identically in the launcher and editor; useful for size/tint/position pops,
+  fades, and camera moves without hand-rolled per-frame code.
 - Hello Sprite (rung 1) and Animated Sprite (rung 2) how-to guides with runnable
   examples, completing the written teaching ladder (rungs 1-6). Rung 1 builds a
   single sprite through the typed bus; rung 2 plays the 2x2 sample atlas as a
@@ -18,35 +31,21 @@ alpha (the 0.x line), minor releases may include breaking changes.
   script (`Assets/Diorama/Scripts/parallax_layer.lua`) that scrolls a layer at a
   fraction of the camera's motion for a 2.5D depth effect. Includes a runnable
   example that builds background/midground/foreground layers.
-- Twin-stick shooter sample game, step 4: scoring, HUD, and capstone assembly.
-  A game/HUD controller (`twin_stick_game.lua`) tracks the score and drives a
-  LyShine HUD; projectiles award score on a kill through `GameplayNotificationBus`
-  (the standard decoupled gameplay-event path), demonstrating the Diorama (world)
-  vs LyShine (UI) division of labor. Adds `build_game.py`, which assembles the
-  whole scene (tilemap arena, player, top-down camera, controller, spawner) in
-  one run, and the teaching-ladder rung 6 how-to that ties the capstone together.
-- Twin-stick shooter sample game, step 3: projectiles and collision. A
-  projectile (`twin_stick_projectile.lua`) launches along its spawn direction
-  through PhysX, lives briefly, and destroys any `Enemy`-tagged body it hits (and
-  itself) via PhysX collision notifications. The player gains fire input: holding
-  fire spawns projectiles toward the aim direction (rate-limited), spawned via
-  the standard spawnable system. Adds a projectile build script and the
-  projectile spec to the sample README.
-- Twin-stick shooter sample game, step 2: enemies and waves. A chase-AI enemy
-  (`twin_stick_enemy.lua`) that finds the `Player`-tagged entity and pursues it
-  through PhysX, facing its movement by flipping its Diorama sprite, and a wave
-  spawner (`twin_stick_spawner.lua`) that instantiates the enemy prefab around
-  the arena edge on a ramping timer via the standard O3DE spawnable system
-  (`SpawnableScriptMediator`). Adds an enemy build script and the enemy/spawner
-  specs to the sample README.
-- Twin-stick shooter sample game (teaching ladder rung 6), step 1: the player.
-  A Diorama-sprite player with top-down twin-stick movement built the standard
-  O3DE way (PhysX velocity, an input-bindings asset, a Lua controller). The Lua
-  expresses facing by flipping the sprite through `DioramaSpriteRequestBus`, so
-  ordinary gameplay drives the same AI-native bus an agent would. Ships the Lua
-  controller, the input bindings (WASD / mouse / gamepad, plus a fire binding for
-  later), and an editor build script under `Samples/TwinStick`. Enemies,
-  projectiles, and a HUD follow in later steps.
+- Twin-stick shooter sample game (teaching ladder rung 6): a complete 2.5D "kill
+  them with kindness" game. You play Obi, a jolly octopus who fires hearts at
+  ocean "haters" (nine species spawned in ramping waves from the arena edges);
+  three hearts fill a hater with love and it floats away happy. It ships a tilted
+  2.5D camera over an ocean-floor tilemap, a LyShine "Befriended" HUD composited
+  over the Diorama world layer, pause (P) / quit (Esc, gamepad Start) controls, a
+  colour-shifting octopus (chromatophores), and a pooled heart-burst FX manager.
+  Player, chase AI, hearts, and the wave spawner are all transform-driven Lua over
+  the Diorama buses (see Changed for why no PhysX), so ordinary gameplay drives the
+  same AI-native bus an agent would.
+- 2.5D rendering in the sprite feature processor: automatic camera-distance depth
+  sort, so nearer sprites draw in front within their sort layer
+  (`r_dioramaSpriteDepthSort`); and soft ground shadows under billboarded sprites
+  (`r_dioramaSpriteShadows`, opacity `r_dioramaShadowAlpha`), drawn in one batch
+  between the floor and the sprites.
 - Tilemap component (teaching ladder rung 4): a world-space grid of cells, each
   drawing one cell of a shared atlas, rendered through the same batched sprite
   feature processor so a whole layer collapses into one draw call. Authored in
@@ -94,6 +93,19 @@ alpha (the 0.x line), minor releases may include breaking changes.
   the always-on lint workflow.
 
 ### Changed
+- Twin-stick gameplay reworked from PhysX to transform-driven movement with
+  distance-based hit detection. Two engine facts drove it: a dynamic PhysX rigid
+  body ignores the entity's authored editor transform at simulation start (it
+  initializes at the world origin), and PhysX collision callbacks are reflected
+  only in the Automation script scope, so a launcher Lua script never receives
+  `OnCollisionBegin`. Entities now move via `TransformBus`, stay in bounds by a
+  clamp, and detect hits by distance through a shared live-entity table. Kills are
+  replaced by a "befriend" mechanic (three hearts and a hater floats away); the
+  HUD counts befriended haters via a shared global rather than a cross-entity
+  `GameplayNotification`.
+- The sprite shader disables the depth test and back-face culling, so a flat floor
+  renders correctly under a tilted 2.5D camera and draw order (painter's, by sort
+  layer then camera distance) is authoritative.
 - Sprite rendering now goes through a proper Atom scene feature processor
   (`SpriteFeatureProcessor`) instead of an immediate-mode per-sprite draw loop.
   Sprites that share a texture and sort layer are batched into a single draw call
@@ -116,6 +128,19 @@ alpha (the 0.x line), minor releases may include breaking changes.
   and buffer reuse).
 
 ### Fixed
+- The 2.5D floor vanished under a pitched camera. Root-caused (by reading the
+  engine source) to the sprite shader's depth test, not back-face culling and not
+  frustum culling; disabling the depth test is the correct model for this
+  draw-order-ordered sprite renderer, and the floor now renders under the tilt.
+- The score HUD never updated. The reflected Lua name `UiCanvasBus.FindElementByName`
+  is bound to `FindElementEntityIdByName` and returns the element's EntityId
+  directly (so `:GetId()` on it was wrong); the count now also flows through a
+  shared global polled by the HUD controller, matching how the rest of the sample
+  communicates.
+- Per-spawn "property not found" log spam from reading `.lua` properties that the
+  runtime `ScriptComponent` has no baked value for (it does not apply `.lua`
+  defaults). Uniform game constants moved to script locals; only genuinely
+  per-instance values stay as baked, tunable properties.
 - Deadlock that froze the editor (and would freeze a runtime client) the first
   frame a sprite became drawable. `SpriteFeatureProcessor::Render` runs as a
   render job the main thread blocks on, and it loaded the sprite shader with a
@@ -124,6 +149,18 @@ alpha (the 0.x line), minor releases may include breaking changes.
   asynchronously in `Activate`, and the per-frame init only polls readiness, so
   nothing blocks inside the render job. Verified on screen: sprites render and
   the editor stays responsive.
+
+### Removed
+- Orphaned pre-theme creature prefabs (Shark, Bird, Fish, Whale, and a generic
+  Enemy base) and the unused shark texture, left over from before the ocean-hater
+  cast. Nothing referenced them; the live cast is generated from one creature list.
+
+### Contributed upstream
+- Filed o3de/o3de#19804 with a fix in PR #19805: a use-after-free in
+  `AzFramework::ScriptComponent::DestroyEntityTable` when a Lua-scripted entity is
+  torn down during shutdown after the script context (and its `lua_State`) has been
+  freed, found while testing the sample's quit path. Diorama complements the engine
+  and contributes such findings back rather than patching around them.
 
 ## [0.1.0-alpha] - 2026-05-29
 

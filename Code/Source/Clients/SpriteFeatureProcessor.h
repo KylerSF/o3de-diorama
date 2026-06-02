@@ -18,6 +18,7 @@
 #include <Atom/RPI.Public/DynamicDraw/DynamicDrawContext.h>
 #include <Atom/RPI.Public/FeatureProcessor.h>
 #include <Atom/RPI.Public/Image/StreamingImage.h>
+#include <Atom/RPI.Reflect/Image/StreamingImageAsset.h>
 #include <Atom/RPI.Public/Shader/Shader.h>
 #include <Atom/RPI.Public/Shader/ShaderResourceGroup.h>
 #include <Atom/RPI.Reflect/Shader/ShaderAsset.h>
@@ -81,6 +82,14 @@ namespace Diorama
 
         bool EnsureInitialized();
         void AppendQuad(const SpriteEntry& entry, const AZ::Transform& cameraTransform, SpriteVertex outVertices[4]) const;
+        //! Build a flat, ground-plane quad under a sprite for its drop shadow (lies in
+        //! world XY at the sprite's position, squashed to an ellipse footprint, tinted
+        //! black with the given alpha).
+        void AppendShadowQuad(const SpriteEntry& entry, float alpha, SpriteVertex outVertices[4]) const;
+        //! Draw one batched pass of ground shadows for all shadow-casting (billboarded)
+        //! sprites, using the shared soft shadow texture, at the given sort key (placed
+        //! above the floor and below the sprites).
+        void DrawShadows(AZ::RHI::DrawItemSortKey sortKey);
 
         //! Sprite shader asset, loaded asynchronously starting in Activate(). It
         //! must never be loaded with a blocking call from Render(): Render() runs
@@ -90,6 +99,11 @@ namespace Diorama
         AZ::Data::Asset<AZ::RPI::ShaderAsset> m_shaderAsset;
         AZ::RHI::Ptr<AZ::RPI::DynamicDrawContext> m_dynamicDraw;
         bool m_initialized = false;
+
+        //! Shared soft shadow texture (a gem asset), loaded asynchronously in
+        //! Activate() like the shader; resolved to an Image in DrawShadows() once
+        //! ready. Shadows simply do not draw until it has loaded.
+        AZ::Data::Asset<AZ::RPI::StreamingImageAsset> m_shadowImageAsset;
 
         AZStd::unordered_map<SpriteHandle, SpriteEntry> m_sprites;
         SpriteHandle m_nextHandle = 1;
@@ -114,5 +128,10 @@ namespace Diorama
         AZStd::vector<SpriteBatchPlan::Item> m_itemScratch;
         AZStd::vector<SpriteVertex> m_vertexScratch;
         AZStd::vector<AZ::u32> m_indexScratch;
+
+        // Separate scratch for the shadow pass so it does not clobber the per-batch
+        // sprite buffers above (the shadow pass runs in the middle of the batch loop).
+        AZStd::vector<SpriteVertex> m_shadowVertexScratch;
+        AZStd::vector<AZ::u32> m_shadowIndexScratch;
     };
 } // namespace Diorama

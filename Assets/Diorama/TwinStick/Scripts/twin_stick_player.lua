@@ -7,15 +7,26 @@
 
 -- Twin-stick player movement for the Diorama sample game.
 --
--- Top-down movement in the world XY plane: WASD / left-stick drive the player
--- through PhysX (so collisions with arena walls and enemies work), and the mouse
--- / right-stick aim sets the facing direction. The player is a Diorama sprite, so
--- "facing" is expressed by flipping the sprite horizontally through the
--- DioramaSpriteRequestBus -- the same AI-native bus an agent would call, used
--- here from ordinary gameplay code.
+-- Top-down movement in the world XY plane: WASD / left-stick drive the player and
+-- the mouse / right-stick aim sets the facing direction. The player is a Diorama
+-- sprite laid flat on the ground; "facing" is a yaw rotation about world Z so the
+-- sprite visibly points toward the aim.
 --
--- The aim direction is published on the entity so the projectile script (added in
--- a later step) can fire toward where the player is aiming.
+-- Movement is driven directly through the TransformBus (SetWorldTranslation),
+-- not through PhysX. Two engine facts make this the right call for this sample:
+--   1. A dynamic PhysX rigid body does not honor an entity's authored editor
+--      transform at simulation start (it initializes at the world origin), which
+--      put the player -- and everything that keys off its position -- in the
+--      lower-left corner.
+--   2. PhysX collision callbacks are reflected only in the Automation script
+--      scope, so a launcher Lua script never receives OnCollisionBegin. Hit
+--      detection is therefore done by distance (see twin_stick_projectile.lua).
+-- Transform-driven movement honors placement, is fully deterministic, and is the
+-- same API an AI agent would script, so confinement is a simple clamp to the
+-- arena bounds rather than physics walls.
+--
+-- The aim direction is published via the spawn rotation of each projectile so the
+-- projectile script can fly toward where the player is aiming.
 
 -- Version-proof atan2: math.atan2 was removed in Lua 5.3 and the two-argument
 -- math.atan does not exist in 5.1, but one-argument math.atan exists everywhere.
@@ -35,31 +46,68 @@ local function atan2(y, x)
     return 0.0
 end
 
+local function clamp(v, lo, hi)
+    if v < lo then return lo elseif v > hi then return hi else return v end
+end
+
+-- Uniform game constants (not per-instance tuning), kept as locals rather than
+-- ScriptComponent properties: the runtime applies no .lua property default, so an
+-- unbaked property reads nil and logs a "property not found" stack trace.
+local MOUSE_SENSITIVITY = 0.25  -- how strongly mouse deltas steer the aim (scripts get no cursor position, only deltas)
+local THREAT_RANGE = 12.0       -- distance at which the nearest hater fully flushes Obi to his alarm colour
+local ARENA_CENTER_X = 8.0
+local ARENA_CENTER_Y = 8.0
+local ARENA_HALF_X = 31.0       -- half the playable arena WIDTH (one tile inside the floor edge)
+local ARENA_HALF_Y = 17.0       -- half the playable arena HEIGHT
+
 local TwinStickPlayer = {
     Properties = {
-        MoveSpeed = { default = 8.0, description = "Movement speed in world units per second" },
+        MoveSpeed = { default = 9.5, description = "Movement speed in world units per second" },
         AimDeadZone = { default = 0.05, description = "Ignore aim input below this magnitude" },
         TurnSpeed = { default = 8.0, description = "How fast the sprite rotates toward the aim, in radians per second (lower = slower/less sensitive)" },
         ProjectilePrefab = { default = SpawnableScriptAssetRef(), description = "Projectile prefab to fire" },
         FireCooldown = { default = 0.2, description = "Minimum seconds between shots" },
-        MuzzleOffset = { default = 0.6, description = "Spawn distance ahead of the player" },
+        MuzzleOffset = { default = 1.0, description = "Spawn distance ahead of the player" },
     },
 }
 
 function TwinStickPlayer:OnActivate()
     self.moveX = 0.0
     self.moveY = 0.0
-    self.aimX = 0.0
-    self.aimY = 0.0
+    self.aimX = 0.0    -- right-stick X (absolute aim direction)
+    self.aimY = 0.0    -- right-stick Y
+    self.mouseDX = 0.0 -- accumulated mouse delta X this tick (relative aim steering)
+    self.mouseDY = 0.0 -- accumulated mouse delta Y this tick
     -- Last non-zero aim, kept so firing has a direction even between flicks.
     self.aimDir = Vector3(1.0, 0.0, 0.0)
     self.aimYaw = 0.0      -- target yaw from the latest aim input
     self.facingYaw = 0.0   -- current (smoothed) sprite yaw, eased toward aimYaw
 
-    -- Turn the sprite billboard off so it lies flat on the ground (in the world
-    -- XY plane) and can be visibly rotated to face the aim direction. A billboard
-    -- always faces the camera and ignores entity rotation, so aim would not show.
-    DioramaSpriteRequestBus.Event.SetBillboard(self.entityId, false)
+    -- Cache properties with defaults. A runtime (baked) ScriptComponent does NOT
+    -- apply the .lua Property defaults (editor-time only), so any property not baked
+    -- into the level/prefab is nil at runtime. The whole level is baked to a
+    -- spawnable for the launcher, so guard every property the player reads.
+    self.moveSpeed = self.Properties.MoveSpeed or 9.5
+    self.aimDeadZone = self.Properties.AimDeadZone or 0.05
+    self.turnSpeed = self.Properties.TurnSpeed or 8.0
+    self.mouseSens = MOUSE_SENSITIVITY
+    self.threatRange = THREAT_RANGE
+    -- Octopus mood (octopus.png is white, so Tint sets the body color): calm orange
+    -- when safe, flushing toward alarm red as the nearest target closes in.
+    self.calmR, self.calmG, self.calmB = 1.0, 1.0, 1.0    -- true plush colours
+    self.alarmR, self.alarmG, self.alarmB = 1.0, 0.45, 0.35  -- multiply-flush toward red
+    self.fireCooldown = self.Properties.FireCooldown or 0.2
+    self.muzzleOffset = self.Properties.MuzzleOffset or 1.0
+    self.arenaCx = ARENA_CENTER_X
+    self.arenaCy = ARENA_CENTER_Y
+    self.arenaHalfX = ARENA_HALF_X
+    self.arenaHalfY = ARENA_HALF_Y
+
+    -- Keep Obi billboarded: his body stays upright facing the camera (no spinning
+    -- with the aim). We convey aim direction by flipping him left/right and by the
+    -- projectiles, not by rotating the body.
+    self.facingLeft = false
+    DioramaSpriteRequestBus.Event.SetBillboard(self.entityId, true)
 
     -- Firing state.
     self.firing = false
@@ -72,12 +120,16 @@ function TwinStickPlayer:OnActivate()
     self.idMoveY = InputEventNotificationId("move_y")
     self.idAimX = InputEventNotificationId("aim_x")
     self.idAimY = InputEventNotificationId("aim_y")
+    self.idAimDX = InputEventNotificationId("aimdelta_x")
+    self.idAimDY = InputEventNotificationId("aimdelta_y")
     self.idFire = InputEventNotificationId("fire")
 
     self.hMoveX = InputEventNotificationBus.Connect(self, self.idMoveX)
     self.hMoveY = InputEventNotificationBus.Connect(self, self.idMoveY)
     self.hAimX = InputEventNotificationBus.Connect(self, self.idAimX)
     self.hAimY = InputEventNotificationBus.Connect(self, self.idAimY)
+    self.hAimDX = InputEventNotificationBus.Connect(self, self.idAimDX)
+    self.hAimDY = InputEventNotificationBus.Connect(self, self.idAimDY)
     self.hFire = InputEventNotificationBus.Connect(self, self.idFire)
 end
 
@@ -87,6 +139,8 @@ function TwinStickPlayer:OnDeactivate()
     if self.hMoveY then self.hMoveY:Disconnect() end
     if self.hAimX then self.hAimX:Disconnect() end
     if self.hAimY then self.hAimY:Disconnect() end
+    if self.hAimDX then self.hAimDX:Disconnect() end
+    if self.hAimDY then self.hAimDY:Disconnect() end
     if self.hFire then self.hFire:Disconnect() end
 end
 
@@ -100,6 +154,11 @@ function TwinStickPlayer:OnPressed(value)
         self.aimX = value
     elseif id == self.idAimY then
         self.aimY = value
+    elseif id == self.idAimDX then
+        -- Mouse deltas can fire several times per frame; accumulate them.
+        self.mouseDX = self.mouseDX + value
+    elseif id == self.idAimDY then
+        self.mouseDY = self.mouseDY + value
     elseif id == self.idFire then
         self.firing = true
     end
@@ -129,11 +188,19 @@ function TwinStickPlayer:FireProjectile()
     -- projectile launches itself along that forward axis.
     local ticket = self.fireMediator:CreateSpawnTicket(self.Properties.ProjectilePrefab)
     local origin = TransformBus.Event.GetWorldTranslation(self.entityId)
-    local offset = self.Properties.MuzzleOffset
+    local offset = self.muzzleOffset
     local position = Vector3(
         origin.x + self.aimDir.x * offset,
         origin.y + self.aimDir.y * offset,
         origin.z)
+    -- Publish this shot so the projectile launches from the muzzle along the aim,
+    -- independent of when its spawn transform is applied (it is not applied on the
+    -- projectile's first tick, which would otherwise send every shot from the world
+    -- origin heading +X).
+    _G.TwinStickShot = {
+        x = position.x, y = position.y, z = origin.z,
+        dx = self.aimDir.x, dy = self.aimDir.y,
+    }
     -- Yaw (degrees) about Z so the projectile's local +X points along the aim.
     local yawDegrees = math.deg(atan2(self.aimDir.y, self.aimDir.x))
     self.fireMediator:SpawnAndParentAndTransform(
@@ -141,15 +208,23 @@ function TwinStickPlayer:FireProjectile()
 end
 
 function TwinStickPlayer:OnTick(deltaTime, scriptTime)
-    -- Movement: normalize so diagonals are not faster, then drive PhysX velocity
-    -- in the XY plane (gravity is disabled on the player rigid body).
+    -- Frozen while paused (the game controller toggles this shared flag on P).
+    if rawget(_G, "TwinStickPaused") then return end
+
+    -- Movement: normalize so diagonals are not faster, step the world position in
+    -- the XY plane, then clamp inside the arena so play stays confined.
+    local pos = TransformBus.Event.GetWorldTranslation(self.entityId)
     local moveLen = math.sqrt(self.moveX * self.moveX + self.moveY * self.moveY)
     if moveLen > 0.1 then
-        local speed = self.Properties.MoveSpeed
-        local velocity = Vector3((self.moveX / moveLen) * speed, (self.moveY / moveLen) * speed, 0.0)
-        RigidBodyRequestBus.Event.SetLinearVelocity(self.entityId, velocity)
-    else
-        RigidBodyRequestBus.Event.SetLinearVelocity(self.entityId, Vector3(0.0, 0.0, 0.0))
+        local speed = self.moveSpeed
+        local nx = pos.x + (self.moveX / moveLen) * speed * deltaTime
+        local ny = pos.y + (self.moveY / moveLen) * speed * deltaTime
+        local cx = self.arenaCx
+        local cy = self.arenaCy
+        local hx = self.arenaHalfX
+        local hy = self.arenaHalfY
+        pos = Vector3(clamp(nx, cx - hx, cx + hx), clamp(ny, cy - hy, cy + hy), pos.z)
+        TransformBus.Event.SetWorldTranslation(self.entityId, pos)
     end
 
     -- Aim: when the player aims, set the TARGET facing; the sprite then eases
@@ -157,36 +232,39 @@ function TwinStickPlayer:OnTick(deltaTime, scriptTime)
     -- instantly spin the sprite. Mouse deltas arrive as one-shot per-frame values
     -- (and are normalized, so their magnitude does not affect turn speed); gamepad
     -- stick values are re-sent each tick.
-    local aimLen = math.sqrt(self.aimX * self.aimX + self.aimY * self.aimY)
-    if aimLen > self.Properties.AimDeadZone then
-        self.aimDir = Vector3(self.aimX / aimLen, self.aimY / aimLen, 0.0)
+    -- The right stick gives an ABSOLUTE aim direction (its position IS where you
+    -- aim, resent each tick), so point-to-aim works directly. The mouse gives only
+    -- per-frame DELTAS (O3DE exposes no cursor position or screen unproject to game
+    -- scripts), so we STEER the aim by nudging the current direction and renormalizing
+    -- -- proportional and persistent, instead of snapping to the last flick. The stick
+    -- wins whenever it is engaged; otherwise the mouse steers.
+    local stickLen = math.sqrt(self.aimX * self.aimX + self.aimY * self.aimY)
+    if stickLen > self.aimDeadZone then
+        self.aimDir = Vector3(self.aimX / stickLen, self.aimY / stickLen, 0.0)
         self.aimYaw = atan2(self.aimDir.y, self.aimDir.x)
+    elseif self.mouseDX ~= 0.0 or self.mouseDY ~= 0.0 then
+        local nx = self.aimDir.x + self.mouseDX * self.mouseSens
+        local ny = self.aimDir.y + self.mouseDY * self.mouseSens
+        local l = math.sqrt(nx * nx + ny * ny)
+        if l > 0.0001 then
+            self.aimDir = Vector3(nx / l, ny / l, 0.0)
+            self.aimYaw = atan2(ny, nx)
+        end
     end
-    -- Mouse deltas do not "release", so clear them each frame.
+    -- Stick values are resent each tick and mouse deltas are per-frame; clear both so
+    -- a centered stick / still mouse stops changing the aim.
     self.aimX = 0.0
     self.aimY = 0.0
+    self.mouseDX = 0.0
+    self.mouseDY = 0.0
 
-    -- Smoothly rotate the current facing toward the target yaw, capped at
-    -- TurnSpeed radians/second (lower = slower, less sensitive). Take the
-    -- shortest angular path by wrapping the delta into [-pi, pi].
-    local dyaw = self.aimYaw - self.facingYaw
-    while dyaw > math.pi do dyaw = dyaw - 2.0 * math.pi end
-    while dyaw < -math.pi do dyaw = dyaw + 2.0 * math.pi end
-    local maxStep = self.Properties.TurnSpeed * deltaTime
-    if dyaw > maxStep then
-        dyaw = maxStep
-    elseif dyaw < -maxStep then
-        dyaw = -maxStep
+    -- Obi's body stays upright (no spin): just flip him to face the aim horizontally.
+    -- (The rotate-to-aim version is in git history if we want it back.)
+    local faceLeft = self.aimDir.x < 0.0
+    if faceLeft ~= self.facingLeft then
+        self.facingLeft = faceLeft
+        DioramaSpriteRequestBus.Event.SetFlip(self.entityId, faceLeft, false)
     end
-    self.facingYaw = self.facingYaw + dyaw
-    -- Apply: a Diorama sprite quad spans the entity local X (right) and Z (up)
-    -- axes, so its surface normal is local Y. Tilt -90 deg about world X to lay it
-    -- flat facing the top-down camera (local Y -> world +Z), then yaw about world Z
-    -- so it points toward the aim. Composing (worldZ yaw) * (worldX tilt) keeps the
-    -- spin flat in the screen plane.
-    local tilt = Quaternion.CreateRotationX(-math.pi * 0.5)
-    local yaw = Quaternion.CreateRotationZ(self.facingYaw)
-    TransformBus.Event.SetWorldRotationQuaternion(self.entityId, yaw * tilt)
 
     -- Firing: spawn a projectile toward the aim direction, rate-limited by the
     -- cooldown. Holding fire auto-fires at the cooldown rate.
@@ -195,8 +273,28 @@ function TwinStickPlayer:OnTick(deltaTime, scriptTime)
     end
     if self.firing and self.fireTimer <= 0.0 then
         self:FireProjectile()
-        self.fireTimer = self.Properties.FireCooldown
+        self.fireTimer = self.fireCooldown
     end
+
+    -- Octopus mood: flush from calm to alarm color by how close the nearest target
+    -- is. Read positions from the shared cache the targets publish (no extra bus
+    -- calls); nearestSq starts at threatRange^2 so "no target in range" = fully calm.
+    local epos = rawget(_G, "TwinStickEnemyPos")
+    local nearestSq = self.threatRange * self.threatRange
+    if epos ~= nil then
+        for _, p in pairs(epos) do
+            local dx = p.x - pos.x
+            local dy = p.y - pos.y
+            local d2 = dx * dx + dy * dy
+            if d2 < nearestSq then nearestSq = d2 end
+        end
+    end
+    local threat = 1.0 - math.sqrt(nearestSq) / self.threatRange
+    if threat < 0.0 then threat = 0.0 end
+    DioramaSpriteRequestBus.Event.SetTint(self.entityId,
+        self.calmR + (self.alarmR - self.calmR) * threat,
+        self.calmG + (self.alarmG - self.calmG) * threat,
+        self.calmB + (self.alarmB - self.calmB) * threat, 1.0)
 end
 
 return TwinStickPlayer

@@ -44,6 +44,10 @@ namespace Diorama::SpriteBatchPlan
     {
         BatchKey m_key;
         AZ::u32 m_index = 0; //!< Index into the caller's sprite array.
+        //! Squared distance to the camera. Used only when Build is called with
+        //! byDepth=true: within a sort layer, sprites are ordered far-to-near so
+        //! nearer ones draw on top (the sprite shader does not depth-test).
+        float m_depth = 0.0f;
     };
 
     //! A contiguous run of items (after ordering) that draw together. m_begin and
@@ -68,10 +72,16 @@ namespace Diorama::SpriteBatchPlan
     //! them by (sortOffset, textureId), then collects maximal runs that share a
     //! BatchKey into outBatches. Sprites with an invalid texture id are dropped.
     //!
+    //! With byDepth=true the secondary sort key is each item's m_depth (camera
+    //! distance), ordered far-to-near within a sort layer, so nearer sprites draw
+    //! on top (2.5D painter's order, since the sprite shader does not depth-test).
+    //! Cross-layer order still follows m_sortOffset, so a lower-offset ground or
+    //! background sprite stays behind regardless of distance.
+    //!
     //! Stable ordering: ties keep their original relative order, so sprites that
     //! land in the same batch preserve registration order, which keeps draw
     //! results deterministic frame to frame.
-    inline void Build(const AZStd::vector<Item>& items, AZStd::vector<Item>& outOrdered, AZStd::vector<Batch>& outBatches)
+    inline void Build(const AZStd::vector<Item>& items, AZStd::vector<Item>& outOrdered, AZStd::vector<Batch>& outBatches, bool byDepth = false)
     {
         outOrdered.clear();
         outBatches.clear();
@@ -88,11 +98,15 @@ namespace Diorama::SpriteBatchPlan
         AZStd::stable_sort(
             outOrdered.begin(),
             outOrdered.end(),
-            [](const Item& lhs, const Item& rhs)
+            [byDepth](const Item& lhs, const Item& rhs)
             {
                 if (lhs.m_key.m_sortOffset != rhs.m_key.m_sortOffset)
                 {
                     return lhs.m_key.m_sortOffset < rhs.m_key.m_sortOffset;
+                }
+                if (byDepth && lhs.m_depth != rhs.m_depth)
+                {
+                    return lhs.m_depth > rhs.m_depth; // farther from camera first -> drawn behind
                 }
                 return lhs.m_key.m_textureId < rhs.m_key.m_textureId;
             });

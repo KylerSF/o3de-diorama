@@ -35,16 +35,21 @@ freely mixed with 3D geometry, lighting, particles, and post effects. See
 
 | Area | Capability | Status |
 | --- | --- | --- |
-| Sprite | World-space sprite quad rendered through Atom dynamic draw | Working |
+| Sprite | World-space sprite quad rendered through Atom | Working |
 | Sprite | Editor viewport preview via a shared presenter | Working |
 | Sprite | Atlas UV sub-regions, horizontal/vertical flip | Working |
-| Sprite | 2.5D sort offset (draw-order control) | Working |
-| Sprite | Billboard (camera-facing) and fixed orientation | Working (runtime) |
-| Sprite | Sprite-sheet / flipbook animation | Planned |
-| Rendering | Batched sprite feature processor (thousands of sprites) | Planned |
-| Tilemap | Custom tilemap asset, builder, and component | Planned |
+| Sprite | Billboard (camera-facing) and fixed orientation | Working |
+| Sprite | Sprite-sheet / flipbook animation | Working |
+| Rendering | Batched feature processor (texture + sort-layer batching) | Working |
+| Rendering | Automatic camera-distance depth sort | Working |
+| Rendering | Soft ground shadows under billboards | Working |
+| Tilemap | Atlas-grid tilemap component + typed bus | Working |
+| 2.5D | Depth-sorted layers + tilted 2.5D camera | Working |
+| Scripting | Typed Sprite/Tilemap buses (Lua, Python, ScriptCanvas) | Working |
+| Sample | 2.5D twin-stick shooter with a LyShine HUD | Working |
+| 2.5D | Parallax background layers | Planned |
 | Camera | Orthographic / pixel-perfect camera | Planned |
-| 2.5D | Parallax and layered depth scenes | Planned |
+| Tilemap | Dedicated tilemap asset + builder | Planned |
 
 A known alpha limitation: the editor preview does not yet live-update to every
 runtime property change. See the roadmap and issues for tracking.
@@ -113,11 +118,11 @@ The documentation and sample ladder (full outline in
 complete game:
 
 1. Hello Sprite (done)
-2. Animated Sprite (sprite-sheet playback)
-3. Sprite Atlas (batched, shared atlas)
-4. Tilemap (custom asset + builder)
-5. Parallax and Layers (2.5D)
-6. Twin-Stick Shooter (capstone 2.5D sample game)
+2. Animated Sprite, sprite-sheet playback (done)
+3. Sprite Atlas, batched shared atlas (done)
+4. Tilemap, atlas-grid component (done)
+5. Parallax and Layers, 2.5D layering + scroll script (done)
+6. Twin-Stick Shooter, capstone 2.5D sample game (done)
 
 Bonus tracks: custom sprite material/shader, pixel-perfect camera, and a
 thousands-of-sprites stress scene.
