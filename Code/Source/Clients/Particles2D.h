@@ -141,4 +141,42 @@ namespace Diorama::Particles2D
         }
         return particles.size();
     }
+
+    //! Clamp a raw per-tick delta to a safe range. A non-finite or non-positive
+    //! delta becomes 0; anything above maxTimeStep is capped. The first frame after
+    //! a level load can hand the emitter a huge or non-finite delta; without this
+    //! clamp it drives an unbounded spawn loop that hangs the game thread.
+    inline float ClampTimeStep(float deltaTime, float maxTimeStep)
+    {
+        if (!(deltaTime > 0.0f)) // false for NaN and non-positive values
+        {
+            return 0.0f;
+        }
+        return deltaTime > maxTimeStep ? maxTimeStep : deltaTime;
+    }
+
+    //! Advance the continuous-emission accumulator by one already-clamped timestep
+    //! and return how many particles to spawn this tick. Never queues more than the
+    //! pool capacity in a single tick, so the caller's spawn loop is always bounded
+    //! regardless of the rate or accumulated value.
+    inline int EmitCountForTick(float& accumulator, float rate, float dt, int maxParticles)
+    {
+        if (rate <= 0.0f)
+        {
+            return 0;
+        }
+        accumulator += rate * dt;
+        const float cap = static_cast<float>(maxParticles > 0 ? maxParticles : 0);
+        if (accumulator > cap)
+        {
+            accumulator = cap;
+        }
+        int count = 0;
+        while (accumulator >= 1.0f)
+        {
+            accumulator -= 1.0f;
+            ++count;
+        }
+        return count;
+    }
 } // namespace Diorama::Particles2D

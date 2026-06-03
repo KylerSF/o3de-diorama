@@ -24,6 +24,7 @@ namespace Diorama
     {
         constexpr float ParticleDegToRad = 0.01745329252f;
         constexpr int ParticleMaxCap = 4096; // hard ceiling on the pool, whatever the config asks
+        constexpr float MaxTimeStep = 0.1f; // clamp the per-tick delta (hitch / non-finite guard)
 
         float ParticleNonNeg(float v)
         {
@@ -336,19 +337,25 @@ namespace Diorama
             }
         }
 
+        // Clamp the timestep before it drives emission or integration. The first
+        // tick after a level load can hand us a huge or non-finite delta; left
+        // unchecked, continuous emission accumulates an unbounded spawn count and
+        // the drain loop spins forever, hanging the game thread (observed as a
+        // frozen launcher: FPS 0, nothing renders).
+        const float dt = Particles2D::ClampTimeStep(deltaTime, MaxTimeStep);
+
         // Continuous emission: accumulate fractional particles so a low rate still
-        // emits at the right average cadence.
-        if (m_playing && m_config.m_rate > 0.0f)
+        // emits at the right average cadence (bounded to the pool capacity per tick).
+        if (m_playing)
         {
-            m_emitAccumulator += m_config.m_rate * deltaTime;
-            while (m_emitAccumulator >= 1.0f)
+            const int toSpawn = Particles2D::EmitCountForTick(m_emitAccumulator, m_config.m_rate, dt, m_config.m_maxParticles);
+            for (int i = 0; i < toSpawn; ++i)
             {
                 SpawnOne();
-                m_emitAccumulator -= 1.0f;
             }
         }
 
-        Particles2D::StepPool(m_particles, MakeParams(), deltaTime);
+        Particles2D::StepPool(m_particles, MakeParams(), dt);
         PushToRenderer();
     }
 

@@ -9,6 +9,8 @@
 
 #include <Clients/Particles2D.h>
 
+#include <limits>
+
 namespace Diorama
 {
     using Particles2D::EmitterParams;
@@ -118,5 +120,57 @@ namespace Diorama
         {
             EXPECT_FALSE(Particles2D::IsDead(p));
         }
+    }
+
+    TEST_F(Particles2DTest, ClampTimeStep_PassesNormalDelta)
+    {
+        EXPECT_NEAR(Particles2D::ClampTimeStep(0.016f, 0.1f), 0.016f, Tol);
+    }
+
+    TEST_F(Particles2DTest, ClampTimeStep_CapsHitch)
+    {
+        EXPECT_NEAR(Particles2D::ClampTimeStep(5.0f, 0.1f), 0.1f, Tol);
+    }
+
+    TEST_F(Particles2DTest, ClampTimeStep_ZeroesNonPositive)
+    {
+        EXPECT_EQ(Particles2D::ClampTimeStep(0.0f, 0.1f), 0.0f);
+        EXPECT_EQ(Particles2D::ClampTimeStep(-1.0f, 0.1f), 0.0f);
+    }
+
+    TEST_F(Particles2DTest, ClampTimeStep_ZeroesNonFinite)
+    {
+        const float inf = std::numeric_limits<float>::infinity();
+        const float nan = std::numeric_limits<float>::quiet_NaN();
+        // A non-finite delta must not pass through (it would drive an unbounded
+        // emission accumulator and hang the game thread). inf exceeds the cap so
+        // it clamps to maxTimeStep; NaN is non-positive under the guard so it zeroes.
+        EXPECT_EQ(Particles2D::ClampTimeStep(inf, 0.1f), 0.1f);
+        EXPECT_EQ(Particles2D::ClampTimeStep(nan, 0.1f), 0.0f);
+    }
+
+    TEST_F(Particles2DTest, EmitCountForTick_AccumulatesFractional)
+    {
+        float acc = 0.0f;
+        // rate 10/s at 0.05s = 0.5 per tick: no spawn first tick, one on the second.
+        EXPECT_EQ(Particles2D::EmitCountForTick(acc, 10.0f, 0.05f, 400), 0);
+        EXPECT_EQ(Particles2D::EmitCountForTick(acc, 10.0f, 0.05f, 400), 1);
+    }
+
+    TEST_F(Particles2DTest, EmitCountForTick_BoundedByPoolCapacity)
+    {
+        // A huge accumulated value (e.g. from a large delta) must never queue more
+        // than the pool can hold in one tick -- this is what keeps the spawn loop
+        // bounded and the game thread from hanging.
+        float acc = 0.0f;
+        const int count = Particles2D::EmitCountForTick(acc, 1.0e9f, 0.1f, 64);
+        EXPECT_EQ(count, 64);
+        EXPECT_LT(acc, 1.0f);
+    }
+
+    TEST_F(Particles2DTest, EmitCountForTick_ZeroRateEmitsNothing)
+    {
+        float acc = 5.0f;
+        EXPECT_EQ(Particles2D::EmitCountForTick(acc, 0.0f, 0.1f, 400), 0);
     }
 } // namespace Diorama
