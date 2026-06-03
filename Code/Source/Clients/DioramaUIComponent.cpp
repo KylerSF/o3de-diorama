@@ -12,8 +12,15 @@
 #include <AzCore/Serialization/EditContext.h>
 #include <AzCore/Serialization/SerializeContext.h>
 
+#include <AzCore/Math/Matrix3x4.h>
+#include <AzCore/Math/Matrix4x4.h>
+#include <AzCore/Math/Vector4.h>
+
 #include <AzFramework/Font/FontInterface.h>
 
+#include <Atom/RPI.Public/AuxGeom/AuxGeomDraw.h>
+#include <Atom/RPI.Public/AuxGeom/AuxGeomFeatureProcessorInterface.h>
+#include <Atom/RPI.Public/Scene.h>
 #include <Atom/RPI.Public/ViewportContext.h>
 #include <Atom/RPI.Public/ViewportContextBus.h>
 
@@ -32,7 +39,8 @@ namespace Diorama
         if (auto* serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
         {
             serializeContext->Class<DioramaUIConfig>()
-                ->Version(1)
+                ->Version(2)
+                ->Field("kind", &DioramaUIConfig::m_kind)
                 ->Field("anchor", &DioramaUIConfig::m_anchor)
                 ->Field("offset", &DioramaUIConfig::m_offset)
                 ->Field("referenceWidth", &DioramaUIConfig::m_referenceWidth)
@@ -40,13 +48,20 @@ namespace Diorama
                 ->Field("text", &DioramaUIConfig::m_text)
                 ->Field("fontSize", &DioramaUIConfig::m_fontSize)
                 ->Field("color", &DioramaUIConfig::m_color)
+                ->Field("size", &DioramaUIConfig::m_size)
+                ->Field("value", &DioramaUIConfig::m_value)
+                ->Field("backgroundColor", &DioramaUIConfig::m_backgroundColor)
                 ->Field("visible", &DioramaUIConfig::m_visible);
 
             if (auto* editContext = serializeContext->GetEditContext())
             {
-                editContext->Class<DioramaUIConfig>("2D UI Element", "A screen-space HUD text element")
+                editContext->Class<DioramaUIConfig>("2D UI Element", "A screen-space HUD element")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
+                    ->DataElement(AZ::Edit::UIHandlers::ComboBox, &DioramaUIConfig::m_kind, "Kind", "What the element draws")
+                        ->EnumAttribute(UIElementKind::Text, "Text")
+                        ->EnumAttribute(UIElementKind::Bar, "Bar / Gauge")
+                        ->EnumAttribute(UIElementKind::Panel, "Panel (solid color)")
                     ->DataElement(AZ::Edit::UIHandlers::ComboBox, &DioramaUIConfig::m_anchor, "Anchor", "Screen corner/edge the element is pinned to")
                         ->EnumAttribute(UILayout2D::Anchor::TopLeft, "Top Left")
                         ->EnumAttribute(UILayout2D::Anchor::Top, "Top")
@@ -61,8 +76,13 @@ namespace Diorama
                     ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaUIConfig::m_referenceWidth, "Reference Width", "Virtual resolution width the layout is authored in")
                     ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaUIConfig::m_referenceHeight, "Reference Height", "Virtual resolution height the layout is authored in")
                     ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaUIConfig::m_text, "Text", "Label text")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaUIConfig::m_fontSize, "Font Size", "Font size in reference pixels")
-                    ->DataElement(AZ::Edit::UIHandlers::Color, &DioramaUIConfig::m_color, "Color", "Text color")
+                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaUIConfig::m_fontSize, "Font Size", "Font size in reference pixels (text)")
+                    ->DataElement(AZ::Edit::UIHandlers::Color, &DioramaUIConfig::m_color, "Color", "Text color, or bar fill / panel color")
+                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaUIConfig::m_size, "Size", "Element box in reference pixels (bar/panel)")
+                    ->DataElement(AZ::Edit::UIHandlers::Slider, &DioramaUIConfig::m_value, "Value", "Bar fill 0..1")
+                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                        ->Attribute(AZ::Edit::Attributes::Max, 1.0f)
+                    ->DataElement(AZ::Edit::UIHandlers::Color, &DioramaUIConfig::m_backgroundColor, "Background Color", "Bar/panel background behind the fill")
                     ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaUIConfig::m_visible, "Visible", "Whether the element draws");
             }
         }
@@ -100,24 +120,14 @@ namespace Diorama
 
     void DioramaUIComponent::OnTick([[maybe_unused]] float deltaTime, [[maybe_unused]] AZ::ScriptTimePoint time)
     {
-        if (!m_config.m_visible || m_config.m_text.empty())
-        {
-            return;
-        }
-
-        auto* fontQuery = AZ::Interface<AzFramework::FontQueryInterface>::Get();
-        if (fontQuery == nullptr)
-        {
-            return;
-        }
-        AzFramework::FontDrawInterface* fontDraw = fontQuery->GetDefaultFontDrawInterface();
-        if (fontDraw == nullptr)
+        if (!m_config.m_visible)
         {
             return;
         }
 
         // Real backbuffer size + viewport id, with the reference resolution as a
-        // fallback if the viewport context is not available yet.
+        // fallback if the viewport context is not available yet. Shared by both the
+        // text and quad paths.
         float realW = m_config.m_referenceWidth;
         float realH = m_config.m_referenceHeight;
         AzFramework::ViewportId viewportId = AzFramework::InvalidViewportId;
@@ -132,9 +142,36 @@ namespace Diorama
             }
         }
 
+        if (m_config.m_kind == UIElementKind::Text)
+        {
+            DrawText(realW, realH, viewportId);
+        }
+        else
+        {
+            DrawQuads(realW, realH);
+        }
+    }
+
+    void DioramaUIComponent::DrawText(float realW, float realH, AZ::u32 viewportId)
+    {
+        if (m_config.m_text.empty())
+        {
+            return;
+        }
+        auto* fontQuery = AZ::Interface<AzFramework::FontQueryInterface>::Get();
+        if (fontQuery == nullptr)
+        {
+            return;
+        }
+        AzFramework::FontDrawInterface* fontDraw = fontQuery->GetDefaultFontDrawInterface();
+        if (fontDraw == nullptr)
+        {
+            return;
+        }
+
         const float scale = UILayout2D::ReferenceScale(m_config.m_referenceWidth, m_config.m_referenceHeight, realW, realH);
         // Size/pivot zero: the resolved rect's position is the anchor+offset point,
-        // and the font's own alignment (below) places the text around it.
+        // and the font's own alignment places the text around it.
         const UILayout2D::ScreenRect rect = UILayout2D::ResolveRect(
             m_config.m_referenceWidth, m_config.m_referenceHeight, realW, realH, m_config.m_anchor,
             m_config.m_offset.GetX(), m_config.m_offset.GetY(), 0.0f, 0.0f, 0.0f, 0.0f);
@@ -155,6 +192,75 @@ namespace Diorama
             : (fy >= 1.0f ? AzFramework::TextVerticalAlignment::Bottom : AzFramework::TextVerticalAlignment::Center);
 
         fontDraw->DrawScreenAlignedText2d(params, m_config.m_text);
+    }
+
+    void DioramaUIComponent::DrawQuads(float realW, float realH)
+    {
+        AZ::RPI::Scene* scene = AZ::RPI::Scene::GetSceneForEntityId(GetEntityId());
+        AZ::RPI::AuxGeomDrawPtr auxGeom = scene ? AZ::RPI::AuxGeomFeatureProcessorInterface::GetDrawQueueForScene(scene) : nullptr;
+        if (scene == nullptr || auxGeom == nullptr)
+        {
+            return;
+        }
+
+        // The element box resolved to real screen pixels. The pivot follows the
+        // anchor (e.g. a bottom-right element is pinned by its bottom-right corner)
+        // so the box stays on-screen against its corner.
+        const float pivotX = UILayout2D::AnchorFractionX(m_config.m_anchor);
+        const float pivotY = UILayout2D::AnchorFractionY(m_config.m_anchor);
+        const UILayout2D::ScreenRect rect = UILayout2D::ResolveRect(
+            m_config.m_referenceWidth, m_config.m_referenceHeight, realW, realH, m_config.m_anchor,
+            m_config.m_offset.GetX(), m_config.m_offset.GetY(), m_config.m_size.GetX(), m_config.m_size.GetY(), pivotX, pivotY);
+        m_lastScreenX = rect.m_x;
+        m_lastScreenY = rect.m_y;
+
+        // Orthographic override mapping screen pixels (y-down) to clip space, so the
+        // AuxGeom quads draw in screen space regardless of the scene camera.
+        AZ::Matrix4x4 ortho = AZ::Matrix4x4::CreateIdentity();
+        ortho.SetRow(0, AZ::Vector4(2.0f / realW, 0.0f, 0.0f, -1.0f));
+        ortho.SetRow(1, AZ::Vector4(0.0f, -2.0f / realH, 0.0f, 1.0f));
+        ortho.SetRow(2, AZ::Vector4(0.0f, 0.0f, 1.0f, 0.0f));
+        ortho.SetRow(3, AZ::Vector4(0.0f, 0.0f, 0.0f, 1.0f));
+        const int32_t viewProj = auxGeom->AddViewProjOverride(ortho);
+
+        auto drawQuad = [&](float x, float y, float w, float h, const AZ::Color& color)
+        {
+            if (w <= 0.0f || h <= 0.0f)
+            {
+                return;
+            }
+            // Two triangles in the XY pixel plane (z = 0); the ortho override projects
+            // them to screen. Explicit verts avoid any assumption about which plane a
+            // fixed-shape quad is authored in.
+            const AZ::Vector3 verts[6] = {
+                AZ::Vector3(x, y, 0.0f),         AZ::Vector3(x + w, y, 0.0f),     AZ::Vector3(x + w, y + h, 0.0f),
+                AZ::Vector3(x, y, 0.0f),         AZ::Vector3(x + w, y + h, 0.0f), AZ::Vector3(x, y + h, 0.0f),
+            };
+            const AZ::Color colors[1] = { color };
+            AZ::RPI::AuxGeomDraw::AuxGeomDynamicDrawArguments args;
+            args.m_verts = verts;
+            args.m_vertCount = 6;
+            args.m_colors = colors;
+            args.m_colorCount = 1;
+            args.m_opacityType = color.GetA() < 1.0f ? AZ::RPI::AuxGeomDraw::OpacityType::Translucent
+                                                      : AZ::RPI::AuxGeomDraw::OpacityType::Opaque;
+            args.m_depthTest = AZ::RPI::AuxGeomDraw::DepthTest::Off;
+            args.m_depthWrite = AZ::RPI::AuxGeomDraw::DepthWrite::Off;
+            args.m_viewProjectionOverrideIndex = viewProj;
+            auxGeom->DrawTriangles(args, AZ::RPI::AuxGeomDraw::FaceCullMode::None);
+        };
+
+        if (m_config.m_kind == UIElementKind::Bar)
+        {
+            // Background track, then the value-scaled fill from the left.
+            drawQuad(rect.m_x, rect.m_y, rect.m_width, rect.m_height, m_config.m_backgroundColor);
+            const float fill = UILayout2D::ClampFill(m_config.m_value);
+            drawQuad(rect.m_x, rect.m_y, rect.m_width * fill, rect.m_height, m_config.m_color);
+        }
+        else // Panel: a single solid quad.
+        {
+            drawQuad(rect.m_x, rect.m_y, rect.m_width, rect.m_height, m_config.m_color);
+        }
     }
 
     void DioramaUIComponent::SetText(const AZStd::string& text)
@@ -183,6 +289,22 @@ namespace Diorama
         m_config.m_offset = AZ::Vector2(x, y);
     }
 
+    void DioramaUIComponent::SetSize(float width, float height)
+    {
+        m_config.m_size = AZ::Vector2(width < 0.0f ? 0.0f : width, height < 0.0f ? 0.0f : height);
+    }
+
+    void DioramaUIComponent::SetValue(float value)
+    {
+        m_config.m_value = UILayout2D::ClampFill(value);
+    }
+
+    void DioramaUIComponent::SetBackgroundColor(float r, float g, float b, float a)
+    {
+        m_config.m_backgroundColor =
+            AZ::Color(UIClamp(r, 0.0f, 1.0f), UIClamp(g, 0.0f, 1.0f), UIClamp(b, 0.0f, 1.0f), UIClamp(a, 0.0f, 1.0f));
+    }
+
     void DioramaUIComponent::SetVisible(bool visible)
     {
         m_config.m_visible = visible;
@@ -195,6 +317,8 @@ namespace Diorama
         info.m_fontSize = m_config.m_fontSize;
         info.m_visible = m_config.m_visible;
         info.m_anchor = static_cast<int>(m_config.m_anchor);
+        info.m_kind = static_cast<int>(m_config.m_kind);
+        info.m_value = m_config.m_value;
         info.m_screenX = m_lastScreenX;
         info.m_screenY = m_lastScreenY;
         return info;

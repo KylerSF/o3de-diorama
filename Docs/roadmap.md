@@ -157,13 +157,16 @@ Missing table-stakes (no design doc yet):
   parity model the sprite/tilemap buses follow), with an editor twin and demos,
   rather than a bolt-on. Health/score/menus an agent can build the same way it
   builds sprites. (LyShine is UI-only and outside Diorama's parity model today.)
-  **In progress**: design in [design/2d-ui-hud.md](design/2d-ui-hud.md). The pure
-  `UILayout2D.h` anchor/scale core (+ unit tests), and the v1 **text** element have
-  landed: `DioramaUIComponent` + `DioramaUIRequestBus` (SetText/SetFontSize/
-  SetColor/SetAnchor/SetOffset/SetVisible/GetUIInfo) + the `EditorDioramaUIComponent`
-  twin, rendering screen-space text via `AzFramework::FontDrawInterface` (verified
-  rendering a HUD over the lighting demo). Next: bar/gauge and panel elements
-  (screen-space quads), a HUD demo + how-to, and porting the twin-stick score HUD.
+  **In progress**: design in [design/2d-ui-hud.md](design/2d-ui-hud.md). Landed: the
+  pure `UILayout2D.h` anchor/scale core (+ unit tests); `DioramaUIComponent` +
+  `DioramaUIRequestBus` + the `EditorDioramaUIComponent` twin; **text** elements via
+  `AzFramework::FontDrawInterface`; and **bar/gauge + solid-color panel** elements via
+  screen-space AuxGeom triangles with an orthographic view-proj override (no new
+  shader, no LyShine dependency). Bus: SetText/SetFontSize/SetColor/SetAnchor/
+  SetOffset/SetSize/SetValue/SetBackgroundColor/SetVisible/GetUIInfo. Verified
+  rendering a title + score + health bar + panel over the lighting demo. Next:
+  textured-image panels (sprite path), a HUD demo + how-to, and porting the
+  twin-stick score HUD off LyShine onto the Diorama bus.
 - **Animation state machine.** Flipbook and skeletal give *clips*; character work
   needs transitions (idle -> run -> jump) with conditions and blends.
 - **Input action-mapping.** A rebindable action surface; the twin-stick wires raw

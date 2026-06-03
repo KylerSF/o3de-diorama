@@ -22,6 +22,8 @@ namespace Diorama
                 ->Field("fontSize", &UIInfo::m_fontSize)
                 ->Field("visible", &UIInfo::m_visible)
                 ->Field("anchor", &UIInfo::m_anchor)
+                ->Field("kind", &UIInfo::m_kind)
+                ->Field("value", &UIInfo::m_value)
                 ->Field("screenX", &UIInfo::m_screenX)
                 ->Field("screenY", &UIInfo::m_screenY);
         }
@@ -35,6 +37,8 @@ namespace Diorama
                 ->Property("fontSize", BehaviorValueProperty(&UIInfo::m_fontSize))
                 ->Property("visible", BehaviorValueProperty(&UIInfo::m_visible))
                 ->Property("anchor", BehaviorValueProperty(&UIInfo::m_anchor))
+                ->Property("kind", BehaviorValueProperty(&UIInfo::m_kind))
+                ->Property("value", BehaviorValueProperty(&UIInfo::m_value))
                 ->Property("screenX", BehaviorValueProperty(&UIInfo::m_screenX))
                 ->Property("screenY", BehaviorValueProperty(&UIInfo::m_screenY));
         }
@@ -72,6 +76,19 @@ namespace Diorama
                 &DioramaUIRequestBus::Events::SetOffset,
                 { { { "x", "Offset X from the anchor, in reference pixels." },
                     { "y", "Offset Y from the anchor, in reference pixels (y-down)." } } })
+            ->Event(
+                "SetSize",
+                &DioramaUIRequestBus::Events::SetSize,
+                { { { "width", "Element box width in reference pixels (bar/panel)." },
+                    { "height", "Element box height in reference pixels (bar/panel)." } } })
+            ->Event(
+                "SetValue",
+                &DioramaUIRequestBus::Events::SetValue,
+                { { { "value", "Bar fill, clamped 0..1." } } })
+            ->Event(
+                "SetBackgroundColor",
+                &DioramaUIRequestBus::Events::SetBackgroundColor,
+                { { { "r", "Red 0..1." }, { "g", "Green 0..1." }, { "b", "Blue 0..1." }, { "a", "Alpha 0..1." } } })
             ->Event(
                 "SetVisible",
                 &DioramaUIRequestBus::Events::SetVisible,

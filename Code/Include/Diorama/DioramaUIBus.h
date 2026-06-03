@@ -34,6 +34,8 @@ namespace Diorama
         float m_fontSize = 0.0f; //!< Font size in reference pixels.
         bool m_visible = false; //!< Whether the element draws.
         int m_anchor = 0; //!< Anchor index (see SetAnchor).
+        int m_kind = 0; //!< Element kind: 0 Text, 1 Bar, 2 Panel.
+        float m_value = 0.0f; //!< Bar fill 0..1.
         float m_screenX = 0.0f; //!< Last resolved screen X in real pixels.
         float m_screenY = 0.0f; //!< Last resolved screen Y in real pixels.
     };
@@ -59,6 +61,12 @@ namespace Diorama
         virtual void SetAnchor(int anchor) = 0;
         //! Offset from the anchor, in reference pixels (y-down).
         virtual void SetOffset(float x, float y) = 0;
+        //! Element box size in reference pixels (bar/panel; ignored by text).
+        virtual void SetSize(float width, float height) = 0;
+        //! Bar fill, clamped 0..1 (bar only). The fill color is SetColor.
+        virtual void SetValue(float value) = 0;
+        //! Bar/panel background color behind the fill (channels clamped 0..1).
+        virtual void SetBackgroundColor(float r, float g, float b, float a) = 0;
         //! Show or hide the element.
         virtual void SetVisible(bool visible) = 0;
         //! Resolved element state. Safe to poll.
