@@ -31,6 +31,7 @@ Each has a written guide and a runnable example.
 | 2D Particle Emitter | [09-particles.md](09-particles.md) | Written |
 | 2D Materials (flash + outline) | [10-materials.md](10-materials.md) | Written |
 | Side-Scroller Slice (integration) | [11-sidescroller.md](11-sidescroller.md) | Written |
+| 2D UI / HUD (text + bar + panel) | [13-ui-hud.md](13-ui-hud.md) | Written |
 
 ## Tooling
 
@@ -67,6 +68,7 @@ the design, see:
 | 2D Particle Emitter | [../examples/particles_demo.py](../examples/particles_demo.py) |
 | 2D Materials (flash + outline) | [../examples/materials_demo.py](../examples/materials_demo.py) |
 | Side-Scroller Slice (integration) | [../examples/sidescroller_demo.py](../examples/sidescroller_demo.py) |
+| 2D UI / HUD | [../examples/ui_hud_demo.py](../examples/ui_hud_demo.py) |
 
 Run an example in the editor:
 
