@@ -22,14 +22,16 @@ Run in the editor:
     --project-path=/path/to/YourProject \
     --runpython /path/to/o3de-diorama/Docs/examples/quickstart_demo.py
 """
+import json
+
 import azlmbr
 import azlmbr.asset
 import azlmbr.bus as bus
-import azlmbr.components
 import azlmbr.editor as editor
 import azlmbr.entity
 import azlmbr.legacy.general as general
 import azlmbr.math as math
+import azlmbr.paths
 
 diorama = azlmbr.diorama
 
@@ -107,6 +109,43 @@ def make_entity(name, position, type_ids):
     return eid
 
 
+def frame_quickcamera():
+    """Aim QuickCamera at the XY plane by patching the saved prefab, then reopen.
+
+    A runtime TransformBus.SetLocalRotation does NOT persist: it updates the live
+    component (so the viewport shows it) but never patches the prefab template DOM that
+    save serializes, so the rotation is dropped on save. Instead we edit the serialized
+    prefab directly -- the file the loader reads -- and reopen the level so the editor's
+    live template absorbs the rotation (and a later save by the user preserves it).
+    Rotate -90 about X makes the camera's +Y forward point -Z, a front view of the scene.
+    """
+    proj = None
+    try:
+        proj = str(azlmbr.paths.projectroot)
+    except Exception as e:
+        log("could not resolve project root ({}); set QuickCamera Rotate X=-90 by hand".format(e))
+        return
+    pf = "{}/Levels/{}/{}.prefab".format(proj, LEVEL_NAME, LEVEL_NAME)
+    try:
+        with open(pf) as f:
+            doc = json.load(f)
+        patched = 0
+        for entity in doc.get("Entities", {}).values():
+            if entity.get("Name") != "QuickCamera":
+                continue
+            for comp in entity.get("Components", {}).values():
+                if "TransformComponent" in comp.get("$type", ""):
+                    comp.setdefault("Transform Data", {})["Rotate"] = [-90.0, 0.0, 0.0]
+                    patched += 1
+        with open(pf, "w") as f:
+            json.dump(doc, f, indent=4)
+        general.open_level_no_prompt(LEVEL_NAME)
+        general.idle_wait_frames(20)
+        log("Camera framed (Rotate X=-90) via prefab patch + reload; patched {} transform(s).".format(patched))
+    except Exception as e:
+        log("camera-frame patch failed ({}); set QuickCamera Rotate X=-90 by hand".format(e))
+
+
 def main():
     log("start")
     if not open_or_create_level(LEVEL_NAME):
@@ -144,16 +183,16 @@ def main():
     cam_types = [controller_type] + ([atom_camera_type] if atom_camera_type is not None else [])
     if atom_camera_type is None:
         log("WARN: Atom 'Camera' component not found; add a Camera to QuickCamera by hand.")
-    camera = make_entity("QuickCamera", math.Vector3(0.0, 0.0, 28.0), cam_types)
-    # Aim it at the XY plane. O3DE camera forward is entity +Y, so without a rotation
-    # the camera stares sideways and the level renders empty in game mode. Rotate -90
-    # about X so forward becomes -Z (a front view of the XY-plane scene). -pi/2 rad.
-    azlmbr.components.TransformBus(bus.Event, "SetLocalRotation", camera, math.Vector3(-1.5707963, 0.0, 0.0))
+    make_entity("QuickCamera", math.Vector3(0.0, 0.0, 28.0), cam_types)
+    # The camera's rotation is set after the save, by patching the prefab directly --
+    # see frame_quickcamera(). O3DE camera forward is entity +Y, so it needs a -90 X
+    # rotation (forward -> -Z, a front view of the XY plane) or the level renders empty.
 
     general.idle_wait_frames(40)
     if general.get_current_level_name() == LEVEL_NAME:
         try:
             general.save_level()
+            frame_quickcamera()
         except Exception as e:
             log("save_level raised: {}".format(e))
     else:
