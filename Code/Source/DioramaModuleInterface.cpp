@@ -15,6 +15,7 @@
 #include <Clients/DioramaCamera2DComponent.h>
 #include <Clients/DioramaLightComponent.h>
 #include <Clients/DioramaParallaxComponent.h>
+#include <Clients/DioramaUIComponent.h>
 #include <Clients/ParticleEmitterComponent.h>
 #include <Clients/DioramaSystemComponent.h>
 #include <Clients/SpriteComponent.h>
@@ -44,6 +45,7 @@ namespace Diorama
                 DioramaCamera2DComponent::CreateDescriptor(),
                 ParticleEmitterComponent::CreateDescriptor(),
                 DioramaParallaxComponent::CreateDescriptor(),
+                DioramaUIComponent::CreateDescriptor(),
             });
     }
 

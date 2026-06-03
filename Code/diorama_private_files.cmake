@@ -39,6 +39,9 @@ set(FILES
     Source/Clients/ParticleEmitterComponent.cpp
     Source/Clients/ParticleEmitterComponent.h
     Source/Clients/ParticleBus.cpp
+    Source/Clients/DioramaUIComponent.cpp
+    Source/Clients/DioramaUIComponent.h
+    Source/Clients/UIBus.cpp
     Source/Clients/DioramaParallaxComponent.cpp
     Source/Clients/DioramaParallaxComponent.h
     Source/Clients/ParallaxBus.cpp

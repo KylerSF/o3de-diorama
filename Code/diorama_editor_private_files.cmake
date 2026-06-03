@@ -16,4 +16,6 @@ set(FILES
     Source/Tools/EditorParticleEmitterComponent.h
     Source/Tools/EditorDioramaParallaxComponent.cpp
     Source/Tools/EditorDioramaParallaxComponent.h
+    Source/Tools/EditorDioramaUIComponent.cpp
+    Source/Tools/EditorDioramaUIComponent.h
 )

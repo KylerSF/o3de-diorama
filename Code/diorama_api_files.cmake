@@ -12,4 +12,5 @@ set(FILES
     Include/Diorama/DioramaCameraBus.h
     Include/Diorama/DioramaParticleBus.h
     Include/Diorama/DioramaParallaxBus.h
+    Include/Diorama/DioramaUIBus.h
 )

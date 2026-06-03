@@ -77,6 +77,13 @@ namespace Diorama
     inline constexpr const char* DioramaParallaxRequestsTypeId = "{EF380AF1-E90C-46E2-F8FB-D910FC2D8E93}";
     inline constexpr const char* ParallaxInfoTypeId = "{F0491B02-FA1D-47F3-A90C-EA21AD3E9FA4}";
 
+    // 2D UI/HUD TypeIds (screen-space HUD elements at parity with the sprite bus)
+    inline constexpr const char* DioramaUIConfigTypeId = "{E807B991-372D-40F3-BF59-FD11AB9816C7}";
+    inline constexpr const char* DioramaUIComponentTypeId = "{CFAC0BA7-08B4-4F78-BE65-D958A0780108}";
+    inline constexpr const char* EditorDioramaUIComponentTypeId = "{159DE9A8-A1BE-4FEC-842B-B15AD8239D88}";
+    inline constexpr const char* DioramaUIRequestsTypeId = "{761615B1-CB60-41BD-AD90-BCBFC0163C5B}";
+    inline constexpr const char* UIInfoTypeId = "{E78E6C16-4C66-43BB-975C-3EA5721A3182}";
+
     // AI-facing 2D collision API TypeIds
     inline constexpr const char* Diorama2DColliderRequestsTypeId = "{908C687A-9799-4BD9-9E82-3368D3BAEA03}";
     inline constexpr const char* Diorama2DCollisionNotificationsTypeId = "{3E9FB4C7-C577-450B-8CCA-9CEDF0964E06}";
