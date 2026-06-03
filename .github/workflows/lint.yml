@@ -51,10 +51,12 @@ jobs:
         run: |
           status=0
           while IFS= read -r f; do
-            case "$f" in
-              *.png|*.jpg|*.jpeg|*.gif|*.ico|*.pdf) continue ;;
-            esac
-            if [ -f "$f" ] && grep -nIE ' +$' "$f"; then
+            [ -f "$f" ] || continue
+            # Skip binary files: a trailing-newline / trailing-whitespace check only
+            # makes sense for text. grep -I reports no match on binary, so this also
+            # covers images, audio (.wav), fonts, etc. without an extension allowlist.
+            grep -Iq . "$f" || continue
+            if grep -nIE ' +$' "$f"; then
               echo "::error file=$f::trailing whitespace"; status=1
             fi
             if [ -s "$f" ] && [ -n "$(tail -c1 "$f")" ]; then
