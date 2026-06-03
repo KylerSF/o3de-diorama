@@ -38,6 +38,13 @@ namespace Diorama
         //! cheap until the component activates and explicitly requests the load.
         AZ::Data::Asset<AZ::RPI::StreamingImageAsset> m_texture{ AZ::Data::AssetLoadBehavior::PreLoad };
 
+        //! Optional tangent-space normal map (2D dynamic lighting v1b). When set, the
+        //! gem's 2D lights shape the flat art (Lambertian N.L) instead of only
+        //! attenuating by distance; when unset, lighting is the flat v1a path. Best
+        //! suited to billboarded sprites (the lighting uses the camera basis). Left
+        //! NoLoad until the component activates and requests it.
+        AZ::Data::Asset<AZ::RPI::StreamingImageAsset> m_normalMap{ AZ::Data::AssetLoadBehavior::PreLoad };
+
         //! Size of the quad in world units (width, height).
         AZ::Vector2 m_size = AZ::Vector2(1.0f, 1.0f);
 

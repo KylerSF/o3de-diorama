@@ -88,6 +88,24 @@ sprites are full-bright, not dimmed. The ambient floor (set by
 light exists, so adding the feature never darkens a scene on its own. You opt
 into the moody look by placing a light.
 
+## Normal maps (shaped light)
+
+By default lights only brighten sprites by distance (flat). Assign a sprite a
+**normal map** and the lights *shape* it: the side facing a light gets brighter
+and the highlight tracks a moving light, so flat art reads as 3D. The demo does
+this with a shipped spherical normal map (`diorama/textures/sphere_normal.png`),
+which makes each flat creature light like a ball:
+
+```python
+diorama.DioramaSpriteRequestBus(bus.Event, "SetNormalMapByPath", eid, "diorama/textures/sphere_normal.png")
+```
+
+You can also set it in the inspector via the Sprite component's **Normal Map**
+field. Normal maps work best on **billboarded** sprites (the lighting uses the
+camera's basis to orient the normal). Remove the normal map to compare against the
+flat look. Painting normal maps for your own art (e.g. with Laigter or SpriteIlluminator)
+is the usual workflow; the shipped sphere map is just a ready demo.
+
 ## How it works
 
 The `SpriteFeatureProcessor` gathers every registered `2D Light` once per frame

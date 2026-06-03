@@ -9,6 +9,18 @@ alpha (the 0.x line), minor releases may include breaking changes.
 ## [Unreleased]
 
 ### Added
+- Normal-mapped 2D lighting (lighting v1b). Sprites gain an optional **normal map**
+  slot: when set, the gem's 2D lights shape the flat art with a Lambertian N.L term
+  (the side facing a light is brighter, and the highlight tracks a moving light)
+  instead of only attenuating by distance; when unset, lighting is byte-for-byte the
+  flat v1a path. The shader brings the tangent-space normal into world space using
+  the billboard's camera basis (set per draw), so it is best suited to billboarded
+  sprites. The normal map is part of the batch key (one bind per draw), so sprites
+  sharing albedo + normal + sort still batch into one call. A new
+  `SetNormalMapByPath` verb on `DioramaSpriteRequestBus` assigns it from script /
+  Python / Script Canvas, and a `sphere_normal` sample texture ships so a flat
+  sprite can light like a 3D ball. See
+  [Docs/design/2d-lighting.md](Docs/design/2d-lighting.md).
 - Gem-native 2D parallax layer component. A `2D Parallax Layer` component placed on
   a layer entity (sprite, tilemap, or a parent of several) offsets it from its
   authored position by a reference entity's movement scaled by `(1 - factor)`, so

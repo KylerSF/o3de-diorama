@@ -119,7 +119,7 @@ namespace Diorama
         //! Draw one batched pass of ground shadows for all shadow-casting (billboarded)
         //! sprites, using the shared soft shadow texture, at the given sort key (placed
         //! above the floor and below the sprites).
-        void DrawShadows(AZ::RHI::DrawItemSortKey sortKey);
+        void DrawShadows(AZ::RHI::DrawItemSortKey sortKey, const AZ::Transform& cameraTransform);
 
         //! Sprite shader asset, loaded asynchronously starting in Activate(). It
         //! must never be loaded with a blocking call from Render(): Render() runs
@@ -149,6 +149,12 @@ namespace Diorama
         //! CVars; when lighting is off it writes ambient=1 and zero lights so the
         //! shader's lit math collapses to the unlit albedo * vertex color.
         void SetLightingConstants(AZ::RPI::ShaderResourceGroup* drawSrg);
+
+        //! Pack the per-draw material constants (v1b): whether this batch has a normal
+        //! map, and the billboard's camera-aligned tangent basis used to bring a
+        //! tangent-space normal into world space. Set on every batch alongside the
+        //! lighting constants so the shader's normal-mapped path has its inputs.
+        void SetMaterialConstants(AZ::RPI::ShaderResourceGroup* drawSrg, const AZ::Transform& cameraTransform, bool hasNormalMap);
 
         // The batch plan (grouping + ordering) only changes when a sprite is
         // added, removed, or its batch key (texture or sort layer) changes. It is

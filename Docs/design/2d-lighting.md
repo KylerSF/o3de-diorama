@@ -17,7 +17,15 @@ Atom integration decision behind it, and the phased plan.
   forced to 1, count 0). Verified: C++ + tests build green, shader passes the AZSL
   semantic check, SRG constant layout matches CPU packing exactly. Visual sign-off
   pending on a monitor (no unit-testable core for the look itself).
-- **v1b (next):** per-sprite normal map for shape/relief (the headline look).
+- **v1b (done):** per-sprite normal map for shape/relief. Sprites gain an optional
+  normal map; when set, lights add a Lambertian N.L term (tangent-space normal
+  brought to world space via the billboard's camera basis, set per draw), so the
+  side facing a light is brighter and the highlight tracks a moving light. The
+  normal map is part of the batch key (one bind per draw). Without one, the flat
+  v1a path is byte-for-byte unchanged. `SetNormalMapByPath` on the sprite bus
+  assigns it; a `sphere_normal` sample texture ships. Best on billboards (the
+  basis is camera-aligned). Verified: builds green, 118 tests pass, shader
+  semantic-clean with the new constants + image slot; visual is a monitor check.
 - **v2+:** spot lights, nearest-N selection, emissive channel (see Phasing).
 
 ## Goal

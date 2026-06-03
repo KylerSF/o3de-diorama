@@ -40,13 +40,19 @@ namespace Diorama
             return name;
         }
 
+        const AZ::Name& NormalMapSrgInput()
+        {
+            static const AZ::Name name{ "m_normalMap" };
+            return name;
+        }
+
         // The batch key identifies sprites that can draw together: same texture
         // asset and same sort layer. The full asset id is used (not a hash) so
         // distinct textures never collide, and the sort offset is kept as a float
         // so fractional layers stay distinct.
         SpriteBatchPlan::BatchKey MakeBatchKey(const SpriteComponentConfig& config)
         {
-            return SpriteBatchPlan::BatchKey{ config.m_texture.GetId(), config.m_sortOffset };
+            return SpriteBatchPlan::BatchKey{ config.m_texture.GetId(), config.m_sortOffset, config.m_normalMap.GetId() };
         }
     } // namespace
 
@@ -264,6 +270,39 @@ namespace Diorama
         }
     }
 
+    void SpriteFeatureProcessor::SetMaterialConstants(
+        AZ::RPI::ShaderResourceGroup* drawSrg, const AZ::Transform& cameraTransform, bool hasNormalMap)
+    {
+        // Billboard tangent basis: right and up are the camera's, the face normal is
+        // their cross product (pointing toward the camera). This matches AppendQuad's
+        // billboard basis, so a tangent-space normal maps correctly for billboards.
+        const AZ::Matrix3x3 cameraBasis = AZ::Matrix3x3::CreateFromTransform(cameraTransform);
+        const AZ::Vector3 right = cameraBasis.GetColumn(0);
+        const AZ::Vector3 up = cameraBasis.GetColumn(2);
+        const AZ::Vector3 fwd = right.Cross(up);
+
+        const AZ::RHI::ShaderInputConstantIndex materialIdx = drawSrg->FindShaderInputConstantIndex(AZ::Name{ "m_material" });
+        if (materialIdx.IsValid())
+        {
+            drawSrg->SetConstant(materialIdx, AZ::Vector4(hasNormalMap ? 1.0f : 0.0f, 0.0f, 0.0f, 0.0f));
+        }
+        const AZ::RHI::ShaderInputConstantIndex rightIdx = drawSrg->FindShaderInputConstantIndex(AZ::Name{ "m_camBasisRight" });
+        if (rightIdx.IsValid())
+        {
+            drawSrg->SetConstant(rightIdx, AZ::Vector4(right.GetX(), right.GetY(), right.GetZ(), 0.0f));
+        }
+        const AZ::RHI::ShaderInputConstantIndex upIdx = drawSrg->FindShaderInputConstantIndex(AZ::Name{ "m_camBasisUp" });
+        if (upIdx.IsValid())
+        {
+            drawSrg->SetConstant(upIdx, AZ::Vector4(up.GetX(), up.GetY(), up.GetZ(), 0.0f));
+        }
+        const AZ::RHI::ShaderInputConstantIndex fwdIdx = drawSrg->FindShaderInputConstantIndex(AZ::Name{ "m_camBasisFwd" });
+        if (fwdIdx.IsValid())
+        {
+            drawSrg->SetConstant(fwdIdx, AZ::Vector4(fwd.GetX(), fwd.GetY(), fwd.GetZ(), 0.0f));
+        }
+    }
+
     bool SpriteFeatureProcessor::EnsureInitialized()
     {
         if (m_initialized)
@@ -379,7 +418,7 @@ namespace Diorama
         }
     }
 
-    void SpriteFeatureProcessor::DrawShadows(AZ::RHI::DrawItemSortKey sortKey)
+    void SpriteFeatureProcessor::DrawShadows(AZ::RHI::DrawItemSortKey sortKey, const AZ::Transform& cameraTransform)
     {
         if (!m_shadowImageAsset.IsReady())
         {
@@ -430,7 +469,15 @@ namespace Diorama
             return;
         }
         drawSrg->SetImage(imageIndex, shadowImage);
+        // Bind the shadow image into the normal-map slot too (a required bind) and
+        // mark the batch as having no normal map; shadows are flat-lit (and black).
+        const AZ::RHI::ShaderInputImageIndex normalIndex = drawSrg->FindShaderInputImageIndex(NormalMapSrgInput());
+        if (normalIndex.IsValid())
+        {
+            drawSrg->SetImage(normalIndex, shadowImage);
+        }
         SetLightingConstants(drawSrg.get());
+        SetMaterialConstants(drawSrg.get(), cameraTransform, false);
         drawSrg->Compile();
 
         m_dynamicDraw->SetSortKey(sortKey);
@@ -518,7 +565,7 @@ namespace Diorama
             // (>= 0), so the soft blobs sit on the floor beneath the billboards.
             if (drawShadows && !shadowsDrawn && batch.m_key.m_sortOffset >= 0.0f)
             {
-                DrawShadows(batchSortKey++);
+                DrawShadows(batchSortKey++, cameraTransform);
                 shadowsDrawn = true;
             }
 
@@ -552,7 +599,29 @@ namespace Diorama
                 continue;
             }
             drawSrg->SetImage(imageIndex, image);
+
+            // v1b: bind the batch's normal map if it has one (and it is ready),
+            // otherwise bind the albedo image as a required-but-unused placeholder
+            // and flag the batch as flat (the shader skips the N.L term then).
+            bool hasNormalMap = false;
+            AZ::Data::Instance<AZ::RPI::Image> normalImage = image;
+            if (first->m_config.m_normalMap.GetId().IsValid() && first->m_config.m_normalMap.IsReady())
+            {
+                AZ::Data::Instance<AZ::RPI::Image> resolved = AZ::RPI::StreamingImage::FindOrCreate(first->m_config.m_normalMap);
+                if (resolved)
+                {
+                    normalImage = resolved;
+                    hasNormalMap = true;
+                }
+            }
+            const AZ::RHI::ShaderInputImageIndex normalIndex = drawSrg->FindShaderInputImageIndex(NormalMapSrgInput());
+            if (normalIndex.IsValid())
+            {
+                drawSrg->SetImage(normalIndex, normalImage);
+            }
+
             SetLightingConstants(drawSrg.get());
+            SetMaterialConstants(drawSrg.get(), cameraTransform, hasNormalMap);
             drawSrg->Compile();
 
             // Pack all quads in this batch into one vertex/index stream. 32-bit

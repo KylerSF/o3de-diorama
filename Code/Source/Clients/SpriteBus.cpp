@@ -94,6 +94,11 @@ namespace Diorama
                 { { { "productPath",
                       "Texture product path, e.g. 'diorama/textures/hero.png'. Returns false if it does not resolve to an asset." } } })
             ->Event(
+                "SetNormalMapByPath",
+                &DioramaSpriteRequestBus::Events::SetNormalMapByPath,
+                { { { "productPath",
+                      "Normal map product path (2D lighting v1b); empty clears it. Returns false if it does not resolve to an asset." } } })
+            ->Event(
                 "SetSize",
                 &DioramaSpriteRequestBus::Events::SetSize,
                 { { { "width", "Quad width in world units; negative is clamped to zero." },

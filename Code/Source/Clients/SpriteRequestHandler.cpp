@@ -67,6 +67,32 @@ namespace Diorama
         return true;
     }
 
+    bool SpriteRequestHandler::SetNormalMapByPath(AZStd::string_view productPath)
+    {
+        if (m_config == nullptr)
+        {
+            return false;
+        }
+
+        if (productPath.empty())
+        {
+            m_config->m_normalMap = {};
+            NotifyChanged();
+            return true;
+        }
+
+        const AZ::Data::AssetId assetId = ResolveStreamingImageAssetId(productPath);
+        if (!assetId.IsValid())
+        {
+            return false;
+        }
+
+        m_config->m_normalMap = AZ::Data::Asset<AZ::RPI::StreamingImageAsset>(assetId, AZ::AzTypeInfo<AZ::RPI::StreamingImageAsset>::Uuid());
+        m_config->m_normalMap.SetAutoLoadBehavior(AZ::Data::AssetLoadBehavior::PreLoad);
+        NotifyChanged();
+        return true;
+    }
+
     void SpriteRequestHandler::SetSize(float width, float height)
     {
         if (m_config == nullptr)

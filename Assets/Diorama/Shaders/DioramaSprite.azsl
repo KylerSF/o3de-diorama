@@ -32,6 +32,17 @@ ShaderResourceGroup SpriteSrg : SRG_PerDraw
     float4 m_lightPosDir[DIORAMA_MAX_LIGHTS];
     float4 m_lightColor[DIORAMA_MAX_LIGHTS];
 
+    // v1b normal-mapped lighting (see SpriteFeatureProcessor::SetMaterialConstants).
+    // m_material.x is 1 when this batch has a normal map (else 0, the v1a flat path).
+    // m_camBasis{Right,Up,Fwd}.xyz are the billboard's tangent basis for the frame
+    // (camera right/up and the quad normal toward the camera), used to bring a
+    // tangent-space normal into world space.
+    Texture2D m_normalMap;
+    float4 m_material;
+    float4 m_camBasisRight;
+    float4 m_camBasisUp;
+    float4 m_camBasisFwd;
+
     Sampler m_sampler
     {
         MinFilter = Linear;
@@ -85,6 +96,18 @@ PSOutput MainPS(VSOutput input)
     // exact albedo * vertex-tint look when lighting is off or no lights exist.
     float3 lit = SpriteSrg::m_ambientAndCount.xyz;
     int lightCount = (int)SpriteSrg::m_ambientAndCount.w;
+
+    // v1b: with a normal map, bring the tangent-space normal into world space using
+    // the billboard's camera basis so lights shape the flat art. Without one, N is
+    // unused and every light's N.L term collapses to 1 (the exact v1a look).
+    bool hasNormal = SpriteSrg::m_material.x > 0.5;
+    float3 N = SpriteSrg::m_camBasisFwd.xyz;
+    if (hasNormal)
+    {
+        float3 nm = SpriteSrg::m_normalMap.Sample(SpriteSrg::m_sampler, input.m_uv).xyz * 2.0 - 1.0;
+        N = normalize(SpriteSrg::m_camBasisRight.xyz * nm.x + SpriteSrg::m_camBasisUp.xyz * nm.y + SpriteSrg::m_camBasisFwd.xyz * nm.z);
+    }
+
     for (int i = 0; i < lightCount; ++i)
     {
         float4 posDir = SpriteSrg::m_lightPosDir[i];
@@ -92,7 +115,8 @@ PSOutput MainPS(VSOutput input)
         if (posDir.w > 0.5)
         {
             // Directional: no attenuation, full contribution everywhere.
-            lit += col;
+            float ndl = hasNormal ? saturate(dot(N, posDir.xyz)) : 1.0;
+            lit += col * ndl;
         }
         else
         {
@@ -100,7 +124,8 @@ PSOutput MainPS(VSOutput input)
             float3 toLight = posDir.xyz - input.m_worldPos;
             float distSq = dot(toLight, toLight);
             float atten = saturate(1.0 - distSq * SpriteSrg::m_lightColor[i].a);
-            lit += col * atten;
+            float ndl = hasNormal ? saturate(dot(N, normalize(toLight))) : 1.0;
+            lit += col * atten * ndl;
         }
     }
 

@@ -148,6 +148,10 @@ def main():
         diorama.DioramaSpriteRequestBus(bus.Event, "SetSize", eid, 3.0, 3.0)
         diorama.DioramaSpriteRequestBus(bus.Event, "SetBillboard", eid, True)
         diorama.DioramaSpriteRequestBus(bus.Event, "SetSortOffset", eid, 0.0)
+        # v1b: a spherical normal map makes each flat creature light like a 3D ball,
+        # so the point light shades the side facing it. Remove this line to compare
+        # against the flat v1a look.
+        diorama.DioramaSpriteRequestBus(bus.Event, "SetNormalMapByPath", eid, "diorama/textures/sphere_normal.png")
 
     # The light: a warm point light at the center, just in front of the scene.
     # Configured through the typed bus -- no property-path strings, no math types.

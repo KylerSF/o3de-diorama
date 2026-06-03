@@ -27,10 +27,14 @@ namespace Diorama::SpriteBatchPlan
         //! a float so fractional layers stay distinct (truncating to an integer
         //! would collapse 0.25 and 0.75 into one layer and wrongly merge them).
         float m_sortOffset = 0.0f;
+        //! Optional normal-map identity. The normal map is bound per draw (one per
+        //! batch), so sprites that differ only in normal map must not share a batch.
+        //! Default (invalid) means "no normal map" (the flat v1a lighting path).
+        AZ::Data::AssetId m_normalMapId;
 
         bool operator==(const BatchKey& other) const
         {
-            return m_textureId == other.m_textureId && m_sortOffset == other.m_sortOffset;
+            return m_textureId == other.m_textureId && m_sortOffset == other.m_sortOffset && m_normalMapId == other.m_normalMapId;
         }
         bool operator!=(const BatchKey& other) const
         {
@@ -108,7 +112,11 @@ namespace Diorama::SpriteBatchPlan
                 {
                     return lhs.m_depth > rhs.m_depth; // farther from camera first -> drawn behind
                 }
-                return lhs.m_key.m_textureId < rhs.m_key.m_textureId;
+                if (lhs.m_key.m_textureId != rhs.m_key.m_textureId)
+                {
+                    return lhs.m_key.m_textureId < rhs.m_key.m_textureId;
+                }
+                return lhs.m_key.m_normalMapId < rhs.m_key.m_normalMapId;
             });
 
         for (AZ::u32 i = 0; i < outOrdered.size();)
