@@ -82,7 +82,7 @@ namespace Diorama
         }
 
         AZ::TransformNotificationBus::Handler::BusDisconnect();
-        AZ::Data::AssetBus::Handler::BusDisconnect();
+        AZ::Data::AssetBus::MultiHandler::BusDisconnect();
         AZ::TickBus::Handler::BusDisconnect();
 
         if (m_featureProcessor != nullptr && m_handle != 0)
@@ -98,11 +98,12 @@ namespace Diorama
     void SpritePresenter::SetConfig(const SpriteComponentConfig& config)
     {
         const bool textureChanged = config.m_texture.GetId() != m_config.m_texture.GetId();
+        const bool normalChanged = config.m_normalMap.GetId() != m_config.m_normalMap.GetId();
         m_config = config;
 
-        if (textureChanged)
+        if (textureChanged || normalChanged)
         {
-            AZ::Data::AssetBus::Handler::BusDisconnect();
+            AZ::Data::AssetBus::MultiHandler::BusDisconnect();
             QueueTextureLoad();
         }
 
@@ -130,7 +131,15 @@ namespace Diorama
         if (m_config.m_texture.GetId().IsValid())
         {
             m_config.m_texture.QueueLoad();
-            AZ::Data::AssetBus::Handler::BusConnect(m_config.m_texture.GetId());
+            AZ::Data::AssetBus::MultiHandler::BusConnect(m_config.m_texture.GetId());
+        }
+        // Also stream the optional normal map (2D lighting v1b); the feature
+        // processor binds it once ready (it polls IsReady, but we re-push on ready
+        // so its copy of the config sees the loaded asset).
+        if (m_config.m_normalMap.GetId().IsValid())
+        {
+            m_config.m_normalMap.QueueLoad();
+            AZ::Data::AssetBus::MultiHandler::BusConnect(m_config.m_normalMap.GetId());
         }
     }
 
@@ -142,9 +151,19 @@ namespace Diorama
 
     void SpritePresenter::OnAssetReady(AZ::Data::Asset<AZ::Data::AssetData> asset)
     {
+        bool changed = false;
         if (asset.GetId() == m_config.m_texture.GetId())
         {
             m_config.m_texture = asset;
+            changed = true;
+        }
+        if (asset.GetId() == m_config.m_normalMap.GetId())
+        {
+            m_config.m_normalMap = asset;
+            changed = true;
+        }
+        if (changed)
+        {
             Push();
         }
     }

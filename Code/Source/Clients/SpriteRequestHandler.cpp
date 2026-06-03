@@ -67,6 +67,32 @@ namespace Diorama
         return true;
     }
 
+    bool SpriteRequestHandler::SetNormalMapByPath(AZStd::string_view productPath)
+    {
+        if (m_config == nullptr)
+        {
+            return false;
+        }
+
+        if (productPath.empty())
+        {
+            m_config->m_normalMap = {};
+            NotifyChanged();
+            return true;
+        }
+
+        const AZ::Data::AssetId assetId = ResolveStreamingImageAssetId(productPath);
+        if (!assetId.IsValid())
+        {
+            return false;
+        }
+
+        m_config->m_normalMap = AZ::Data::Asset<AZ::RPI::StreamingImageAsset>(assetId, AZ::AzTypeInfo<AZ::RPI::StreamingImageAsset>::Uuid());
+        m_config->m_normalMap.SetAutoLoadBehavior(AZ::Data::AssetLoadBehavior::PreLoad);
+        NotifyChanged();
+        return true;
+    }
+
     void SpriteRequestHandler::SetSize(float width, float height)
     {
         if (m_config == nullptr)
@@ -95,6 +121,39 @@ namespace Diorama
         }
         m_config->m_tint =
             AZ::Color(AZ::GetClamp(r, 0.0f, 1.0f), AZ::GetClamp(g, 0.0f, 1.0f), AZ::GetClamp(b, 0.0f, 1.0f), AZ::GetClamp(a, 0.0f, 1.0f));
+        NotifyChanged();
+    }
+
+    void SpriteRequestHandler::SetFlash(float r, float g, float b, float amount)
+    {
+        if (m_config == nullptr)
+        {
+            return;
+        }
+        m_config->m_flashColor = AZ::Color(AZ::GetClamp(r, 0.0f, 1.0f), AZ::GetClamp(g, 0.0f, 1.0f), AZ::GetClamp(b, 0.0f, 1.0f), 1.0f);
+        m_config->m_flashAmount = AZ::GetClamp(amount, 0.0f, 1.0f);
+        NotifyChanged();
+    }
+
+    void SpriteRequestHandler::SetOutline(float r, float g, float b, float thickness)
+    {
+        if (m_config == nullptr)
+        {
+            return;
+        }
+        m_config->m_outlineColor = AZ::Color(AZ::GetClamp(r, 0.0f, 1.0f), AZ::GetClamp(g, 0.0f, 1.0f), AZ::GetClamp(b, 0.0f, 1.0f), 1.0f);
+        m_config->m_outlineThickness = thickness < 0.0f ? 0.0f : thickness;
+        NotifyChanged();
+    }
+
+    void SpriteRequestHandler::SetEmissive(float r, float g, float b, float intensity)
+    {
+        if (m_config == nullptr)
+        {
+            return;
+        }
+        m_config->m_emissiveColor = AZ::Color(AZ::GetClamp(r, 0.0f, 1.0f), AZ::GetClamp(g, 0.0f, 1.0f), AZ::GetClamp(b, 0.0f, 1.0f), 1.0f);
+        m_config->m_emissiveIntensity = intensity < 0.0f ? 0.0f : intensity;
         NotifyChanged();
     }
 

@@ -34,7 +34,7 @@ These are treated as acceptance criteria, not aspirations.
 
 - Two-module split: a lightweight runtime client module and a heavy Qt editor module. Shipped games carry only the runtime, so adding 2D costs little at runtime while authors still get real tooling.
 - Integration over reinvention: Diorama builds on existing O3DE systems (transforms, prefabs, scripting, physics) rather than inventing parallel ones.
-- A rendering path designed to scale: it starts with Atom dynamic draw for correctness and clarity, and is structured to move to a batched feature processor as sprite counts grow.
+- A rendering path designed to scale: a batched Atom feature processor where sprites and tilemap tiles sharing a texture and sort layer collapse into one draw, with automatic camera-distance depth sorting and soft ground shadows for the 2.5D look.
 
 ## Boundaries
 

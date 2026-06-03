@@ -94,6 +94,11 @@ namespace Diorama
                 { { { "productPath",
                       "Texture product path, e.g. 'diorama/textures/hero.png'. Returns false if it does not resolve to an asset." } } })
             ->Event(
+                "SetNormalMapByPath",
+                &DioramaSpriteRequestBus::Events::SetNormalMapByPath,
+                { { { "productPath",
+                      "Normal map product path (2D lighting v1b); empty clears it. Returns false if it does not resolve to an asset." } } })
+            ->Event(
                 "SetSize",
                 &DioramaSpriteRequestBus::Events::SetSize,
                 { { { "width", "Quad width in world units; negative is clamped to zero." },
@@ -110,6 +115,27 @@ namespace Diorama
                     { "g", "Green tint multiplier, clamped to 0..1." },
                     { "b", "Blue tint multiplier, clamped to 0..1." },
                     { "a", "Alpha (opacity) multiplier, clamped to 0..1." } } })
+            ->Event(
+                "SetFlash",
+                &DioramaSpriteRequestBus::Events::SetFlash,
+                { { { "r", "Flash red, clamped 0..1." },
+                    { "g", "Flash green, clamped 0..1." },
+                    { "b", "Flash blue, clamped 0..1." },
+                    { "amount", "Blend toward the flash color after lighting, 0..1 (1 on a hit, ease back to 0)." } } })
+            ->Event(
+                "SetOutline",
+                &DioramaSpriteRequestBus::Events::SetOutline,
+                { { { "r", "Outline red, clamped 0..1." },
+                    { "g", "Outline green, clamped 0..1." },
+                    { "b", "Outline blue, clamped 0..1." },
+                    { "thickness", "Silhouette outline thickness (0 = off); screen-relative, clamped non-negative." } } })
+            ->Event(
+                "SetEmissive",
+                &DioramaSpriteRequestBus::Events::SetEmissive,
+                { { { "r", "Emissive red, clamped 0..1." },
+                    { "g", "Emissive green, clamped 0..1." },
+                    { "b", "Emissive blue, clamped 0..1." },
+                    { "intensity", "Emissive strength (0 = off); > 1 makes the sprite bloom via a PostFxLayer + Bloom." } } })
             ->Event(
                 "SetBillboard",
                 &DioramaSpriteRequestBus::Events::SetBillboard,

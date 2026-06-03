@@ -30,6 +30,7 @@
     "origin_url": "https://github.com/nickschuetz/o3de-diorama",
     "repo_uri": "https://github.com/nickschuetz/o3de-diorama",
     "dependencies": [
-        "Atom_RPI"
+        "Atom_RPI",
+        "MiniAudio"
     ]
 }

@@ -2,8 +2,10 @@
     "Source" : "DioramaSprite.azsl",
 
     "DepthStencilState" : {
-        "Depth" : { "Enable" : true, "WriteMask" : "Zero", "CompareFunc" : "GreaterEqual" }
+        "Depth" : { "Enable" : false, "WriteMask" : "Zero", "CompareFunc" : "Always" }
     },
+
+    "RasterState" : { "CullMode" : "None" },
 
     "GlobalTargetBlendState" : {
         "Enable" : true,

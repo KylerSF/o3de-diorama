@@ -64,12 +64,29 @@ namespace Diorama
         //! Assign the texture by product path (e.g. "diorama/textures/hero.png").
         //! Returns false if the path does not resolve to an asset.
         virtual bool SetTextureByPath(AZStd::string_view productPath) = 0;
+        //! Assign the optional normal map by product path (2D lighting v1b); empty
+        //! clears it. Returns false if the path does not resolve to an asset. When
+        //! set, the gem's 2D lights shape the sprite (best on billboards).
+        virtual bool SetNormalMapByPath(AZStd::string_view productPath) = 0;
         //! Quad size in world units; negative values are clamped to zero.
         virtual void SetSize(float width, float height) = 0;
         //! Normalized pivot; clamped to 0..1.
         virtual void SetPivot(float x, float y) = 0;
         //! Tint multiplied into the texture; channels clamped to 0..1.
         virtual void SetTint(float r, float g, float b, float a) = 0;
+        //! Hit-flash material (2D materials v1): blend the sprite toward (r,g,b) by
+        //! amount (0..1) after lighting. Drive amount to 1 on a hit and ease back to
+        //! 0. Channels and amount are clamped to 0..1.
+        virtual void SetFlash(float r, float g, float b, float amount) = 0;
+        //! Outline material (2D materials v1): draw a silhouette outline of color
+        //! (r,g,b) with the given thickness (0 = off). Channels clamped to 0..1,
+        //! thickness clamped non-negative.
+        virtual void SetOutline(float r, float g, float b, float thickness) = 0;
+        //! Emissive material (post-processing hook): add color (r,g,b) scaled by
+        //! intensity to the lit result. intensity > 1 pushes the sprite above HDR 1.0
+        //! so it blooms through a PostFxLayer + Bloom in the scene. 0 = off. Channels
+        //! clamped 0..1, intensity clamped non-negative.
+        virtual void SetEmissive(float r, float g, float b, float intensity) = 0;
         //! Always face the camera when true.
         virtual void SetBillboard(bool enabled) = 0;
         //! Visible from both sides when true (default); when false the sprite is

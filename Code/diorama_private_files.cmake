@@ -13,10 +13,42 @@ set(FILES
     Source/Clients/SpriteRequestHandler.h
     Source/Clients/SpriteAnimation.h
     Source/Clients/SpriteBatchPlan.h
+    Source/Clients/Collision2D.h
+    Source/Clients/Collision2DBus.cpp
+    Source/Clients/Collision2DSystemComponent.cpp
+    Source/Clients/Collision2DSystemComponent.h
+    Source/Clients/Collider2DComponent.cpp
+    Source/Clients/Collider2DComponent.h
+    Source/Clients/Camera2D.h
+    Source/Clients/Particles2D.h
+    Source/Clients/UILayout2D.h
     Source/Clients/SpriteFeatureProcessor.cpp
     Source/Clients/SpriteFeatureProcessor.h
     Source/Clients/SpritePresenter.cpp
     Source/Clients/SpritePresenter.h
+    Source/Clients/DioramaLightComponent.cpp
+    Source/Clients/DioramaLightComponent.h
+    Source/Clients/LightPresenter.cpp
+    Source/Clients/LightPresenter.h
+    Source/Clients/LightBus.cpp
+    Source/Clients/LightRequestHandler.cpp
+    Source/Clients/LightRequestHandler.h
+    Source/Clients/DioramaCamera2DComponent.cpp
+    Source/Clients/DioramaCamera2DComponent.h
+    Source/Clients/CameraBus.cpp
+    Source/Clients/ParticleEmitterComponent.cpp
+    Source/Clients/ParticleEmitterComponent.h
+    Source/Clients/ParticleBus.cpp
+    Source/Clients/DioramaUIComponent.cpp
+    Source/Clients/DioramaUIComponent.h
+    Source/Clients/UIBus.cpp
+    Source/Clients/AudioBus.cpp
+    Source/Clients/DioramaCRTComponent.cpp
+    Source/Clients/DioramaCRTComponent.h
+    Source/Clients/CRTBus.cpp
+    Source/Clients/DioramaParallaxComponent.cpp
+    Source/Clients/DioramaParallaxComponent.h
+    Source/Clients/ParallaxBus.cpp
     Source/Clients/TilemapComponent.cpp
     Source/Clients/TilemapComponent.h
     Source/Clients/TilemapComponentConfig.cpp

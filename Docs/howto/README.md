@@ -19,6 +19,29 @@ example under [../examples](../examples).
 All rungs of the ladder now have a written guide, from a single sprite to the
 complete twin-stick capstone.
 
+## Feature demos
+
+Focused, one-feature-each demos that extend the ladder as new gem features land.
+Each has a written guide and a runnable example.
+
+| Feature | Guide | Status |
+| ------- | ----- | ------ |
+| 2D Dynamic Lighting | [07-lighting.md](07-lighting.md) | Written |
+| 2D Camera Controller | [08-camera.md](08-camera.md) | Written |
+| 2D Particle Emitter | [09-particles.md](09-particles.md) | Written |
+| 2D Materials (flash + outline) | [10-materials.md](10-materials.md) | Written |
+| Side-Scroller Slice (integration) | [11-sidescroller.md](11-sidescroller.md) | Written |
+| 2D UI / HUD (text + bar + panel) | [13-ui-hud.md](13-ui-hud.md) | Written |
+| Make it Glow (post-processing + emissive) | [14-glow.md](14-glow.md) | Written |
+| Sound (SFX and music via MiniAudio) | [15-audio.md](15-audio.md) | Written |
+| Retro CRT Overlay (scanlines) | [16-crt.md](16-crt.md) | Written |
+
+## Tooling
+
+| Topic | Guide | Status |
+| ----- | ----- | ------ |
+| Record a demo headlessly (GameLauncher + ffmpeg) | [12-recording-demos.md](12-recording-demos.md) | Written |
+
 ## Reference
 
 The guides teach by building. For exhaustive, parameter-by-parameter detail and
@@ -43,6 +66,12 @@ the design, see:
 | Tilemap | [../examples/tilemap.py](../examples/tilemap.py) |
 | Parallax and Layers | [../examples/parallax_layers.py](../examples/parallax_layers.py) |
 | Twin-Stick Shooter | [../../Samples/TwinStick](../../Samples/TwinStick) |
+| 2D Dynamic Lighting | [../examples/lighting_demo.py](../examples/lighting_demo.py) |
+| 2D Camera Controller | [../examples/camera_demo.py](../examples/camera_demo.py) |
+| 2D Particle Emitter | [../examples/particles_demo.py](../examples/particles_demo.py) |
+| 2D Materials (flash + outline) | [../examples/materials_demo.py](../examples/materials_demo.py) |
+| Side-Scroller Slice (integration) | [../examples/sidescroller_demo.py](../examples/sidescroller_demo.py) |
+| 2D UI / HUD | [../examples/ui_hud_demo.py](../examples/ui_hud_demo.py) |
 
 Run an example in the editor:
 

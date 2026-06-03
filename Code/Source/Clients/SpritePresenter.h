@@ -31,7 +31,7 @@ namespace Diorama
     //! so the editor module reuses it through the shared private object library.
     class SpritePresenter final
         : private AZ::TransformNotificationBus::Handler
-        , private AZ::Data::AssetBus::Handler
+        , private AZ::Data::AssetBus::MultiHandler
         , private AZ::TickBus::Handler
     {
     public:

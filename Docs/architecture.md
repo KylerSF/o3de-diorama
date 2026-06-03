@@ -263,6 +263,34 @@ system is up, the Diorama system component declares a dependency on the
 that dependency is what makes a feature-processor gem crash on a null factory at
 startup.
 
+### 2.5D depth ordering and shadows
+
+The sprite shader writes no depth and does not depth-test, so **draw order alone**
+decides what is in front -- the standard 2D/2.5D painter's model. The feature
+processor assigns each emitted batch a monotonically increasing sort key in the
+order it draws them, so "emitted earlier" means "behind". Two opt-in features
+build the 2.5D look on top of that order, each a console variable defaulting on:
+
+- **Automatic depth sort** (`r_dioramaSpriteDepthSort`). Each frame the batch plan
+  orders sprites by squared distance to the camera, far-to-near, *within* each
+  sort layer, so nearer sprites draw in front as they and the camera move.
+  Cross-layer order still follows the sort offset, so a ground or background layer
+  with a lower offset stays behind regardless of distance. (The plan is rebuilt
+  per frame while this is on, since the order depends on live positions; with it
+  off, the plan is cached and only rebuilt on a sprite add/remove/rebatch.)
+- **Soft ground shadows** (`r_dioramaSpriteShadows`, opacity `r_dioramaShadowAlpha`).
+  Billboarded sprites get a soft shadow blob drawn flat on the ground in one
+  batch, sorted above the floor and below the sprites. The blob is a shared gem
+  texture loaded asynchronously like the shader; non-billboard quads (the floor)
+  do not cast.
+
+Because the depth sort orders *within* a layer, give the floor and backgrounds a
+lower sort offset than the gameplay sprites (the twin-stick sample puts the ocean
+floor on a negative offset), or a distant sprite could sort beneath the flat
+ground quad. A note on the shader: it sets `CullMode: None` and disables the depth
+test specifically so a flat floor renders under a tilted 2.5D camera and the
+painter's order is authoritative.
+
 ## Verifying state without a screenshot
 
 Both buses expose a resolved-state query: `GetSpriteInfo` returns a `SpriteInfo`,
@@ -272,6 +300,10 @@ frame, number of filled tiles), not merely what was last requested. That lets an
 agent confirm an action took effect by reading back state, with no need to capture
 and inspect a frame. See the [API reference](reference/api.md) for the fields and a
 verify-loop example.
+
+When you do need to confirm a scene actually renders (not just that a component
+resolved its state), record it headlessly with the standalone GameLauncher rather
+than the editor: see [How-To: Record a Demo Headlessly](howto/12-recording-demos.md).
 
 ## Component services and dependencies
 

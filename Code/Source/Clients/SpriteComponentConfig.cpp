@@ -20,8 +20,15 @@ namespace Diorama
         if (auto* serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
         {
             serializeContext->Class<SpriteComponentConfig, AZ::ComponentConfig>()
-                ->Version(4)
+                ->Version(8)
                 ->Field("Texture", &SpriteComponentConfig::m_texture)
+                ->Field("NormalMap", &SpriteComponentConfig::m_normalMap)
+                ->Field("FlashColor", &SpriteComponentConfig::m_flashColor)
+                ->Field("FlashAmount", &SpriteComponentConfig::m_flashAmount)
+                ->Field("OutlineColor", &SpriteComponentConfig::m_outlineColor)
+                ->Field("OutlineThickness", &SpriteComponentConfig::m_outlineThickness)
+                ->Field("EmissiveColor", &SpriteComponentConfig::m_emissiveColor)
+                ->Field("EmissiveIntensity", &SpriteComponentConfig::m_emissiveIntensity)
                 ->Field("Size", &SpriteComponentConfig::m_size)
                 ->Field("Pivot", &SpriteComponentConfig::m_pivot)
                 ->Field("Tint", &SpriteComponentConfig::m_tint)
@@ -47,6 +54,21 @@ namespace Diorama
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
                     ->DataElement(
                         AZ::Edit::UIHandlers::Default, &SpriteComponentConfig::m_texture, "Texture", "Texture drawn on the sprite quad")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default, &SpriteComponentConfig::m_normalMap, "Normal Map",
+                        "Optional tangent-space normal map; when set, 2D lights shape the art (billboards)")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Color, &SpriteComponentConfig::m_flashColor, "Flash Color", "Color blended in by the hit-flash effect")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Slider, &SpriteComponentConfig::m_flashAmount, "Flash Amount", "0 = no flash; 1 = full flash color (drive on a hit)")
+                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                        ->Attribute(AZ::Edit::Attributes::Max, 1.0f)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Color, &SpriteComponentConfig::m_outlineColor, "Outline Color", "Color of the silhouette outline")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default, &SpriteComponentConfig::m_outlineThickness, "Outline Thickness", "0 = no outline; larger draws a thicker silhouette outline")
+                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                        ->Attribute(AZ::Edit::Attributes::SoftMax, 4.0f)
                     ->DataElement(
                         AZ::Edit::UIHandlers::Default, &SpriteComponentConfig::m_size, "Size", "Quad size in world units (width, height)")
                     ->Attribute(AZ::Edit::Attributes::Min, 0.0f)

@@ -6,4 +6,13 @@ set(FILES
     Include/Diorama/SpriteComponentConfig.h
     Include/Diorama/TilemapBus.h
     Include/Diorama/TilemapComponentConfig.h
+    Include/Diorama/Collision2DBus.h
+    Include/Diorama/DioramaLightConfig.h
+    Include/Diorama/DioramaLightBus.h
+    Include/Diorama/DioramaCameraBus.h
+    Include/Diorama/DioramaParticleBus.h
+    Include/Diorama/DioramaParallaxBus.h
+    Include/Diorama/DioramaUIBus.h
+    Include/Diorama/DioramaAudioBus.h
+    Include/Diorama/DioramaCRTBus.h
 )

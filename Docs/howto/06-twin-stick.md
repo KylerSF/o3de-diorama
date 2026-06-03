@@ -20,10 +20,20 @@ arena as world-space sprites, and exposes typed buses (`DioramaSpriteRequestBus`
 | Concern | Handled by |
 | ------- | ---------- |
 | Sprites, tilemap arena | **Diorama** |
-| Movement, collision, spawning | PhysX + the spawnable system |
+| Movement + hit detection | Transform-driven Lua (`TransformBus`, distance checks) -- deliberately **not** PhysX (see note) |
+| Spawning waves | The spawnable system (`SpawnableScriptMediator`) |
 | Input | Input bindings + `InputEventNotificationBus` |
 | Game logic | Lua scripts |
 | HUD | **LyShine** |
+
+> **Why no PhysX for gameplay?** Two engine facts make transform-driven movement
+> the right call here: (1) a dynamic PhysX rigid body does not honor an entity's
+> authored editor transform at simulation start (it initializes at the world
+> origin), and (2) PhysX collision callbacks are reflected only in the Automation
+> script scope, so a launcher Lua script never receives `OnCollisionBegin`. So the
+> sample moves entities through `TransformBus`, confines them with a clamp to the
+> arena, and detects hits by distance through a shared live-entity table. It is
+> fully deterministic and is the same API an agent would script.
 
 A nice consequence: gameplay Lua drives the same Diorama buses an agent would.
 The player and enemies set their facing with `DioramaSpriteRequestBus.SetFlip`
@@ -31,28 +41,51 @@ from ordinary `OnTick` code.
 
 ## The pieces
 
+The theme: you play **Obi**, a jolly octopus who fires **hearts**. The "enemies"
+are ocean predators ("haters"); three hearts fill a hater with love and it floats
+away happy. Kill them with kindness.
+
 | Piece | Script / asset | Role |
 | ----- | -------------- | ---- |
-| Arena | Tilemap component | The floor, a batched grid of atlas tiles (rung 4) |
-| Player | `twin_stick_player.lua` | WASD move (PhysX), mouse aim, fire |
-| Enemy | `twin_stick_enemy.lua` | Chases the `Player`-tagged entity |
-| Spawner | `twin_stick_spawner.lua` | Spawns the enemy prefab in ramping waves |
-| Projectile | `twin_stick_projectile.lua` | Launches, lives briefly, kills enemies |
-| Game / HUD | `twin_stick_game.lua` | Score + LyShine HUD |
+| Arena | Tilemap component | The ocean floor, one big tinted tile on a lower sort layer |
+| Player (Obi) | `twin_stick_player.lua` | WASD/stick move + aim (transform-driven), fires hearts; flushes colour as a hater nears |
+| Hater | `twin_stick_enemy.lua` | Chases Obi; swells + pinkens per heart; at 3 it floats away (befriended) |
+| Spawner | `twin_stick_spawner.lua` | Spawns a random hater (9 species) on a ramping timer from the arena edges |
+| Heart | `twin_stick_projectile.lua` | Flies along the aim, registers a hit on the nearest hater by distance |
+| FX manager | `twin_stick_fx.lua` | One long-lived entity animating a pool of script-less heart-burst shards |
+| Game / HUD | `twin_stick_game.lua` | Befriended count (LyShine HUD), pause (P), quit (Esc) |
 
-## How a kill flows through the game
+## How a befriending flows through the game
 
-1. The player holds fire; `twin_stick_player.lua` spawns the projectile prefab
-   toward the aim direction via `SpawnableScriptMediator`.
-2. The projectile launches along its forward and, on
-   `CollisionNotificationBus.OnCollisionBegin`, checks the other body's tag.
-3. On an `Enemy`, it sends an `EnemyKilled` event (`GameplayNotificationBus`) to
-   the `Game`-tagged controller, then destroys the enemy and itself.
-4. `twin_stick_game.lua` receives the event, adds to the score, and updates the
-   LyShine HUD text.
+Every live hater registers itself in a shared Lua table (all game scripts share
+one VM), so pieces communicate through shared globals rather than physics events:
 
-Each step is decoupled through standard O3DE buses, so pieces can be developed and
-tested independently.
+1. Obi holds fire; `twin_stick_player.lua` spawns a heart toward the aim via
+   `SpawnableScriptMediator`, publishing the muzzle position + direction so the
+   heart launches from the right place (a freshly spawned entity does not have its
+   spawn transform on its first tick).
+2. The heart flies along its direction and each tick tests its distance to every
+   live hater. On an overlap it increments that hater's hit tally
+   (`_G.TwinStickHits`) and consumes itself.
+3. The hater reads its own tally: each heart makes it swell and pinken; at 3 it
+   becomes content, releases a burst of hearts, bumps `_G.TwinStickBefriended`,
+   and floats up to the surface, fading out.
+4. `twin_stick_game.lua` polls `_G.TwinStickBefriended` each tick and updates the
+   LyShine HUD ("Befriended: N").
+
+Each step is decoupled through shared globals, so pieces can be developed and
+tested independently with no physics dependency.
+
+## The 2.5D techniques it showcases
+
+- **Tilted 2.5D camera** over a receding ocean floor, with billboarded creatures
+  standing up on it.
+- **Automatic depth sorting** (`r_dioramaSpriteDepthSort`) so nearer creatures
+  draw in front; the floor sits on a lower sort layer to stay behind.
+- **Soft ground shadows** (`r_dioramaSpriteShadows`) grounding each creature.
+- **LyShine HUD** composited over the Diorama world layer (engine UI + custom
+  world-space 2.5D rendering in one frame).
+- **Pause / quit** controls and a colour-shifting player (octopus chromatophores).
 
 ## Building it
 

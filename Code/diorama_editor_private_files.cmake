@@ -6,4 +6,18 @@ set(FILES
     Source/Tools/EditorSpriteComponent.h
     Source/Tools/EditorTilemapComponent.cpp
     Source/Tools/EditorTilemapComponent.h
+    Source/Tools/EditorCollider2DComponent.cpp
+    Source/Tools/EditorCollider2DComponent.h
+    Source/Tools/EditorDioramaLightComponent.cpp
+    Source/Tools/EditorDioramaLightComponent.h
+    Source/Tools/EditorDioramaCamera2DComponent.cpp
+    Source/Tools/EditorDioramaCamera2DComponent.h
+    Source/Tools/EditorParticleEmitterComponent.cpp
+    Source/Tools/EditorParticleEmitterComponent.h
+    Source/Tools/EditorDioramaParallaxComponent.cpp
+    Source/Tools/EditorDioramaParallaxComponent.h
+    Source/Tools/EditorDioramaUIComponent.cpp
+    Source/Tools/EditorDioramaUIComponent.h
+    Source/Tools/EditorDioramaCRTComponent.cpp
+    Source/Tools/EditorDioramaCRTComponent.h
 )

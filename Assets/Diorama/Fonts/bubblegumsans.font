@@ -1,0 +1,15 @@
+<fontshader>
+	<font path="bubblegumsans.ttf" w="1024" h="1024"/>
+	<effect name="default">
+		<pass>
+		</pass>
+	</effect>
+	<effect name="drop_shadow">
+		<pass>
+		</pass>
+		<pass>
+			<color r="0" g="0" b="0" a="0.6"/>
+			<pos x="2" y="2"/>
+		</pass>
+	</effect>
+</fontshader>

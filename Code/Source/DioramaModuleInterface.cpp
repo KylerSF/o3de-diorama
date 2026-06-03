@@ -10,6 +10,14 @@
 
 #include <Diorama/DioramaTypeIds.h>
 
+#include <Clients/Collider2DComponent.h>
+#include <Clients/Collision2DSystemComponent.h>
+#include <Clients/DioramaCamera2DComponent.h>
+#include <Clients/DioramaLightComponent.h>
+#include <Clients/DioramaCRTComponent.h>
+#include <Clients/DioramaParallaxComponent.h>
+#include <Clients/DioramaUIComponent.h>
+#include <Clients/ParticleEmitterComponent.h>
 #include <Clients/DioramaSystemComponent.h>
 #include <Clients/SpriteComponent.h>
 #include <Clients/TilemapComponent.h>
@@ -30,8 +38,16 @@ namespace Diorama
             m_descriptors.end(),
             {
                 DioramaSystemComponent::CreateDescriptor(),
+                Collision2DSystemComponent::CreateDescriptor(),
                 SpriteComponent::CreateDescriptor(),
                 TilemapComponent::CreateDescriptor(),
+                Collider2DComponent::CreateDescriptor(),
+                DioramaLightComponent::CreateDescriptor(),
+                DioramaCamera2DComponent::CreateDescriptor(),
+                ParticleEmitterComponent::CreateDescriptor(),
+                DioramaParallaxComponent::CreateDescriptor(),
+                DioramaUIComponent::CreateDescriptor(),
+                DioramaCRTComponent::CreateDescriptor(),
             });
     }
 
@@ -39,6 +55,7 @@ namespace Diorama
     {
         return AZ::ComponentTypeList{
             azrtti_typeid<DioramaSystemComponent>(),
+            azrtti_typeid<Collision2DSystemComponent>(),
         };
     }
 } // namespace Diorama

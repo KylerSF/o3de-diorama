@@ -6,8 +6,16 @@
  */
 
 #include "DioramaEditorSystemComponent.h"
+#include <Clients/Collision2DSystemComponent.h>
 #include <Diorama/DioramaTypeIds.h>
 #include <DioramaModuleInterface.h>
+#include <Tools/EditorCollider2DComponent.h>
+#include <Tools/EditorDioramaCamera2DComponent.h>
+#include <Tools/EditorDioramaLightComponent.h>
+#include <Tools/EditorDioramaCRTComponent.h>
+#include <Tools/EditorDioramaParallaxComponent.h>
+#include <Tools/EditorDioramaUIComponent.h>
+#include <Tools/EditorParticleEmitterComponent.h>
 #include <Tools/EditorSpriteComponent.h>
 #include <Tools/EditorTilemapComponent.h>
 
@@ -31,6 +39,13 @@ namespace Diorama
                     DioramaEditorSystemComponent::CreateDescriptor(),
                     EditorSpriteComponent::CreateDescriptor(),
                     EditorTilemapComponent::CreateDescriptor(),
+                    EditorCollider2DComponent::CreateDescriptor(),
+                    EditorDioramaLightComponent::CreateDescriptor(),
+                    EditorDioramaCamera2DComponent::CreateDescriptor(),
+                    EditorParticleEmitterComponent::CreateDescriptor(),
+                    EditorDioramaParallaxComponent::CreateDescriptor(),
+                    EditorDioramaUIComponent::CreateDescriptor(),
+                    EditorDioramaCRTComponent::CreateDescriptor(),
                 });
         }
 
@@ -42,6 +57,9 @@ namespace Diorama
         {
             return AZ::ComponentTypeList{
                 azrtti_typeid<DioramaEditorSystemComponent>(),
+                // Run the collision world in the editor too, so colliders simulate
+                // in play-in-editor (the runtime module supplies it in launchers).
+                azrtti_typeid<Collision2DSystemComponent>(),
             };
         }
     };

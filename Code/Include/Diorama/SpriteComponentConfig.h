@@ -38,6 +38,35 @@ namespace Diorama
         //! cheap until the component activates and explicitly requests the load.
         AZ::Data::Asset<AZ::RPI::StreamingImageAsset> m_texture{ AZ::Data::AssetLoadBehavior::PreLoad };
 
+        //! Optional tangent-space normal map (2D dynamic lighting v1b). When set, the
+        //! gem's 2D lights shape the flat art (Lambertian N.L) instead of only
+        //! attenuating by distance; when unset, lighting is the flat v1a path. Best
+        //! suited to billboarded sprites (the lighting uses the camera basis). Left
+        //! NoLoad until the component activates and requests it.
+        AZ::Data::Asset<AZ::RPI::StreamingImageAsset> m_normalMap{ AZ::Data::AssetLoadBehavior::PreLoad };
+
+        //! Hit-flash material effect (2D materials v1). m_flashAmount in 0..1 blends
+        //! the sprite toward m_flashColor after lighting, for a hit/damage flash;
+        //! 0 (default) is no flash, the unchanged look. Drive it from script (e.g.
+        //! flash to 1 on a hit, then ease back to 0).
+        AZ::Color m_flashColor = AZ::Color(1.0f, 1.0f, 1.0f, 1.0f);
+        float m_flashAmount = 0.0f;
+
+        //! Outline material effect (2D materials v1). m_outlineThickness > 0 draws an
+        //! outline of m_outlineColor around the sprite's opaque silhouette (in the
+        //! transparent fringe of the quad), for selection/hit highlights. 0 = off.
+        //! Thickness is a screen-relative multiplier (uses the UV derivative), so it
+        //! stays roughly constant on screen regardless of texture resolution.
+        AZ::Color m_outlineColor = AZ::Color(1.0f, 1.0f, 1.0f, 1.0f);
+        float m_outlineThickness = 0.0f;
+
+        //! Emissive material effect (2D post-processing hook). m_emissiveColor scaled
+        //! by m_emissiveIntensity is added to the lit color, so an intensity > 1 pushes
+        //! the sprite above HDR 1.0 and it blooms through Atom's post-process pass
+        //! (add a PostFxLayer + Bloom to the scene). 0 (default) = no emissive.
+        AZ::Color m_emissiveColor = AZ::Color(1.0f, 1.0f, 1.0f, 1.0f);
+        float m_emissiveIntensity = 0.0f;
+
         //! Size of the quad in world units (width, height).
         AZ::Vector2 m_size = AZ::Vector2(1.0f, 1.0f);
 

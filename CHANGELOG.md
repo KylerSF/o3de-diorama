@@ -9,6 +9,114 @@ alpha (the 0.x line), minor releases may include breaking changes.
 ## [Unreleased]
 
 ### Added
+- Side-scroller vertical slice sample (`Docs/examples/sidescroller_demo.py` +
+  `walker.lua` + how-to). A short side-scroll scene that composes the sprint's
+  features at once: three parallax background layers, a follow camera, two
+  2D point-light torches, an ember particle emitter, and an outlined walking
+  player. Pure composition of the shipped feature components (no new engine code),
+  doubling as an integration check that the features stack.
+- 2D materials: hit-flash and outline (materials v1). Sprites gain a **Flash Color**
+  + **Flash Amount** (the shader blends the lit sprite toward the flash color, for
+  the classic damage/hit pop) and an **Outline Color** + **Outline Thickness** (a
+  silhouette outline drawn in the transparent fringe, for selection/hit highlights;
+  thickness is screen-relative via the UV derivative). `SetFlash(r,g,b,amount)` and
+  `SetOutline(r,g,b,thickness)` verbs on `DioramaSpriteRequestBus` drive them from
+  script / Python / Script Canvas. Both are part of the batch key (bound per draw),
+  so a sprite using an effect splits into its own batch while the rest (the default,
+  unchanged look) batch together. This is the per-draw material backbone for the
+  planned dissolve / additive-blend effects. See
+  [Docs/design/2d-materials.md](Docs/design/2d-materials.md).
+- Normal-mapped 2D lighting (lighting v1b). Sprites gain an optional **normal map**
+  slot: when set, the gem's 2D lights shape the flat art with a Lambertian N.L term
+  (the side facing a light is brighter, and the highlight tracks a moving light)
+  instead of only attenuating by distance; when unset, lighting is byte-for-byte the
+  flat v1a path. The shader brings the tangent-space normal into world space using
+  the billboard's camera basis (set per draw), so it is best suited to billboarded
+  sprites. The normal map is part of the batch key (one bind per draw), so sprites
+  sharing albedo + normal + sort still batch into one call. A new
+  `SetNormalMapByPath` verb on `DioramaSpriteRequestBus` assigns it from script /
+  Python / Script Canvas, and a `sphere_normal` sample texture ships so a flat
+  sprite can light like a 3D ball. See
+  [Docs/design/2d-lighting.md](Docs/design/2d-lighting.md).
+- Gem-native 2D parallax layer component. A `2D Parallax Layer` component placed on
+  a layer entity (sprite, tilemap, or a parent of several) offsets it from its
+  authored position by a reference entity's movement scaled by `(1 - factor)`, so
+  far layers (low factor) appear to follow the camera and near layers (high factor)
+  stay put, giving 2.5D depth. It is the first-class C++ counterpart of the existing
+  `parallax_layer.lua` script, with an editor twin and a typed
+  `DioramaParallaxRequestBus` (Common scope): `SetCamera`, `SetFactor` (clamped
+  0..1), `SetEnabled`, and `GetParallaxInfo`.
+- Gem-native 2D particle emitter. A `2D Particle Emitter` component sprays pooled
+  particles (sparks, smoke, dust, hearts, fountains): continuous rate and/or bursts,
+  a point/cone/radial emission shape with spread, randomized lifetime and speed,
+  gravity and drag, and size + color ramps over life. Each live particle is a
+  billboarded sprite quad pushed through the existing batched sprite path (one draw
+  call per emitter, and particles pick up 2D lighting for free) via a pre-acquired
+  handle pool. The pool is fixed-capacity and every rate/range is clamped, so no
+  script or asset value can spawn unboundedly. The simulation is the pure,
+  unit-tested `Particles2D` core. A typed `DioramaParticleRequestBus` (Common scope)
+  exposes `Emit`, `Burst`, `Play` / `Stop`, `SetRate`, `SetGravity`, `SetLifetime`,
+  `SetSpeed`, `SetDirection`, `SetStartColor` / `SetEndColor`, `SetStartSize` /
+  `SetEndSize`, `SetTextureByPath`, and `GetParticleInfo` to Lua, Python, and Script
+  Canvas. See [Docs/design/2d-particles.md](Docs/design/2d-particles.md).
+- Gem-native 2D camera controller. A `2D Camera Controller` component placed on a
+  camera entity follows a target with frame-rate-independent smoothing, a deadzone
+  (small target motion does not move the view), optional world bounds, lookahead
+  (the view leads the target's motion), optional pixel-perfect snapping, and
+  trauma-based screen shake (`shake = maxShake * trauma^2`, applied after follow so
+  it never fights tracking, decaying over time). It writes only the camera entity's
+  translation, so an authored 2.5D tilt is preserved, and works in any of the three
+  world planes (XY / XZ / YZ). All the feel math is the pure, unit-tested
+  `Camera2D` core. A typed `DioramaCamera2DRequestBus` (Common scope) exposes
+  `SetTarget`, `SetFollowOffset`, `SetSmoothTime`, `SetDeadzone`, `SetLookahead`,
+  `SetBounds` / `ClearBounds`, `AddTrauma` (the gameplay juice hook), `SetEnabled`,
+  and `GetCameraInfo` to Lua, Python, and Script Canvas. See
+  [Docs/design/2d-camera.md](Docs/design/2d-camera.md).
+- Gem-native 2D dynamic lighting (v1a). A `2D Light` component (directional sun or
+  point light: color, intensity, direction or attenuation radius, on/off) placed in
+  the scene and gathered by the sprite feature processor each frame into the sprite
+  shader's per-draw lighting constants, so sprites are modulated by the lights:
+  a point light brightens nearby sprites in its color with distance falloff, a
+  directional light tints the whole sprite layer. Bounded to 8 lights (the count is
+  clamped on the CPU before it ever sizes a loop). CVar-gated by
+  `r_dioramaSpriteLighting` (default on) and `r_dioramaSpriteAmbient`; a scene with
+  no lights, or lighting off, renders the exact prior unlit look. Decoupled from
+  Atom's CoreLights (whose CPU light data is private and whose SRGs are not
+  guaranteed to bind to a dynamic draw), so it is self-contained and verifiable. The
+  editor component drives a live viewport preview. Normal-mapped relief is the next
+  increment (v1b); see [Docs/design/2d-lighting.md](Docs/design/2d-lighting.md).
+- Gem-native 2D collision reachable from gameplay scripts. A `2D Collider` component
+  (circle or box, layer/mask matrix, trigger flag) and a collision system that
+  detects overlaps each tick and dispatches contact and trigger events through
+  buses reflected at `Common` scope, so launcher Lua, Python, and Script Canvas all
+  receive them: `Diorama2DCollisionNotificationBus` (OnContactBegin/Stay/End,
+  OnTriggerEnter/Exit), the per-collider `Diorama2DColliderRequestBus`, and the
+  global `Diorama2DCollisionRequestBus` (OverlapCircle, OverlapBox, Raycast2D). This
+  is the launcher-reachable contact path PhysX's collision bus is not (it is
+  Automation-scope only). Decoupled from PhysX, with a configurable collision plane
+  (XY / XZ / YZ, default the XY screen plane) so it matches whichever plane a 2.5D
+  game moves on. The collision math (overlap, raycast, sort-and-sweep broadphase,
+  begin/stay/end tracking) is a pure, header-only core; unit tests plus
+  component/system integration tests cover it, and the twin-stick sample uses it for
+  befriend-on-contact (validated in a running GameLauncher).
+- Pure, header-only math cores for the upcoming camera and particle features, the
+  parts verifiable without a viewport: frame-rate-independent camera follow,
+  deadzone, bounds, lookahead, pixel snap, and trauma-based screen shake; and
+  per-particle integration (velocity, gravity, drag), aging, and size/color over
+  life with a pooled step. Both unit tested.
+- Post-alpha feature roadmap ([Docs/roadmap.md](Docs/roadmap.md)) and a set of
+  vetted design docs under [Docs/design/](Docs/design/) for the next 2D/2.5D
+  features: dynamic lighting, collision-from-scripts, post-processing, per-sprite
+  materials, a 2D camera component, particles, tilemap painting/autotiling,
+  skeletal animation, Aseprite import, an in-editor slicer, a starter template, and
+  an editor live-preview audit. Each is grounded in engine investigation with a
+  chosen approach, security/performance notes, and a phased plan.
+- Tween / easing library for gameplay scripts
+  (`Assets/Diorama/Scripts/tween.lua`): a dependency-free helper that animates a
+  value over time with easing (linear, quad, cubic, sine, back, elastic, bounce),
+  with a per-owner tween group you update each tick. Pure logic, so it behaves
+  identically in the launcher and editor; useful for size/tint/position pops,
+  fades, and camera moves without hand-rolled per-frame code.
 - Hello Sprite (rung 1) and Animated Sprite (rung 2) how-to guides with runnable
   examples, completing the written teaching ladder (rungs 1-6). Rung 1 builds a
   single sprite through the typed bus; rung 2 plays the 2x2 sample atlas as a
@@ -18,35 +126,21 @@ alpha (the 0.x line), minor releases may include breaking changes.
   script (`Assets/Diorama/Scripts/parallax_layer.lua`) that scrolls a layer at a
   fraction of the camera's motion for a 2.5D depth effect. Includes a runnable
   example that builds background/midground/foreground layers.
-- Twin-stick shooter sample game, step 4: scoring, HUD, and capstone assembly.
-  A game/HUD controller (`twin_stick_game.lua`) tracks the score and drives a
-  LyShine HUD; projectiles award score on a kill through `GameplayNotificationBus`
-  (the standard decoupled gameplay-event path), demonstrating the Diorama (world)
-  vs LyShine (UI) division of labor. Adds `build_game.py`, which assembles the
-  whole scene (tilemap arena, player, top-down camera, controller, spawner) in
-  one run, and the teaching-ladder rung 6 how-to that ties the capstone together.
-- Twin-stick shooter sample game, step 3: projectiles and collision. A
-  projectile (`twin_stick_projectile.lua`) launches along its spawn direction
-  through PhysX, lives briefly, and destroys any `Enemy`-tagged body it hits (and
-  itself) via PhysX collision notifications. The player gains fire input: holding
-  fire spawns projectiles toward the aim direction (rate-limited), spawned via
-  the standard spawnable system. Adds a projectile build script and the
-  projectile spec to the sample README.
-- Twin-stick shooter sample game, step 2: enemies and waves. A chase-AI enemy
-  (`twin_stick_enemy.lua`) that finds the `Player`-tagged entity and pursues it
-  through PhysX, facing its movement by flipping its Diorama sprite, and a wave
-  spawner (`twin_stick_spawner.lua`) that instantiates the enemy prefab around
-  the arena edge on a ramping timer via the standard O3DE spawnable system
-  (`SpawnableScriptMediator`). Adds an enemy build script and the enemy/spawner
-  specs to the sample README.
-- Twin-stick shooter sample game (teaching ladder rung 6), step 1: the player.
-  A Diorama-sprite player with top-down twin-stick movement built the standard
-  O3DE way (PhysX velocity, an input-bindings asset, a Lua controller). The Lua
-  expresses facing by flipping the sprite through `DioramaSpriteRequestBus`, so
-  ordinary gameplay drives the same AI-native bus an agent would. Ships the Lua
-  controller, the input bindings (WASD / mouse / gamepad, plus a fire binding for
-  later), and an editor build script under `Samples/TwinStick`. Enemies,
-  projectiles, and a HUD follow in later steps.
+- Twin-stick shooter sample game (teaching ladder rung 6): a complete 2.5D "kill
+  them with kindness" game. You play Obi, a jolly octopus who fires hearts at
+  ocean "haters" (nine species spawned in ramping waves from the arena edges);
+  three hearts fill a hater with love and it floats away happy. It ships a tilted
+  2.5D camera over an ocean-floor tilemap, a LyShine "Befriended" HUD composited
+  over the Diorama world layer, pause (P) / quit (Esc, gamepad Start) controls, a
+  colour-shifting octopus (chromatophores), and a pooled heart-burst FX manager.
+  Player, chase AI, hearts, and the wave spawner are all transform-driven Lua over
+  the Diorama buses (see Changed for why no PhysX), so ordinary gameplay drives the
+  same AI-native bus an agent would.
+- 2.5D rendering in the sprite feature processor: automatic camera-distance depth
+  sort, so nearer sprites draw in front within their sort layer
+  (`r_dioramaSpriteDepthSort`); and soft ground shadows under billboarded sprites
+  (`r_dioramaSpriteShadows`, opacity `r_dioramaShadowAlpha`), drawn in one batch
+  between the floor and the sprites.
 - Tilemap component (teaching ladder rung 4): a world-space grid of cells, each
   drawing one cell of a shared atlas, rendered through the same batched sprite
   feature processor so a whole layer collapses into one draw call. Authored in
@@ -94,6 +188,19 @@ alpha (the 0.x line), minor releases may include breaking changes.
   the always-on lint workflow.
 
 ### Changed
+- Twin-stick gameplay reworked from PhysX to transform-driven movement with
+  distance-based hit detection. Two engine facts drove it: a dynamic PhysX rigid
+  body ignores the entity's authored editor transform at simulation start (it
+  initializes at the world origin), and PhysX collision callbacks are reflected
+  only in the Automation script scope, so a launcher Lua script never receives
+  `OnCollisionBegin`. Entities now move via `TransformBus`, stay in bounds by a
+  clamp, and detect hits by distance through a shared live-entity table. Kills are
+  replaced by a "befriend" mechanic (three hearts and a hater floats away); the
+  HUD counts befriended haters via a shared global rather than a cross-entity
+  `GameplayNotification`.
+- The sprite shader disables the depth test and back-face culling, so a flat floor
+  renders correctly under a tilted 2.5D camera and draw order (painter's, by sort
+  layer then camera distance) is authoritative.
 - Sprite rendering now goes through a proper Atom scene feature processor
   (`SpriteFeatureProcessor`) instead of an immediate-mode per-sprite draw loop.
   Sprites that share a texture and sort layer are batched into a single draw call
@@ -116,6 +223,19 @@ alpha (the 0.x line), minor releases may include breaking changes.
   and buffer reuse).
 
 ### Fixed
+- The 2.5D floor vanished under a pitched camera. Root-caused (by reading the
+  engine source) to the sprite shader's depth test, not back-face culling and not
+  frustum culling; disabling the depth test is the correct model for this
+  draw-order-ordered sprite renderer, and the floor now renders under the tilt.
+- The score HUD never updated. The reflected Lua name `UiCanvasBus.FindElementByName`
+  is bound to `FindElementEntityIdByName` and returns the element's EntityId
+  directly (so `:GetId()` on it was wrong); the count now also flows through a
+  shared global polled by the HUD controller, matching how the rest of the sample
+  communicates.
+- Per-spawn "property not found" log spam from reading `.lua` properties that the
+  runtime `ScriptComponent` has no baked value for (it does not apply `.lua`
+  defaults). Uniform game constants moved to script locals; only genuinely
+  per-instance values stay as baked, tunable properties.
 - Deadlock that froze the editor (and would freeze a runtime client) the first
   frame a sprite became drawable. `SpriteFeatureProcessor::Render` runs as a
   render job the main thread blocks on, and it loaded the sprite shader with a
@@ -124,6 +244,18 @@ alpha (the 0.x line), minor releases may include breaking changes.
   asynchronously in `Activate`, and the per-frame init only polls readiness, so
   nothing blocks inside the render job. Verified on screen: sprites render and
   the editor stays responsive.
+
+### Removed
+- Orphaned pre-theme creature prefabs (Shark, Bird, Fish, Whale, and a generic
+  Enemy base) and the unused shark texture, left over from before the ocean-hater
+  cast. Nothing referenced them; the live cast is generated from one creature list.
+
+### Contributed upstream
+- Filed o3de/o3de#19804 with a fix in PR #19805: a use-after-free in
+  `AzFramework::ScriptComponent::DestroyEntityTable` when a Lua-scripted entity is
+  torn down during shutdown after the script context (and its `lua_State`) has been
+  freed, found while testing the sample's quit path. Diorama complements the engine
+  and contributes such findings back rather than patching around them.
 
 ## [0.1.0-alpha] - 2026-05-29
 
