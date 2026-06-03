@@ -84,6 +84,9 @@ namespace Diorama
     inline constexpr const char* DioramaUIRequestsTypeId = "{761615B1-CB60-41BD-AD90-BCBFC0163C5B}";
     inline constexpr const char* UIInfoTypeId = "{E78E6C16-4C66-43BB-975C-3EA5721A3182}";
 
+    // Audio convenience TypeIds (fire-and-forget one-shot over MiniAudio)
+    inline constexpr const char* DioramaAudioRequestsTypeId = "{51D41A62-96D1-4A9A-A9E6-4C8D3F7D62F1}";
+
     // AI-facing 2D collision API TypeIds
     inline constexpr const char* Diorama2DColliderRequestsTypeId = "{908C687A-9799-4BD9-9E82-3368D3BAEA03}";
     inline constexpr const char* Diorama2DCollisionNotificationsTypeId = "{3E9FB4C7-C577-450B-8CCA-9CEDF0964E06}";

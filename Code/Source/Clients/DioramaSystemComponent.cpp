@@ -10,9 +10,19 @@
 #include <Clients/SpriteFeatureProcessor.h>
 #include <Diorama/DioramaTypeIds.h>
 
+#include <AzCore/Asset/AssetManager.h>
+#include <AzCore/Asset/AssetManagerBus.h>
+#include <AzCore/Math/MathUtils.h>
 #include <AzCore/Serialization/SerializeContext.h>
 
+#include <AzFramework/Components/TransformComponent.h>
+
 #include <Atom/RPI.Public/FeatureProcessorFactory.h>
+
+#include <MiniAudio/MiniAudioBus.h>
+#include <MiniAudio/MiniAudioConstants.h>
+#include <MiniAudio/MiniAudioPlaybackBus.h>
+#include <MiniAudio/SoundAsset.h>
 
 namespace Diorama
 {
@@ -21,6 +31,7 @@ namespace Diorama
     void DioramaSystemComponent::Reflect(AZ::ReflectContext* context)
     {
         SpriteFeatureProcessor::Reflect(context);
+        ReflectAudioBuses(context);
 
         if (auto serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
         {
@@ -76,6 +87,7 @@ namespace Diorama
     void DioramaSystemComponent::Activate()
     {
         DioramaRequestBus::Handler::BusConnect();
+        DioramaAudioRequestBus::Handler::BusConnect();
 
         // Register the sprite feature processor so each render scene can enable
         // it. Scenes that have it enabled will create an instance and call its
@@ -87,7 +99,94 @@ namespace Diorama
     {
         AZ::RPI::FeatureProcessorFactory::Get()->UnregisterFeatureProcessor<SpriteFeatureProcessor>();
 
+        DestroyAudioPool();
+        DioramaAudioRequestBus::Handler::BusDisconnect();
         DioramaRequestBus::Handler::BusDisconnect();
+    }
+
+    void DioramaSystemComponent::EnsureAudioPool()
+    {
+        if (!m_audioVoices.empty())
+        {
+            return;
+        }
+        // A small pool of voices, so overlapping one-shots do not cut each other off.
+        constexpr int VoiceCount = 8;
+        const AZ::Uuid playbackType = AZ::Uuid::CreateString(MiniAudio::MiniAudioPlaybackComponentTypeId);
+        for (int i = 0; i < VoiceCount; ++i)
+        {
+            AZ::Entity* voice = aznew AZ::Entity(AZStd::string::format("DioramaSfxVoice_%d", i));
+            voice->CreateComponent(azrtti_typeid<AzFramework::TransformComponent>());
+            voice->CreateComponent(playbackType);
+            voice->Init();
+            voice->Activate();
+            m_audioVoices.push_back(voice);
+        }
+    }
+
+    void DioramaSystemComponent::DestroyAudioPool()
+    {
+        for (AZ::Entity* voice : m_audioVoices)
+        {
+            if (voice != nullptr)
+            {
+                if (voice->GetState() == AZ::Entity::State::Active)
+                {
+                    voice->Deactivate();
+                }
+                delete voice;
+            }
+        }
+        m_audioVoices.clear();
+        m_nextVoice = 0;
+    }
+
+    void DioramaSystemComponent::PlayOneShot(const AZStd::string& productPath, float volume)
+    {
+        EnsureAudioPool();
+        if (m_audioVoices.empty())
+        {
+            return;
+        }
+
+        // Resolve the sound product path to a SoundAsset and block until it is ready,
+        // so the very first play of a sound is not silent.
+        const AZ::TypeId soundType = azrtti_typeid<MiniAudio::SoundAsset>();
+        AZ::Data::AssetId assetId;
+        AZ::Data::AssetCatalogRequestBus::BroadcastResult(
+            assetId, &AZ::Data::AssetCatalogRequests::GetAssetIdByPath, productPath.c_str(), soundType, false);
+        if (!assetId.IsValid())
+        {
+            // Be forgiving about the path: the sound product is registered as
+            // "<source>.miniaudio", so accept either the source name or the product.
+            const AZStd::string withExt = productPath + "." + MiniAudio::SoundAsset::FileExtension;
+            AZ::Data::AssetCatalogRequestBus::BroadcastResult(
+                assetId, &AZ::Data::AssetCatalogRequests::GetAssetIdByPath, withExt.c_str(), soundType, false);
+        }
+        if (!assetId.IsValid())
+        {
+            AZ_Warning("Diorama", false, "PlayOneShot: sound '%s' not found", productPath.c_str());
+            return;
+        }
+        auto asset = AZ::Data::AssetManager::Instance().GetAsset<MiniAudio::SoundAsset>(
+            assetId, AZ::Data::AssetLoadBehavior::PreLoad);
+        asset.BlockUntilLoadComplete();
+
+        const AZ::EntityId voice = m_audioVoices[m_nextVoice]->GetId();
+        m_nextVoice = (m_nextVoice + 1) % m_audioVoices.size();
+
+        const float vol = AZ::GetClamp(volume, 0.0f, 1.0f);
+        MiniAudio::MiniAudioPlaybackRequestBus::Event(voice, &MiniAudio::MiniAudioPlaybackRequests::Stop);
+        MiniAudio::MiniAudioPlaybackRequestBus::Event(voice, &MiniAudio::MiniAudioPlaybackRequests::SetSoundAsset, asset);
+        MiniAudio::MiniAudioPlaybackRequestBus::Event(voice, &MiniAudio::MiniAudioPlaybackRequests::SetLooping, false);
+        MiniAudio::MiniAudioPlaybackRequestBus::Event(voice, &MiniAudio::MiniAudioPlaybackRequests::SetVolumePercentage, vol);
+        MiniAudio::MiniAudioPlaybackRequestBus::Event(voice, &MiniAudio::MiniAudioPlaybackRequests::Play);
+    }
+
+    void DioramaSystemComponent::SetMasterVolume(float volume)
+    {
+        MiniAudio::MiniAudioRequestBus::Broadcast(
+            &MiniAudio::MiniAudioRequests::SetGlobalVolume, AZ::GetClamp(volume, 0.0f, 1.0f));
     }
 
 } // namespace Diorama

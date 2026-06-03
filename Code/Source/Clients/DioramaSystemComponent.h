@@ -8,6 +8,9 @@
 #pragma once
 
 #include <AzCore/Component/Component.h>
+#include <AzCore/Component/Entity.h>
+#include <AzCore/std/containers/vector.h>
+#include <Diorama/DioramaAudioBus.h>
 #include <Diorama/DioramaBus.h>
 
 namespace Diorama
@@ -19,6 +22,7 @@ namespace Diorama
     class DioramaSystemComponent
         : public AZ::Component
         , protected DioramaRequestBus::Handler
+        , protected DioramaAudioRequestBus::Handler
     {
     public:
         AZ_COMPONENT_DECL(DioramaSystemComponent);
@@ -38,6 +42,19 @@ namespace Diorama
         void Init() override;
         void Activate() override;
         void Deactivate() override;
+
+        // DioramaAudioRequests
+        void PlayOneShot(const AZStd::string& productPath, float volume) override;
+        void SetMasterVolume(float volume) override;
+
+    private:
+        //! Lazily build the fire-and-forget voice pool (entities each carrying a
+        //! MiniAudio Playback component) on first use, and tear it down on Deactivate.
+        void EnsureAudioPool();
+        void DestroyAudioPool();
+
+        AZStd::vector<AZ::Entity*> m_audioVoices; //!< owned voice-pool entities
+        size_t m_nextVoice = 0; //!< round-robin index into m_audioVoices
     };
 
 } // namespace Diorama

@@ -158,10 +158,12 @@ Missing table-stakes (no design doc yet):
   `MiniAudioPlaybackRequestBus` reflected for Lua/Python/Script Canvas. So audio is
   present and script-drivable; Diorama's job is the 2D-friendly path + conveniences,
   not a new engine. **In progress**: blessed-path how-to ([howto/15-audio.md](howto/15-audio.md)),
-  a sample SFX (`diorama/audio/blip.wav`, processes to `.miniaudio`), and a Lua
-  example. Remaining: a `PlayOneShot(path)` convenience (thin wrapper over MiniAudio
-  for fire-and-forget SFX, the one verbose 2D gap) -- and audible verification needs
-  a listener (it is not headless-capture verifiable).
+  a sample SFX (`diorama/audio/blip.wav`, processes to `.miniaudio`), Lua examples,
+  and the **`DioramaAudioRequestBus::PlayOneShot(path, volume)`** convenience -- a
+  global, `Common`-reflected fire-and-forget call backed by an 8-voice pool of
+  MiniAudio Playback entities (the one verbose 2D gap, now closed). Builds green,
+  133 tests pass; audible output is confirmed by listening (not headless-capture
+  verifiable).
 - **UI / HUD parity.** A first-class HUD/UI story that is *at parity* with the rest
   of Diorama: AI- and human-drivable through a typed request bus (the same
   parity model the sprite/tilemap buses follow), with an editor twin and demos,

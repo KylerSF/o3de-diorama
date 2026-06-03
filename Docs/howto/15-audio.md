@@ -46,11 +46,26 @@ same parity as the sprite/HUD buses.
 - **Master volume**: the system bus `MiniAudioRequestBus` exposes
   `SetGlobalVolume` / `SetGlobalVolumeInDecibels`.
 
-## Fire-and-forget one-shots (the 2D gap)
+## Fire-and-forget one-shots
 
 MiniAudio playback is per-entity, which is ideal for music and looping sources but
-verbose for the many short SFX a game fires (hits, pickups, footsteps). Until a
-Diorama `PlayOneShot(path)` convenience lands (a planned thin wrapper over
-MiniAudio's engine), the pattern is: keep a small pool of SFX entities each with a
-Playback component, set the sound and `Play()` the next free one; or spawn a
-play-on-activate SFX prefab and let it finish. See the roadmap audio item.
+verbose for the many short SFX a game fires (hits, pickups, footsteps). Diorama adds
+a one-call convenience on top: `DioramaAudioRequestBus` (a global bus, reflected
+`Common`).
+
+```lua
+-- Play a sound once, fire and forget; no entity or component wiring.
+DioramaAudioRequestBus.Broadcast.PlayOneShot("diorama/audio/blip.wav", 1.0)
+-- Master volume for all audio.
+DioramaAudioRequestBus.Broadcast.SetMasterVolume(0.8)
+```
+
+`PlayOneShot(productPath, volume)` plays from a small internally managed voice pool
+(8 voices, round-robin, so overlapping SFX do not cut each other off). It accepts
+either the source name (`diorama/audio/blip.wav`) or the product
+(`...wav.miniaudio`). Because the bus is `Common`, a game script, Script Canvas, or
+an AI agent all fire SFX with the same one line -- the audio parallel to the sprite
+and HUD buses.
+
+Use `PlayOneShot` for transient SFX; use a Playback component (above) for music and
+looping/positional sources you start and stop.

@@ -42,6 +42,7 @@ set(FILES
     Source/Clients/DioramaUIComponent.cpp
     Source/Clients/DioramaUIComponent.h
     Source/Clients/UIBus.cpp
+    Source/Clients/AudioBus.cpp
     Source/Clients/DioramaParallaxComponent.cpp
     Source/Clients/DioramaParallaxComponent.h
     Source/Clients/ParallaxBus.cpp
