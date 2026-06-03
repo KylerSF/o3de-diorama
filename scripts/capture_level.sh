@@ -72,7 +72,10 @@ done
 sleep 8   # settle: re-bake reload + animation populate
 
 if kill -0 $GPID 2>/dev/null; then
-  DISPLAY="$DISP" ffmpeg -y -f x11grab -video_size "${W}x${H}" -framerate 30 -i "$DISP" -t "$SECS" -pix_fmt yuv420p "$OUT" >/tmp/diorama_ffmpeg.log 2>&1
+  # -draw_mouse 0: do not record the pointer. Under Xvfb (no window manager) the
+  # default X11 root cursor is a large "X" parked at screen center; the launcher
+  # cannot hide it (logs "ShowCursor failed"), so suppress it at the grab instead.
+  DISPLAY="$DISP" ffmpeg -y -f x11grab -draw_mouse 0 -video_size "${W}x${H}" -framerate 30 -i "$DISP" -t "$SECS" -pix_fmt yuv420p "$OUT" >/tmp/diorama_ffmpeg.log 2>&1
   echo "ffmpeg rc=$?"
 else
   echo "launcher not running at capture time (see /tmp/diorama_launcher.log)"
