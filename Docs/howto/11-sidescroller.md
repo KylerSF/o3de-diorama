@@ -31,15 +31,19 @@ Build it (own level, `DioramaSideScroller`):
 The motion runs at game time, so after running the script:
 
 1. Select **Player**, **Add Component -> Lua Script**, set the script to
-   `diorama/examples/sidescroller/walker.lua`, and set its **Camera** property to
-   the **SideCamera** entity.
+   `diorama/examples/sidescroller/walker.lua`. Optionally set its **Camera**
+   property to the **SideCamera** entity; if you leave it unset the walker falls
+   back to the active camera, so wiring it is not required.
 2. Select **SideCamera** -> **Be this camera**.
 3. **Enter game mode** (Ctrl+G): the player walks rightward, the camera follows,
    the parallax layers scroll at their depths, and the player passes through the
    torch light and embers, then loops back.
 
-Tune the walker's `Speed` / `LoopDistance`, the parallax `Factor` per layer, and
-the torch lights to taste.
+Tune the walker's `Speed` / `LoopDistance` / `SpinSpeed` (a slow vertical-axis
+"coin" spin as the player walks; `0` disables it), the parallax `Factor` per
+layer, and the torch lights to taste. The spin needs the `Player` sprite to be
+**non-billboard** and **double-sided** so it shows its back mid-turn (a billboard
+always faces the camera and would ignore the rotation).
 
 ## How it works
 

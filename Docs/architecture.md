@@ -301,6 +301,10 @@ agent confirm an action took effect by reading back state, with no need to captu
 and inspect a frame. See the [API reference](reference/api.md) for the fields and a
 verify-loop example.
 
+When you do need to confirm a scene actually renders (not just that a component
+resolved its state), record it headlessly with the standalone GameLauncher rather
+than the editor: see [How-To: Record a Demo Headlessly](howto/12-recording-demos.md).
+
 ## Component services and dependencies
 
 - A Sprite provides `DioramaSpriteService` and is incompatible with itself, so an

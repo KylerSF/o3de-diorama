@@ -32,6 +32,12 @@ Each has a written guide and a runnable example.
 | 2D Materials (flash + outline) | [10-materials.md](10-materials.md) | Written |
 | Side-Scroller Slice (integration) | [11-sidescroller.md](11-sidescroller.md) | Written |
 
+## Tooling
+
+| Topic | Guide | Status |
+| ----- | ----- | ------ |
+| Record a demo headlessly (GameLauncher + ffmpeg) | [12-recording-demos.md](12-recording-demos.md) | Written |
+
 ## Reference
 
 The guides teach by building. For exhaustive, parameter-by-parameter detail and

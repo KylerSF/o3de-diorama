@@ -46,6 +46,13 @@ simulates particles on the CPU and feeds their quads through the existing batch 
   slots. No per-frame heap allocation, matching the render-loop rule.
 - Per tick: integrate velocity/gravity/drag, age particles, evaluate the over-life
   curves, retire the dead. O(live particles).
+- The per-tick delta is clamped first (`ClampTimeStep`): a non-finite or non-positive
+  delta becomes 0 and large deltas are capped. The first frame after a level load can
+  hand the component a non-finite delta; without the clamp, continuous emission
+  (`accumulator += rate * dt`) would accumulate an unbounded spawn count and the drain
+  loop would spin forever, hanging the game thread. Emission is also bounded to the
+  pool capacity per tick (`EmitCountForTick`), so the spawn loop is always finite.
+  Both are pure helpers in `Particles2D.h` and unit-tested.
 - Each live particle emits a billboarded quad (with its current size/color/rotation)
   into the sprite batch for the emitter's texture, so the whole burst is one draw.
 
