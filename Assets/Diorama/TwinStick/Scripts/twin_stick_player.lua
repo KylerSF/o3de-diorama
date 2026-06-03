@@ -94,7 +94,7 @@ function TwinStickPlayer:OnActivate()
     self.threatRange = THREAT_RANGE
     -- Octopus mood (octopus.png is white, so Tint sets the body color): calm orange
     -- when safe, flushing toward alarm red as the nearest target closes in.
-    self.calmR, self.calmG, self.calmB = 1.0, 1.0, 1.0    -- true plush colours
+    self.calmR, self.calmG, self.calmB = 1.0, 1.0, 1.0    -- white tint = the sprite's own colours
     self.alarmR, self.alarmG, self.alarmB = 1.0, 0.45, 0.35  -- multiply-flush toward red
     self.fireCooldown = self.Properties.FireCooldown or 0.2
     self.muzzleOffset = self.Properties.MuzzleOffset or 1.0

@@ -2,7 +2,7 @@
 """Generate the twin-stick "spread joy" theme textures with PIL.
 
   heart.png    - red heart (the octopus's harpoon ammo + the float-away FX)
-  octopus.png  - jolly purple octopus (the player)
+  octopus.png  - friendly generic cartoon octopus (the player, "Obi")
   target.png   - soft white bubble creature (tinted per-entity; grows + floats away)
 
 Rendered at 4x and downscaled for anti-aliasing. These are simple procedural
@@ -58,20 +58,19 @@ def heart():
 
 
 def octopus():
-    # Full-colour plush-style octopus (original art, evoking the reference plush, not
-    # copied from it): peach body with bright YELLOW tentacle tips (its signature),
-    # darker-peach ribbing on the tentacles, three orange forehead ovals, dark eyes +
-    # a smile. The player's baked Tint is white (= these true colours); the mood
-    # mechanic multiplies toward red to flush the octopus under threat (multiply can
-    # redden but not pale it -- fine for the agitated look). Kept inside the canvas so
-    # no tentacle clips.
+    # Original generic cartoon octopus (the player, "Obi"): a rounded mantle, two big
+    # friendly eyes with catchlights, a small smile, and eight plump tentacles with a
+    # row of suckers along the underside. Deliberately a plain, generic octopus -- no
+    # specific palette or signature features, so it resembles no particular commercial
+    # design. The body is a light tone so the player's per-entity Tint sets its colour
+    # (the twin-stick mood mechanic multiplies it from calm to alarm). Kept inside the
+    # canvas so no tentacle clips.
     img = canvas()
     d = ImageDraw.Draw(img)
-    body = (244, 164, 112, 255)   # peach-orange plush body
-    tip = (250, 224, 72, 255)     # bright yellow tentacle tips
-    rib = (214, 132, 86, 255)     # darker peach ribbing
-    spot = (236, 138, 64, 255)    # forehead oval patches
-    dark = (38, 30, 52, 255)      # eyes + smile
+    body = (236, 228, 246, 255)   # light, near-neutral body (tint sets the real colour)
+    sucker = (198, 184, 222, 255) # soft suckers along the tentacle undersides
+    shade = (212, 200, 230, 255)  # gentle underside shading
+    dark = (44, 36, 60, 255)      # eyes + smile
 
     def tentacle(bx, by, theta0, curl, length, w0):
         x, y, th = bx, by, theta0
@@ -84,24 +83,19 @@ def octopus():
             th += curl / n
             x += math.cos(th) * (length / n)
             y += math.sin(th) * (length / n)
-        for (px, py, r, _th, t) in pts:                  # peach body (top stays peach)
+        for (px, py, r, _th, t) in pts:                  # body fill
             d.ellipse([px - r, py - r, px + r, py + r], fill=body)
-        for (px, py, r, _th, t) in pts:                  # yellow underside + fully-yellow tip
-            if t > 0.84:
-                d.ellipse([px - r, py - r, px + r, py + r], fill=tip)   # yellow tip cap
-            else:
-                yr, oy = r * 0.34, r * 0.70       # thin yellow line along the lower edge only
-                d.ellipse([px - yr, py + oy - yr, px + yr, py + oy + yr], fill=tip)
+        for k, (px, py, r, _th, t) in enumerate(pts):    # round suckers on the underside
+            if 0.16 < t < 0.94 and k % 9 == 0:
+                sr = r * 0.32
+                sy = py + r * 0.42
+                d.ellipse([px - sr, sy - sr, px + sr, sy + sr], fill=sucker)
 
-    # Tentacles all around the body (an octopus has 8): two emerge from BEHIND the
-    # head's upper sides and curl up/out, the rest fan across the front -- spaced so
-    # each reads individually. (base_x, base_y, start_angle, curl). All drawn before
-    # the head so their bases tuck under it (the back two then look like they wrap
-    # around from behind). Angles are screen-space (0=right, pi/2=down, pi=left).
-    # 8 tentacles, ALL attached under the body (no shoulders -- octopuses have none):
-    # the bases sit on the body's lower arc and they fan out by angle, the outer ones
-    # reaching out to the sides with their tips curling up. (base_x, base_y, angle,
-    # curl); angles are screen-space (0=right, pi/2=down, pi=left).
+    # Eight tentacles fanning out from under the mantle (octopuses have no shoulders);
+    # the bases sit on the body's lower arc and spread by angle, the outer ones
+    # reaching to the sides with their tips curling up. Drawn before the head so the
+    # bases tuck under it. (base_x, base_y, start_angle, curl); screen-space angles
+    # (0 = right, pi/2 = down, pi = left).
     FAN = [
         (0.36, 0.560, math.pi / 2 + 1.00, 1.2),   # far-left: out + tip curls up
         (0.39, 0.610, math.pi / 2 + 0.62, 1.1),
@@ -117,19 +111,17 @@ def octopus():
 
     # head / mantle
     d.ellipse([W * 0.22, W * 0.14, W * 0.78, W * 0.60], fill=body)
-    # three little hearts on the forehead in the plush's orange spot colour, kept high
-    # enough that they clear the eyes
-    for (sx, sy, sr) in ((0.46, 0.25, 0.048), (0.565, 0.225, 0.055), (0.625, 0.275, 0.044)):
-        _heart_shape(d, W * sx, W * sy, W * sr, (236, 138, 64, 255))
+    # a soft shaded crescent low on the mantle for a little roundness (below the eyes)
+    d.ellipse([W * 0.32, W * 0.50, W * 0.68, W * 0.605], fill=shade)
     # eyes: dark ovals with a catchlight
     for ex in (0.42, 0.58):
-        px, py = W * ex, W * 0.43
-        d.ellipse([px - W * 0.040, py - W * 0.052, px + W * 0.040, py + W * 0.052], fill=dark)
-        d.ellipse([px - W * 0.028, py - W * 0.044, px - W * 0.009, py - W * 0.024],
+        px, py = W * ex, W * 0.38
+        d.ellipse([px - W * 0.045, py - W * 0.058, px + W * 0.045, py + W * 0.058], fill=dark)
+        d.ellipse([px - W * 0.030, py - W * 0.048, px - W * 0.010, py - W * 0.026],
                   fill=(255, 255, 255, 235))
     # smile
-    d.arc([W * 0.45, W * 0.47, W * 0.55, W * 0.55], start=18, end=162, fill=dark,
-          width=int(W * 0.011))
+    d.arc([W * 0.45, W * 0.45, W * 0.55, W * 0.54], start=18, end=162, fill=dark,
+          width=int(W * 0.012))
     save(img, "octopus.png")
 
 
