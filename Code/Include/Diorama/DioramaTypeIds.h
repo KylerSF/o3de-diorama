@@ -87,6 +87,12 @@ namespace Diorama
     // Audio convenience TypeIds (fire-and-forget one-shot over MiniAudio)
     inline constexpr const char* DioramaAudioRequestsTypeId = "{51D41A62-96D1-4A9A-A9E6-4C8D3F7D62F1}";
 
+    // CRT scanline overlay TypeIds (retro screen effect)
+    inline constexpr const char* DioramaCRTConfigTypeId = "{DAAA3172-91E6-4521-BFA5-E33F98267758}";
+    inline constexpr const char* DioramaCRTComponentTypeId = "{C9606627-3FE6-42EA-AD87-EF46FF171D27}";
+    inline constexpr const char* EditorDioramaCRTComponentTypeId = "{B89BDCCD-A677-4BB4-940B-59BEE2550D9F}";
+    inline constexpr const char* DioramaCRTRequestsTypeId = "{0D176FF2-664E-48FB-AE3C-91D045A95B44}";
+
     // AI-facing 2D collision API TypeIds
     inline constexpr const char* Diorama2DColliderRequestsTypeId = "{908C687A-9799-4BD9-9E82-3368D3BAEA03}";
     inline constexpr const char* Diorama2DCollisionNotificationsTypeId = "{3E9FB4C7-C577-450B-8CCA-9CEDF0964E06}";

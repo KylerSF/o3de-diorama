@@ -18,4 +18,6 @@ set(FILES
     Source/Tools/EditorDioramaParallaxComponent.h
     Source/Tools/EditorDioramaUIComponent.cpp
     Source/Tools/EditorDioramaUIComponent.h
+    Source/Tools/EditorDioramaCRTComponent.cpp
+    Source/Tools/EditorDioramaCRTComponent.h
 )
