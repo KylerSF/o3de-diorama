@@ -14,8 +14,16 @@ that an agent drives the same bus.
 ## A sound asset
 
 Drop a `.wav` / `.ogg` / `.mp3` / `.flac` into the project; the asset processor turns
-it into a `.miniaudio` product. This gem ships a sample blip at
-`diorama/audio/blip.wav` (an original generated tone).
+it into a `.miniaudio` product. This gem ships a small set of original generated
+SFX under `diorama/audio/` to play with:
+
+| Sound | Use |
+| ----- | --- |
+| `blip.wav` | a plain tone / UI beep |
+| `ui_click.wav` | a short high tick (menu/UI) |
+| `pickup.wav` | a bright two-step (coin / collect) |
+| `jump.wav` | an upward sweep (jump / launch) |
+| `hit.wav` | a low thud (impact / damage) |
 
 ## Play a sound
 
