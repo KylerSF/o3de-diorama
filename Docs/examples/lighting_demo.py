@@ -55,48 +55,66 @@ def make_entity(name, position, type_id):
 
 
 def open_demo_level():
-    """Open the demo level, creating a fresh empty one if it does not exist, so the
-    demo never builds on top of another scene (the twin-stick sample, etc.)."""
-    # Try to open an existing demo level first (re-runs reuse it).
+    """Open the demo level, creating a fresh one from a built-in template if it does
+    not exist, so the demo builds in its OWN level and never lands on top of another
+    scene (this project's DefaultLevel is the twin-stick sample)."""
+    general.idle_enable(True)
+    # Wait for the editor to finish booting and load its startup level FIRST, so our
+    # open/create is not clobbered by a late default-level load (which would land our
+    # entities in DefaultLevel -- the twin-stick scene -- and, since this demo saves,
+    # overwrite it).
+    booted = 0
+    while general.get_current_level_name() in ("", "Untitled") and booted < 600:
+        general.idle_wait_frames(1)
+        booted += 1
+    general.idle_wait_frames(30)
+
+    def now_in(name):
+        return general.get_current_level_name() == name
+
     try:
         general.open_level_no_prompt(LEVEL_NAME)
     except Exception as e:
         log("open_level raised: {}".format(e))
     waited = 0
-    while general.get_current_level_name() not in (LEVEL_NAME,) and waited < 200:
+    while not now_in(LEVEL_NAME) and waited < 200:
         general.idle_wait_frames(1)
         waited += 1
-    if general.get_current_level_name() == LEVEL_NAME:
-        log("opened existing level '{}'".format(LEVEL_NAME))
-        return True
 
-    # Not there yet: create a fresh level from a built-in template. The reflected
-    # signature is create_level_no_prompt(templateName, levelName,
-    # heightmapResolution, heightmapUnitSize, terrainExportTextureSize, useTerrain).
-    # templateName is one of the editor's level templates
-    # (Assets/Editor/Prefabs/*.prefab); Default_Level gives the standard Atom
-    # environment (camera + sky), which is what we want for a viewable demo. The
-    # heightmap args are required by the signature but unused for a flat 2D scene
-    # with no terrain. Try a couple of template names in case the build differs.
-    for template in ("Default_Level", "Empty", "Basic"):
-        log("creating new level '{}' from template '{}'".format(LEVEL_NAME, template))
+    if not now_in(LEVEL_NAME):
+        # create_level_no_prompt(templateName, levelName, heightmapRes, unitSize,
+        # terrainTexSize, useTerrain); Default_Level gives the standard Atom env.
+        for template in ("Default_Level", "Empty", "Basic"):
+            log("creating new level '{}' from template '{}'".format(LEVEL_NAME, template))
+            try:
+                general.create_level_no_prompt(template, LEVEL_NAME, 128, 1, 512, False)
+            except Exception as e:
+                log("create_level('{}') raised: {}".format(template, e))
+                continue
+            waited = 0
+            while not now_in(LEVEL_NAME) and waited < 400:
+                general.idle_wait_frames(1)
+                waited += 1
+            if now_in(LEVEL_NAME):
+                break
+
+    # Final guard: ensure our level is current and stayed so (re-open once if a late
+    # load drifted us off it).
+    general.idle_wait_frames(30)
+    if not now_in(LEVEL_NAME):
         try:
-            general.create_level_no_prompt(template, LEVEL_NAME, 128, 1, 512, False)
+            general.open_level_no_prompt(LEVEL_NAME)
         except Exception as e:
-            log("create_level('{}') raised: {}".format(template, e))
-            continue
+            log("reopen raised: {}".format(e))
         waited = 0
-        while general.get_current_level_name() != LEVEL_NAME and waited < 400:
+        while not now_in(LEVEL_NAME) and waited < 200:
             general.idle_wait_frames(1)
             waited += 1
-        if general.get_current_level_name() == LEVEL_NAME:
-            return True
-    return False
+    return now_in(LEVEL_NAME)
 
 
 def main():
     log("start")
-    general.idle_enable(True)
     if not open_demo_level():
         log("FAIL: could not open or create the demo level '{}'".format(LEVEL_NAME))
         return
@@ -151,11 +169,17 @@ def main():
     # drawn (otherwise sprites briefly show the magenta fallback tint).
     general.idle_wait_frames(60)
 
-    # Save so the demo level persists and can be reopened without re-running.
-    try:
-        general.save_level()
-    except Exception as e:
-        log("save_level raised: {}".format(e))
+    # Save so the demo level persists and can be reopened without re-running. Guard:
+    # only save if we are actually in the demo level, never another scene -- a
+    # misfire here would overwrite whatever level is open (e.g. the twin-stick).
+    if general.get_current_level_name() == LEVEL_NAME:
+        try:
+            general.save_level()
+        except Exception as e:
+            log("save_level raised: {}".format(e))
+    else:
+        log("WARN: current level is '{}', not '{}'; skipping save to avoid overwriting it".format(
+            general.get_current_level_name(), LEVEL_NAME))
 
     log("Scene built in its own level '{}'. To animate: add a Lua Script".format(LEVEL_NAME))
     log("component to 'OrbitLight' with diorama/examples/lighting/light_orbit.lua")
