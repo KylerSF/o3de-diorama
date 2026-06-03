@@ -29,7 +29,8 @@ Each has a written guide and a runnable example.
 | 2D Dynamic Lighting | [07-lighting.md](07-lighting.md) | Written |
 | 2D Camera Controller | [08-camera.md](08-camera.md) | Written |
 | 2D Particle Emitter | [09-particles.md](09-particles.md) | Written |
-| 2D Materials (hit-flash) | [10-materials.md](10-materials.md) | Written |
+| 2D Materials (flash + outline) | [10-materials.md](10-materials.md) | Written |
+| Side-Scroller Slice (integration) | [11-sidescroller.md](11-sidescroller.md) | Written |
 
 ## Reference
 
@@ -58,7 +59,8 @@ the design, see:
 | 2D Dynamic Lighting | [../examples/lighting_demo.py](../examples/lighting_demo.py) |
 | 2D Camera Controller | [../examples/camera_demo.py](../examples/camera_demo.py) |
 | 2D Particle Emitter | [../examples/particles_demo.py](../examples/particles_demo.py) |
-| 2D Materials (hit-flash) | [../examples/materials_demo.py](../examples/materials_demo.py) |
+| 2D Materials (flash + outline) | [../examples/materials_demo.py](../examples/materials_demo.py) |
+| Side-Scroller Slice (integration) | [../examples/sidescroller_demo.py](../examples/sidescroller_demo.py) |
 
 Run an example in the editor:
 

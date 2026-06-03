@@ -9,6 +9,12 @@ alpha (the 0.x line), minor releases may include breaking changes.
 ## [Unreleased]
 
 ### Added
+- Side-scroller vertical slice sample (`Docs/examples/sidescroller_demo.py` +
+  `walker.lua` + how-to). A short side-scroll scene that composes the sprint's
+  features at once: three parallax background layers, a follow camera, two
+  2D point-light torches, an ember particle emitter, and an outlined walking
+  player. Pure composition of the shipped feature components (no new engine code),
+  doubling as an integration check that the features stack.
 - 2D materials: hit-flash and outline (materials v1). Sprites gain a **Flash Color**
   + **Flash Amount** (the shader blends the lit sprite toward the flash color, for
   the classic damage/hit pop) and an **Outline Color** + **Outline Thickness** (a
