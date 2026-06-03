@@ -101,10 +101,14 @@ What makes a 2D game look modern/AAA, and what pure-2D engines do awkwardly:
   animate a value over time with easing (linear/quad/cubic/sine/back/elastic/
   bounce), driven by a per-owner tween group. Removes a lot of boilerplate.
 - **Instant-start "New 2.5D Game" template** (S). Enabling the gem lands you in a
-  working scene (camera, floor, a sprite, input). **Design done**
-  ([design/2d-starter-template.md](design/2d-starter-template.md)): a shipped
-  starter prefab + a gem-registered project template + a defaults robustness pass
-  (ship a default texture so a fresh Sprite is visible).
+  working scene (camera, floor, a sprite, input). **Quick-start shipped**: a
+  playable starter (a player you move with WASD / arrows / left stick, a ground,
+  and a camera) via the reusable `player_move_2d.lua` controller +
+  `diorama/input/diorama_move.inputbindings` + the `quickstart_demo.py` scene
+  builder + [howto/17-quickstart.md](howto/17-quickstart.md). Still open from the
+  design ([design/2d-starter-template.md](design/2d-starter-template.md)): a
+  gem-registered project template and a defaults robustness pass (ship a default
+  texture so a fresh Sprite is visible without authoring).
 - **Editor live-preview** (S). Make sprite property edits update the viewport live.
   **Design done** ([design/2d-live-preview.md](design/2d-live-preview.md)): the old
   "doesn't live-update" note is largely stale (the `ChangeNotify -> SetConfig ->

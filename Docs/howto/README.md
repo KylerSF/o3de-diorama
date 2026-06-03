@@ -5,6 +5,12 @@ Step-by-step guides that follow the teaching ladder in
 complete game. Each rung has a written guide and, where applicable, a runnable
 example under [../examples](../examples).
 
+## Start here
+
+New to the gem? The [2.5D Quick-Start](17-quickstart.md) builds the smallest
+playable scene (a player you move with WASD / arrows / left stick, a ground, and
+a camera) in minutes, then points at the feature guides to build on it.
+
 ## Core ladder
 
 | Rung | Guide | Status |
@@ -72,6 +78,7 @@ the design, see:
 | 2D Materials (flash + outline) | [../examples/materials_demo.py](../examples/materials_demo.py) |
 | Side-Scroller Slice (integration) | [../examples/sidescroller_demo.py](../examples/sidescroller_demo.py) |
 | 2D UI / HUD | [../examples/ui_hud_demo.py](../examples/ui_hud_demo.py) |
+| 2.5D Quick-Start | [../examples/quickstart_demo.py](../examples/quickstart_demo.py) |
 
 Run an example in the editor:
 
