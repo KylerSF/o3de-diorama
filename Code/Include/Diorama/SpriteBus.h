@@ -74,6 +74,10 @@ namespace Diorama
         virtual void SetPivot(float x, float y) = 0;
         //! Tint multiplied into the texture; channels clamped to 0..1.
         virtual void SetTint(float r, float g, float b, float a) = 0;
+        //! Hit-flash material (2D materials v1): blend the sprite toward (r,g,b) by
+        //! amount (0..1) after lighting. Drive amount to 1 on a hit and ease back to
+        //! 0. Channels and amount are clamped to 0..1.
+        virtual void SetFlash(float r, float g, float b, float amount) = 0;
         //! Always face the camera when true.
         virtual void SetBillboard(bool enabled) = 0;
         //! Visible from both sides when true (default); when false the sprite is

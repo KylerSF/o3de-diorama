@@ -116,6 +116,13 @@ namespace Diorama
                     { "b", "Blue tint multiplier, clamped to 0..1." },
                     { "a", "Alpha (opacity) multiplier, clamped to 0..1." } } })
             ->Event(
+                "SetFlash",
+                &DioramaSpriteRequestBus::Events::SetFlash,
+                { { { "r", "Flash red, clamped 0..1." },
+                    { "g", "Flash green, clamped 0..1." },
+                    { "b", "Flash blue, clamped 0..1." },
+                    { "amount", "Blend toward the flash color after lighting, 0..1 (1 on a hit, ease back to 0)." } } })
+            ->Event(
                 "SetBillboard",
                 &DioramaSpriteRequestBus::Events::SetBillboard,
                 { { { "enabled", "When true the sprite always faces the camera." } } })

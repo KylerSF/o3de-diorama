@@ -154,7 +154,12 @@ namespace Diorama
         //! map, and the billboard's camera-aligned tangent basis used to bring a
         //! tangent-space normal into world space. Set on every batch alongside the
         //! lighting constants so the shader's normal-mapped path has its inputs.
-        void SetMaterialConstants(AZ::RPI::ShaderResourceGroup* drawSrg, const AZ::Transform& cameraTransform, bool hasNormalMap);
+        void SetMaterialConstants(
+            AZ::RPI::ShaderResourceGroup* drawSrg,
+            const AZ::Transform& cameraTransform,
+            bool hasNormalMap,
+            float flashAmount,
+            const AZ::Color& flashColor);
 
         // The batch plan (grouping + ordering) only changes when a sprite is
         // added, removed, or its batch key (texture or sort layer) changes. It is

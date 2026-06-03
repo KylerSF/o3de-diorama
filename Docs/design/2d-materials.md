@@ -1,7 +1,14 @@
 # Design: per-sprite materials and effects (flash, tint, dissolve, outline, blend)
 
-Status: design (Tier-1 roadmap item). No implementation yet. Builds directly on the
-existing sprite shader (`DioramaSprite.azsl`) and the batched feature processor.
+Status: **v1 implemented (hit-flash)**. The first material effect ships: a per-sprite
+hit-flash (Flash Color + Flash Amount on SpriteComponentConfig; `SetFlash` on the
+sprite bus) that blends the lit sprite toward the flash color as the shader's last
+step. The flash is part of the batch key (bound per draw) so flashing sprites split
+into their own batch while amount-0 sprites are unchanged. This established the
+per-draw material constant path (shared with normal-mapped lighting v1b) that the
+remaining effects below build on. Deferred: tint-as-material, dissolve (noise +
+threshold), outline (multi-tap), and additive/multiply blend modes. The original
+design notes below are kept for context.
 
 ## Goal
 

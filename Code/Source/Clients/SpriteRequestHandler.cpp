@@ -124,6 +124,17 @@ namespace Diorama
         NotifyChanged();
     }
 
+    void SpriteRequestHandler::SetFlash(float r, float g, float b, float amount)
+    {
+        if (m_config == nullptr)
+        {
+            return;
+        }
+        m_config->m_flashColor = AZ::Color(AZ::GetClamp(r, 0.0f, 1.0f), AZ::GetClamp(g, 0.0f, 1.0f), AZ::GetClamp(b, 0.0f, 1.0f), 1.0f);
+        m_config->m_flashAmount = AZ::GetClamp(amount, 0.0f, 1.0f);
+        NotifyChanged();
+    }
+
     void SpriteRequestHandler::SetBillboard(bool enabled)
     {
         if (m_config == nullptr)

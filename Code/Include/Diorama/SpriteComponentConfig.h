@@ -45,6 +45,13 @@ namespace Diorama
         //! NoLoad until the component activates and requests it.
         AZ::Data::Asset<AZ::RPI::StreamingImageAsset> m_normalMap{ AZ::Data::AssetLoadBehavior::PreLoad };
 
+        //! Hit-flash material effect (2D materials v1). m_flashAmount in 0..1 blends
+        //! the sprite toward m_flashColor after lighting, for a hit/damage flash;
+        //! 0 (default) is no flash, the unchanged look. Drive it from script (e.g.
+        //! flash to 1 on a hit, then ease back to 0).
+        AZ::Color m_flashColor = AZ::Color(1.0f, 1.0f, 1.0f, 1.0f);
+        float m_flashAmount = 0.0f;
+
         //! Size of the quad in world units (width, height).
         AZ::Vector2 m_size = AZ::Vector2(1.0f, 1.0f);
 

@@ -31,10 +31,15 @@ namespace Diorama::SpriteBatchPlan
         //! batch), so sprites that differ only in normal map must not share a batch.
         //! Default (invalid) means "no normal map" (the flat v1a lighting path).
         AZ::Data::AssetId m_normalMapId;
+        //! Hit-flash material (2D materials v1), bound per draw, so sprites that
+        //! differ in flash must not share a batch. Default 0 amount = no flash.
+        float m_flashAmount = 0.0f;
+        AZ::u32 m_flashColor = 0xFFFFFFFFu;
 
         bool operator==(const BatchKey& other) const
         {
-            return m_textureId == other.m_textureId && m_sortOffset == other.m_sortOffset && m_normalMapId == other.m_normalMapId;
+            return m_textureId == other.m_textureId && m_sortOffset == other.m_sortOffset && m_normalMapId == other.m_normalMapId &&
+                m_flashAmount == other.m_flashAmount && m_flashColor == other.m_flashColor;
         }
         bool operator!=(const BatchKey& other) const
         {
@@ -116,7 +121,15 @@ namespace Diorama::SpriteBatchPlan
                 {
                     return lhs.m_key.m_textureId < rhs.m_key.m_textureId;
                 }
-                return lhs.m_key.m_normalMapId < rhs.m_key.m_normalMapId;
+                if (lhs.m_key.m_normalMapId != rhs.m_key.m_normalMapId)
+                {
+                    return lhs.m_key.m_normalMapId < rhs.m_key.m_normalMapId;
+                }
+                if (lhs.m_key.m_flashAmount != rhs.m_key.m_flashAmount)
+                {
+                    return lhs.m_key.m_flashAmount < rhs.m_key.m_flashAmount;
+                }
+                return lhs.m_key.m_flashColor < rhs.m_key.m_flashColor;
             });
 
         for (AZ::u32 i = 0; i < outOrdered.size();)
