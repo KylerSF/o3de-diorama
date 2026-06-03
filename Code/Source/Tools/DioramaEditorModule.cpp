@@ -12,6 +12,7 @@
 #include <Tools/EditorCollider2DComponent.h>
 #include <Tools/EditorDioramaCamera2DComponent.h>
 #include <Tools/EditorDioramaLightComponent.h>
+#include <Tools/EditorDioramaParallaxComponent.h>
 #include <Tools/EditorParticleEmitterComponent.h>
 #include <Tools/EditorSpriteComponent.h>
 #include <Tools/EditorTilemapComponent.h>
@@ -40,6 +41,7 @@ namespace Diorama
                     EditorDioramaLightComponent::CreateDescriptor(),
                     EditorDioramaCamera2DComponent::CreateDescriptor(),
                     EditorParticleEmitterComponent::CreateDescriptor(),
+                    EditorDioramaParallaxComponent::CreateDescriptor(),
                 });
         }
 

@@ -57,6 +57,21 @@ tints, and logs how to attach the parallax script per layer:
   --runpython /path/to/o3de-diorama/Docs/examples/parallax_layers.py
 ```
 
+## Script or component
+
+The parallax motion can come from either:
+
+- **`parallax_layer.lua`** (a script component): attach it to each layer, set its
+  `Camera` and `ParallaxFactor`. Good for quick setup and tweaking in script.
+- **`2D Parallax Layer`** (a gem component): **Add Component -> Diorama -> 2D
+  Parallax Layer**, set its `Camera` and `Factor`. The first-class, no-script
+  option, with a typed `DioramaParallaxRequestBus` (`SetCamera`, `SetFactor`,
+  `SetEnabled`, `GetParallaxInfo`) so an agent or gameplay script can drive it.
+
+Both do the same thing (offset the layer by the camera's movement scaled by
+`1 - factor`); pick whichever fits your workflow. The motion is visible at game
+time.
+
 ## Next
 
 Rung 6, the [Twin-Stick Shooter](06-twin-stick.md) capstone, puts layering to use:

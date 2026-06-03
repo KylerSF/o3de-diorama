@@ -9,6 +9,14 @@ alpha (the 0.x line), minor releases may include breaking changes.
 ## [Unreleased]
 
 ### Added
+- Gem-native 2D parallax layer component. A `2D Parallax Layer` component placed on
+  a layer entity (sprite, tilemap, or a parent of several) offsets it from its
+  authored position by a reference entity's movement scaled by `(1 - factor)`, so
+  far layers (low factor) appear to follow the camera and near layers (high factor)
+  stay put, giving 2.5D depth. It is the first-class C++ counterpart of the existing
+  `parallax_layer.lua` script, with an editor twin and a typed
+  `DioramaParallaxRequestBus` (Common scope): `SetCamera`, `SetFactor` (clamped
+  0..1), `SetEnabled`, and `GetParallaxInfo`.
 - Gem-native 2D particle emitter. A `2D Particle Emitter` component sprays pooled
   particles (sparks, smoke, dust, hearts, fountains): continuous rate and/or bursts,
   a point/cone/radial emission shape with spread, randomized lifetime and speed,

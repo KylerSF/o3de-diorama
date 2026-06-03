@@ -70,6 +70,13 @@ namespace Diorama
     inline constexpr const char* DioramaParticleRequestsTypeId = "{9AE3B5AC-F4B7-42AD-B3A6-84C5A7D8394E}";
     inline constexpr const char* ParticleInfoTypeId = "{ABF4C6BD-A5C8-43BE-C4B7-95D6B8E94A5F}";
 
+    // 2D parallax TypeIds (camera-relative layer offset for 2.5D depth)
+    inline constexpr const char* DioramaParallaxConfigTypeId = "{BC05D7CE-B6D9-43BF-C5C8-A6E7C9FA5B60}";
+    inline constexpr const char* DioramaParallaxComponentTypeId = "{CD16E8DF-C7EA-44C0-D6D9-B7F8DA0B6C71}";
+    inline constexpr const char* EditorDioramaParallaxComponentTypeId = "{DE27F9E0-D8FB-45D1-E7EA-C809EB1C7D82}";
+    inline constexpr const char* DioramaParallaxRequestsTypeId = "{EF380AF1-E90C-46E2-F8FB-D910FC2D8E93}";
+    inline constexpr const char* ParallaxInfoTypeId = "{F0491B02-FA1D-47F3-A90C-EA21AD3E9FA4}";
+
     // AI-facing 2D collision API TypeIds
     inline constexpr const char* Diorama2DColliderRequestsTypeId = "{908C687A-9799-4BD9-9E82-3368D3BAEA03}";
     inline constexpr const char* Diorama2DCollisionNotificationsTypeId = "{3E9FB4C7-C577-450B-8CCA-9CEDF0964E06}";

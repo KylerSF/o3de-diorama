@@ -38,6 +38,9 @@ set(FILES
     Source/Clients/ParticleEmitterComponent.cpp
     Source/Clients/ParticleEmitterComponent.h
     Source/Clients/ParticleBus.cpp
+    Source/Clients/DioramaParallaxComponent.cpp
+    Source/Clients/DioramaParallaxComponent.h
+    Source/Clients/ParallaxBus.cpp
     Source/Clients/TilemapComponent.cpp
     Source/Clients/TilemapComponent.h
     Source/Clients/TilemapComponentConfig.cpp
