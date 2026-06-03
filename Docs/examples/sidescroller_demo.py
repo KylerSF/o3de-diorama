@@ -36,7 +36,7 @@ diorama = azlmbr.diorama
 LEVEL_NAME = "DioramaSideScroller"
 QUAD_TEXTURE = "diorama/textures/white_sprite.png"
 QUAD_TEXTURE_PRODUCT = "diorama/textures/white_sprite.png.streamingimage"
-PLAYER_TEXTURE = "diorama/textures/sample_sprite.png"
+PLAYER_TEXTURE = "diorama/textures/o3de_mascot.png"
 
 
 def log(msg):
@@ -196,13 +196,13 @@ def main():
     for i, px in enumerate((25.0, 50.0)):
         eid, _ = make_entity("Prop{}".format(i + 1), math.Vector3(px, -3.0, 1.0), [sprite_type])
         diorama.DioramaSpriteRequestBus(bus.Event, "SetTextureByPath", eid, PLAYER_TEXTURE)
-        diorama.DioramaSpriteRequestBus(bus.Event, "SetSize", eid, 2.5, 2.5)
+        diorama.DioramaSpriteRequestBus(bus.Event, "SetSize", eid, 2.5, 3.2)
         diorama.DioramaSpriteRequestBus(bus.Event, "SetBillboard", eid, True)
 
     # The player. The walker (attached by hand) moves it and wires the camera.
     player, _ = make_entity("Player", math.Vector3(0.0, -3.0, 1.5), [sprite_type])
     diorama.DioramaSpriteRequestBus(bus.Event, "SetTextureByPath", player, PLAYER_TEXTURE)
-    diorama.DioramaSpriteRequestBus(bus.Event, "SetSize", player, 3.0, 3.0)
+    diorama.DioramaSpriteRequestBus(bus.Event, "SetSize", player, 3.4, 4.4)
     diorama.DioramaSpriteRequestBus(bus.Event, "SetBillboard", player, True)
     diorama.DioramaSpriteRequestBus(bus.Event, "SetOutline", player, 0.1, 0.9, 1.0, 1.2)
 

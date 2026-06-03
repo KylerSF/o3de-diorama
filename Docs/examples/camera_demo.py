@@ -33,7 +33,7 @@ diorama = azlmbr.diorama
 
 LEVEL_NAME = "DioramaCameraDemo"
 POST_TEXTURE = "diorama/textures/white_sprite.png"
-TARGET_TEXTURE = "diorama/textures/sample_sprite.png"
+TARGET_TEXTURE = "diorama/textures/o3de_mascot.png"
 
 
 def log(msg):
@@ -151,7 +151,7 @@ def main():
     # The follow target: a sprite at the center. camera_target.lua patrols it.
     target = make_entity("Target", math.Vector3(0.0, 0.0, 1.0), [sprite_type])
     diorama.DioramaSpriteRequestBus(bus.Event, "SetTextureByPath", target, TARGET_TEXTURE)
-    diorama.DioramaSpriteRequestBus(bus.Event, "SetSize", target, 3.0, 3.0)
+    diorama.DioramaSpriteRequestBus(bus.Event, "SetSize", target, 2.6, 3.34)
     diorama.DioramaSpriteRequestBus(bus.Event, "SetBillboard", target, True)
 
     # The camera entity: an Atom Camera + the Diorama 2D Camera Controller. Placed

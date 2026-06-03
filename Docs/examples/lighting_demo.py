@@ -32,7 +32,7 @@ LEVEL_NAME = "DioramaLightingDemo"
 # Solid-white textures shipped with the gem; tinted per sprite. The backdrop is a
 # large dark quad so the light's glow reads against it.
 BACKDROP_TEXTURE = "diorama/textures/white_floor.png"
-CREATURE_TEXTURE = "diorama/textures/sample_sprite.png"
+CREATURE_TEXTURE = "diorama/textures/o3de_mascot.png"
 
 
 def log(msg):
@@ -145,7 +145,7 @@ def main():
         x = (i - (count - 1) * 0.5) * spacing
         eid = make_entity("Creature{}".format(i + 1), math.Vector3(x, 0.0, 1.0), sprite_type)
         diorama.DioramaSpriteRequestBus(bus.Event, "SetTextureByPath", eid, CREATURE_TEXTURE)
-        diorama.DioramaSpriteRequestBus(bus.Event, "SetSize", eid, 3.0, 3.0)
+        diorama.DioramaSpriteRequestBus(bus.Event, "SetSize", eid, 3.0, 3.85)
         diorama.DioramaSpriteRequestBus(bus.Event, "SetBillboard", eid, True)
         diorama.DioramaSpriteRequestBus(bus.Event, "SetSortOffset", eid, 0.0)
         # v1b: a spherical normal map makes each flat creature light like a 3D ball,

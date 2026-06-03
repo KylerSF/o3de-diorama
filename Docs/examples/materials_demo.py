@@ -29,7 +29,7 @@ import azlmbr.math as math
 diorama = azlmbr.diorama
 
 LEVEL_NAME = "DioramaMaterialsDemo"
-CREATURE_TEXTURE = "diorama/textures/sample_sprite.png"
+CREATURE_TEXTURE = "diorama/textures/o3de_mascot.png"
 
 
 def log(msg):
@@ -115,7 +115,7 @@ def main():
         editor.EditorEntityAPIBus(bus.Event, "SetName", eid, "Target{}".format(i + 1))
         editor.EditorComponentAPIBus(bus.Broadcast, "AddComponentsOfType", eid, [sprite_type])
         diorama.DioramaSpriteRequestBus(bus.Event, "SetTextureByPath", eid, CREATURE_TEXTURE)
-        diorama.DioramaSpriteRequestBus(bus.Event, "SetSize", eid, 3.0, 3.0)
+        diorama.DioramaSpriteRequestBus(bus.Event, "SetSize", eid, 3.0, 3.85)
         diorama.DioramaSpriteRequestBus(bus.Event, "SetBillboard", eid, True)
         targets.append(eid)
 

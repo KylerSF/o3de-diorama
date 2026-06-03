@@ -109,8 +109,8 @@ def main():
     editor.EditorEntityAPIBus(bus.Event, "SetName", eid, "HelloSprite")
     editor.EditorComponentAPIBus(bus.Broadcast, "AddComponentsOfType", eid, [sprite_type])
 
-    diorama.DioramaSpriteRequestBus(bus.Event, "SetTextureByPath", eid, "diorama/textures/sample_sprite.png")
-    diorama.DioramaSpriteRequestBus(bus.Event, "SetSize", eid, 2.0, 2.0)
+    diorama.DioramaSpriteRequestBus(bus.Event, "SetTextureByPath", eid, "diorama/textures/o3de_mascot.png")
+    diorama.DioramaSpriteRequestBus(bus.Event, "SetSize", eid, 2.2, 2.83)
 
     info = diorama.DioramaSpriteRequestBus(bus.Event, "GetSpriteInfo", eid)
     log("texturePath={} size={}x{} textureLoaded={}".format(
