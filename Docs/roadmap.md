@@ -162,8 +162,9 @@ Missing table-stakes (no design doc yet):
   and the **`DioramaAudioRequestBus::PlayOneShot(path, volume)`** convenience -- a
   global, `Common`-reflected fire-and-forget call backed by an 8-voice pool of
   MiniAudio Playback entities (the one verbose 2D gap, now closed). Builds green,
-  133 tests pass; audible output is confirmed by listening (not headless-capture
-  verifiable).
+  133 tests pass, and **verified audible** on a workstation (the GameLauncher/editor
+  with an audio device; headless capture has no audio output, so sound is the one
+  thing the capture pipeline cannot check).
 - **UI / HUD parity.** A first-class HUD/UI story that is *at parity* with the rest
   of Diorama: AI- and human-drivable through a typed request bus (the same
   parity model the sprite/tilemap buses follow), with an editor twin and demos,
