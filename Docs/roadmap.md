@@ -153,9 +153,15 @@ table-stakes below, then double down on those two and prove it with the flagship
 
 Missing table-stakes (no design doc yet):
 
-- **Audio.** Nothing exists today (not in any tier or design). No game ships
-  without sound. Thin game-friendly 2D positional audio + music/SFX surface over
-  O3DE's audio system, plus a sample. Highest-priority gap.
+- **Audio.** O3DE 26.05 ships the **MiniAudio** gem (lightweight, dependency-free;
+  enabled in this project) with a per-entity Playback component + listener and a
+  `MiniAudioPlaybackRequestBus` reflected for Lua/Python/Script Canvas. So audio is
+  present and script-drivable; Diorama's job is the 2D-friendly path + conveniences,
+  not a new engine. **In progress**: blessed-path how-to ([howto/15-audio.md](howto/15-audio.md)),
+  a sample SFX (`diorama/audio/blip.wav`, processes to `.miniaudio`), and a Lua
+  example. Remaining: a `PlayOneShot(path)` convenience (thin wrapper over MiniAudio
+  for fire-and-forget SFX, the one verbose 2D gap) -- and audible verification needs
+  a listener (it is not headless-capture verifiable).
 - **UI / HUD parity.** A first-class HUD/UI story that is *at parity* with the rest
   of Diorama: AI- and human-drivable through a typed request bus (the same
   parity model the sprite/tilemap buses follow), with an editor twin and demos,
