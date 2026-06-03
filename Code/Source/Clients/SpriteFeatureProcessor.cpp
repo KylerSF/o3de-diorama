@@ -55,7 +55,8 @@ namespace Diorama
             return SpriteBatchPlan::BatchKey{ config.m_texture.GetId(),  config.m_sortOffset,
                                               config.m_normalMap.GetId(), config.m_flashAmount,
                                               config.m_flashColor.ToU32(), config.m_outlineThickness,
-                                              config.m_outlineColor.ToU32() };
+                                              config.m_outlineColor.ToU32(), config.m_emissiveIntensity,
+                                              config.m_emissiveColor.ToU32() };
         }
     } // namespace
 
@@ -280,7 +281,9 @@ namespace Diorama
         float flashAmount,
         const AZ::Color& flashColor,
         float outlineThickness,
-        const AZ::Color& outlineColor)
+        const AZ::Color& outlineColor,
+        const AZ::Color& emissiveColor,
+        float emissiveIntensity)
     {
         // Billboard tangent basis: right and up are the camera's, the face normal is
         // their cross product (pointing toward the camera). This matches AppendQuad's
@@ -301,6 +304,16 @@ namespace Diorama
         if (flashIdx.IsValid())
         {
             drawSrg->SetConstant(flashIdx, AZ::Vector4(flashColor.GetR(), flashColor.GetG(), flashColor.GetB(), flashColor.GetA()));
+        }
+        // Emissive: premultiply the color by intensity on the CPU so the shader just
+        // adds it. Intensity > 1 pushes the result above HDR 1.0 and it blooms.
+        const float emissive = emissiveIntensity < 0.0f ? 0.0f : emissiveIntensity;
+        const AZ::RHI::ShaderInputConstantIndex emissiveIdx = drawSrg->FindShaderInputConstantIndex(AZ::Name{ "m_emissiveColor" });
+        if (emissiveIdx.IsValid())
+        {
+            drawSrg->SetConstant(
+                emissiveIdx,
+                AZ::Vector4(emissiveColor.GetR() * emissive, emissiveColor.GetG() * emissive, emissiveColor.GetB() * emissive, 0.0f));
         }
         const AZ::RHI::ShaderInputConstantIndex outlineIdx = drawSrg->FindShaderInputConstantIndex(AZ::Name{ "m_outlineColor" });
         if (outlineIdx.IsValid())
@@ -500,7 +513,8 @@ namespace Diorama
         }
         SetLightingConstants(drawSrg.get());
         SetMaterialConstants(
-            drawSrg.get(), cameraTransform, false, 0.0f, AZ::Color(1.0f, 1.0f, 1.0f, 1.0f), 0.0f, AZ::Color(1.0f, 1.0f, 1.0f, 1.0f));
+            drawSrg.get(), cameraTransform, false, 0.0f, AZ::Color(1.0f, 1.0f, 1.0f, 1.0f), 0.0f, AZ::Color(1.0f, 1.0f, 1.0f, 1.0f),
+            AZ::Color(1.0f, 1.0f, 1.0f, 1.0f), 0.0f);
         drawSrg->Compile();
 
         m_dynamicDraw->SetSortKey(sortKey);
@@ -651,7 +665,9 @@ namespace Diorama
                 first->m_config.m_flashAmount,
                 first->m_config.m_flashColor,
                 first->m_config.m_outlineThickness,
-                first->m_config.m_outlineColor);
+                first->m_config.m_outlineColor,
+                first->m_config.m_emissiveColor,
+                first->m_config.m_emissiveIntensity);
             drawSrg->Compile();
 
             // Pack all quads in this batch into one vertex/index stream. 32-bit

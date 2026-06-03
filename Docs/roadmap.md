@@ -36,6 +36,10 @@ What makes a 2D game look modern/AAA, and what pure-2D engines do awkwardly:
   ([design/2d-post-processing.md](design/2d-post-processing.md)): Atom already
   post-processes our transparent sprites in HDR, so lean on stock PostFx components
   + an emissive hook for bloom, and ship only a CRT fullscreen pass.
+  **In progress**: the **emissive hook shipped** -- sprites can write HDR > 1.0 and
+  bloom through a stock PostFX Layer + Bloom (`SetEmissive(r,g,b,intensity)` on the
+  sprite bus; per-sprite material constant; verified rendering over-bright glowing
+  mascots). How-to: [howto/14-glow.md](howto/14-glow.md). Remaining: the CRT pass.
 - **Per-sprite materials / effects** (M). A small material surface for outline,
   flash, dissolve, hue-shift, and additive/blend modes, so common effects are a
   property, not hand-rolled Lua. Outline + flash alone replace a lot of gameplay

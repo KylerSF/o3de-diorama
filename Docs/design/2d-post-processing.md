@@ -1,6 +1,8 @@
 # Design: 2D post-processing (bloom, color grading, vignette, retro)
 
-Status: design (Tier-1 roadmap item). No implementation yet.
+Status: in progress (Tier-1 roadmap item). The emissive hook (deliverable 2) and the
+teaching how-to (deliverable 1) have shipped; see [howto/14-glow.md](../howto/14-glow.md).
+The CRT pass (deliverable 3) is pending.
 
 ## Goal
 

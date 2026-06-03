@@ -60,6 +60,13 @@ namespace Diorama
         AZ::Color m_outlineColor = AZ::Color(1.0f, 1.0f, 1.0f, 1.0f);
         float m_outlineThickness = 0.0f;
 
+        //! Emissive material effect (2D post-processing hook). m_emissiveColor scaled
+        //! by m_emissiveIntensity is added to the lit color, so an intensity > 1 pushes
+        //! the sprite above HDR 1.0 and it blooms through Atom's post-process pass
+        //! (add a PostFxLayer + Bloom to the scene). 0 (default) = no emissive.
+        AZ::Color m_emissiveColor = AZ::Color(1.0f, 1.0f, 1.0f, 1.0f);
+        float m_emissiveIntensity = 0.0f;
+
         //! Size of the quad in world units (width, height).
         AZ::Vector2 m_size = AZ::Vector2(1.0f, 1.0f);
 

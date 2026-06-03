@@ -130,6 +130,13 @@ namespace Diorama
                     { "b", "Outline blue, clamped 0..1." },
                     { "thickness", "Silhouette outline thickness (0 = off); screen-relative, clamped non-negative." } } })
             ->Event(
+                "SetEmissive",
+                &DioramaSpriteRequestBus::Events::SetEmissive,
+                { { { "r", "Emissive red, clamped 0..1." },
+                    { "g", "Emissive green, clamped 0..1." },
+                    { "b", "Emissive blue, clamped 0..1." },
+                    { "intensity", "Emissive strength (0 = off); > 1 makes the sprite bloom via a PostFxLayer + Bloom." } } })
+            ->Event(
                 "SetBillboard",
                 &DioramaSpriteRequestBus::Events::SetBillboard,
                 { { { "enabled", "When true the sprite always faces the camera." } } })

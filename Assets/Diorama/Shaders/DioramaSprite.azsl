@@ -48,6 +48,10 @@ ShaderResourceGroup SpriteSrg : SRG_PerDraw
     float4 m_flashColor;
     // Silhouette outline color drawn in the transparent fringe (2D materials v1).
     float4 m_outlineColor;
+    // Emissive term (rgb already premultiplied by intensity on the CPU) added to the
+    // lit color, so an intensity > 1 pushes the sprite above HDR 1.0 and it blooms
+    // through Atom's post-process pass. (0,0,0) = no emissive.
+    float4 m_emissiveColor;
 
     Sampler m_sampler
     {
@@ -141,6 +145,10 @@ PSOutput MainPS(VSOutput input)
     // m_material.y. 0 leaves the look unchanged; drive it to 1 on a hit and ease back.
     float flash = saturate(SpriteSrg::m_material.y);
     rgb = lerp(rgb, SpriteSrg::m_flashColor.rgb, flash);
+
+    // Emissive (2D post-processing hook): add the premultiplied emissive term. An
+    // intensity > 1 pushes rgb above 1.0 (HDR), which blooms in the post pass.
+    rgb += SpriteSrg::m_emissiveColor.rgb;
 
     float alpha = sampled.a * input.m_color.a;
 

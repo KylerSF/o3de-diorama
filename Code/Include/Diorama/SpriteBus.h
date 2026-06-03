@@ -82,6 +82,11 @@ namespace Diorama
         //! (r,g,b) with the given thickness (0 = off). Channels clamped to 0..1,
         //! thickness clamped non-negative.
         virtual void SetOutline(float r, float g, float b, float thickness) = 0;
+        //! Emissive material (post-processing hook): add color (r,g,b) scaled by
+        //! intensity to the lit result. intensity > 1 pushes the sprite above HDR 1.0
+        //! so it blooms through a PostFxLayer + Bloom in the scene. 0 = off. Channels
+        //! clamped 0..1, intensity clamped non-negative.
+        virtual void SetEmissive(float r, float g, float b, float intensity) = 0;
         //! Always face the camera when true.
         virtual void SetBillboard(bool enabled) = 0;
         //! Visible from both sides when true (default); when false the sprite is

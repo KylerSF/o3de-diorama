@@ -44,6 +44,7 @@ namespace Diorama
         void SetTint(float r, float g, float b, float a) override;
         void SetFlash(float r, float g, float b, float amount) override;
         void SetOutline(float r, float g, float b, float thickness) override;
+        void SetEmissive(float r, float g, float b, float intensity) override;
         void SetBillboard(bool enabled) override;
         void SetDoubleSided(bool enabled) override;
         void SetUVRegion(float uMin, float vMin, float uMax, float vMax) override;
