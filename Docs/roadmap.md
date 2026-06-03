@@ -123,6 +123,21 @@ verification between each:
 These are tracked as individual efforts rather than one batch: each is a gem
 change that needs to be seen running before it counts as done.
 
+## Backlog / follow-ups
+
+- **Reproducible demo levels.** The per-feature demo *levels* (lighting,
+  particles, camera, materials, parallax, sidescroller) currently exist only in
+  the local sandbox project, authored by hand / by `scripts/prep_demo_camera.py`.
+  Turn that hand-authoring into committed prefab-generator scripts so the levels
+  rebuild from the repo, then they can be captured headlessly in CI via
+  `scripts/capture_level.sh`.
+- **Sidescroller polish.** Composed slice works (parallax + torch lights +
+  embers + walking/spinning player) but needs a live-editor pass: tone down the
+  torch intensity and fix the oblique camera framing to a clean flat side view.
+- **Side-profile / directional character art.** The billboard player faces the
+  camera, so it can only flip or coin-spin; a true side-scroller character needs
+  a side-profile (or multi-frame directional) sprite asset.
+
 ## Beyond games: simulation and robotics
 
 A 2D engine has no robotics-*simulation* story, but as a 2D content layer Diorama has
