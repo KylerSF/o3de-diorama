@@ -183,7 +183,7 @@ def main():
     cam_types = [controller_type] + ([atom_camera_type] if atom_camera_type is not None else [])
     if atom_camera_type is None:
         log("WARN: Atom 'Camera' component not found; add a Camera to QuickCamera by hand.")
-    make_entity("QuickCamera", math.Vector3(0.0, 0.0, 28.0), cam_types)
+    make_entity("QuickCamera", math.Vector3(0.0, 0.0, 14.0), cam_types)
     # The camera's rotation is set after the save, by patching the prefab directly --
     # see frame_quickcamera(). O3DE camera forward is entity +Y, so it needs a -90 X
     # rotation (forward -> -Z, a front view of the XY plane) or the level renders empty.
