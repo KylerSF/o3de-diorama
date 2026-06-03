@@ -19,13 +19,14 @@ namespace Diorama
         // again here or the type registers twice.
         if (auto* serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
         {
-            serializeContext->Class<EditorDioramaUIComponent, AzToolsFramework::Components::EditorComponentBase>()
-                ->Version(1)
-                ->Field("Config", &EditorDioramaUIComponent::m_config);
+            serializeContext->Class<EditorDioramaUIComponent, AzToolsFramework::Components::EditorComponentBase>()->Version(1)->Field(
+                "Config", &EditorDioramaUIComponent::m_config);
 
             if (auto* editContext = serializeContext->GetEditContext())
             {
-                editContext->Class<EditorDioramaUIComponent>("2D UI Element", "A screen-space HUD text element, drivable through DioramaUIRequestBus")
+                editContext
+                    ->Class<EditorDioramaUIComponent>(
+                        "2D UI Element", "A screen-space HUD text element, drivable through DioramaUIRequestBus")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::Category, "Diorama")
                     ->Attribute(AZ::Edit::Attributes::AppearsInAddComponentMenu, AZ_CRC_CE("Game"))

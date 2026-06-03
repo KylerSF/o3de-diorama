@@ -38,11 +38,23 @@ namespace Diorama
                 editContext->Class<DioramaParallaxConfig>("2D Parallax Config", "Camera-relative layer offset for 2.5D depth")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaParallaxConfig::m_camera, "Camera", "Entity the parallax is measured relative to (usually the camera)")
-                    ->DataElement(AZ::Edit::UIHandlers::Slider, &DioramaParallaxConfig::m_factor, "Factor", "0 = far background (follows camera), 1 = foreground (fixed in world)")
-                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
-                        ->Attribute(AZ::Edit::Attributes::Max, 1.0f)
-                    ->DataElement(AZ::Edit::UIHandlers::CheckBox, &DioramaParallaxConfig::m_enabled, "Enabled", "Disabled layers stay at their authored position");
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaParallaxConfig::m_camera,
+                        "Camera",
+                        "Entity the parallax is measured relative to (usually the camera)")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Slider,
+                        &DioramaParallaxConfig::m_factor,
+                        "Factor",
+                        "0 = far background (follows camera), 1 = foreground (fixed in world)")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                    ->Attribute(AZ::Edit::Attributes::Max, 1.0f)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::CheckBox,
+                        &DioramaParallaxConfig::m_enabled,
+                        "Enabled",
+                        "Disabled layers stay at their authored position");
             }
         }
     }
@@ -60,11 +72,13 @@ namespace Diorama
 
         if (auto* serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
         {
-            serializeContext->Class<DioramaParallaxComponent, AZ::Component>()->Version(1)->Field("Config", &DioramaParallaxComponent::m_config);
+            serializeContext->Class<DioramaParallaxComponent, AZ::Component>()->Version(1)->Field(
+                "Config", &DioramaParallaxComponent::m_config);
 
             if (auto* editContext = serializeContext->GetEditContext())
             {
-                editContext->Class<DioramaParallaxComponent>("2D Parallax Layer", "Offsets a layer relative to the camera for 2.5D parallax")
+                editContext
+                    ->Class<DioramaParallaxComponent>("2D Parallax Layer", "Offsets a layer relative to the camera for 2.5D parallax")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::Category, "Diorama")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true)

@@ -17,18 +17,19 @@ namespace Diorama
     {
         if (auto* serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
         {
-            serializeContext->Class<EditorDioramaCRTComponent, AzToolsFramework::Components::EditorComponentBase>()
-                ->Version(1)
-                ->Field("Config", &EditorDioramaCRTComponent::m_config);
+            serializeContext->Class<EditorDioramaCRTComponent, AzToolsFramework::Components::EditorComponentBase>()->Version(1)->Field(
+                "Config", &EditorDioramaCRTComponent::m_config);
 
             if (auto* editContext = serializeContext->GetEditContext())
             {
-                editContext->Class<EditorDioramaCRTComponent>("CRT Overlay", "Retro scanline screen overlay (drivable via DioramaCRTRequestBus)")
+                editContext
+                    ->Class<EditorDioramaCRTComponent>("CRT Overlay", "Retro scanline screen overlay (drivable via DioramaCRTRequestBus)")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::Category, "Diorama")
                     ->Attribute(AZ::Edit::Attributes::AppearsInAddComponentMenu, AZ_CRC_CE("Game"))
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &EditorDioramaCRTComponent::m_config, "Config", "CRT overlay configuration")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default, &EditorDioramaCRTComponent::m_config, "Config", "CRT overlay configuration")
                     ->Attribute(AZ::Edit::Attributes::Visibility, AZ::Edit::PropertyVisibility::ShowChildrenOnly);
             }
         }

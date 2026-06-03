@@ -52,13 +52,13 @@ namespace Diorama
             return;
         }
 
-        behaviorContext->EBus<DioramaUIRequestBus>("DioramaUIRequestBus")
+        behaviorContext
+            ->EBus<DioramaUIRequestBus>("DioramaUIRequestBus")
             // Common scope so it is callable from editor Python and runtime script.
             ->Attribute(AZ::Script::Attributes::Scope, AZ::Script::Attributes::ScopeFlags::Common)
             ->Attribute(AZ::Script::Attributes::Category, "Diorama")
             ->Attribute(AZ::Script::Attributes::Module, "diorama")
-            ->Event(
-                "SetText", &DioramaUIRequestBus::Events::SetText, { { { "text", "Label text to display." } } })
+            ->Event("SetText", &DioramaUIRequestBus::Events::SetText, { { { "text", "Label text to display." } } })
             ->Event(
                 "SetFontSize",
                 &DioramaUIRequestBus::Events::SetFontSize,
@@ -81,18 +81,13 @@ namespace Diorama
                 &DioramaUIRequestBus::Events::SetSize,
                 { { { "width", "Element box width in reference pixels (bar/panel)." },
                     { "height", "Element box height in reference pixels (bar/panel)." } } })
-            ->Event(
-                "SetValue",
-                &DioramaUIRequestBus::Events::SetValue,
-                { { { "value", "Bar fill, clamped 0..1." } } })
+            ->Event("SetValue", &DioramaUIRequestBus::Events::SetValue, { { { "value", "Bar fill, clamped 0..1." } } })
             ->Event(
                 "SetBackgroundColor",
                 &DioramaUIRequestBus::Events::SetBackgroundColor,
                 { { { "r", "Red 0..1." }, { "g", "Green 0..1." }, { "b", "Blue 0..1." }, { "a", "Alpha 0..1." } } })
             ->Event(
-                "SetVisible",
-                &DioramaUIRequestBus::Events::SetVisible,
-                { { { "visible", "Show (true) or hide (false) the element." } } })
+                "SetVisible", &DioramaUIRequestBus::Events::SetVisible, { { { "visible", "Show (true) or hide (false) the element." } } })
             ->Event("GetUIInfo", &DioramaUIRequestBus::Events::GetUIInfo);
     }
 } // namespace Diorama

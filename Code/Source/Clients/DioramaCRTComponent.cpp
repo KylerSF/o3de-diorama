@@ -41,13 +41,15 @@ namespace Diorama
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
                     ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaCRTConfig::m_enabled, "Enabled", "Show the overlay")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaCRTConfig::m_lineSpacing, "Line Spacing", "Pixels between scanlines")
-                    ->DataElement(AZ::Edit::UIHandlers::Slider, &DioramaCRTConfig::m_lineDarkness, "Line Darkness", "Scanline darkness 0..1")
-                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
-                        ->Attribute(AZ::Edit::Attributes::Max, 1.0f)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default, &DioramaCRTConfig::m_lineSpacing, "Line Spacing", "Pixels between scanlines")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Slider, &DioramaCRTConfig::m_lineDarkness, "Line Darkness", "Scanline darkness 0..1")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                    ->Attribute(AZ::Edit::Attributes::Max, 1.0f)
                     ->DataElement(AZ::Edit::UIHandlers::Slider, &DioramaCRTConfig::m_tint, "Tint", "Overall screen darkening 0..1")
-                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
-                        ->Attribute(AZ::Edit::Attributes::Max, 1.0f);
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                    ->Attribute(AZ::Edit::Attributes::Max, 1.0f);
             }
         }
     }
@@ -125,8 +127,8 @@ namespace Diorama
                 return;
             }
             const AZ::Vector3 verts[6] = {
-                AZ::Vector3(x, y, 0.0f),     AZ::Vector3(x + w, y, 0.0f),     AZ::Vector3(x + w, y + h, 0.0f),
-                AZ::Vector3(x, y, 0.0f),     AZ::Vector3(x + w, y + h, 0.0f), AZ::Vector3(x, y + h, 0.0f),
+                AZ::Vector3(x, y, 0.0f), AZ::Vector3(x + w, y, 0.0f),     AZ::Vector3(x + w, y + h, 0.0f),
+                AZ::Vector3(x, y, 0.0f), AZ::Vector3(x + w, y + h, 0.0f), AZ::Vector3(x, y + h, 0.0f),
             };
             const AZ::Color colors[1] = { color };
             AZ::RPI::AuxGeomDraw::AuxGeomDynamicDrawArguments args;

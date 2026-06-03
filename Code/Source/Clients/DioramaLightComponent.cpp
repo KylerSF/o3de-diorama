@@ -33,16 +33,25 @@ namespace Diorama
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
                     ->DataElement(AZ::Edit::UIHandlers::ComboBox, &DioramaLightConfig::m_type, "Type", "Directional (sun) or point light")
-                        ->EnumAttribute(DioramaLightType::Directional, "Directional (sun)")
-                        ->EnumAttribute(DioramaLightType::Point, "Point")
+                    ->EnumAttribute(DioramaLightType::Directional, "Directional (sun)")
+                    ->EnumAttribute(DioramaLightType::Point, "Point")
                     ->DataElement(AZ::Edit::UIHandlers::Color, &DioramaLightConfig::m_color, "Color", "Light color")
                     ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaLightConfig::m_intensity, "Intensity", "Brightness multiplier")
-                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
-                        ->Attribute(AZ::Edit::Attributes::SoftMax, 8.0f)
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaLightConfig::m_direction, "Direction", "World-space travel direction (directional lights only)")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaLightConfig::m_radius, "Radius", "Attenuation radius in world units (point lights only)")
-                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
-                    ->DataElement(AZ::Edit::UIHandlers::CheckBox, &DioramaLightConfig::m_enabled, "Enabled", "Contributes no light when off");
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                    ->Attribute(AZ::Edit::Attributes::SoftMax, 8.0f)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaLightConfig::m_direction,
+                        "Direction",
+                        "World-space travel direction (directional lights only)")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaLightConfig::m_radius,
+                        "Radius",
+                        "Attenuation radius in world units (point lights only)")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::CheckBox, &DioramaLightConfig::m_enabled, "Enabled", "Contributes no light when off");
             }
         }
     }

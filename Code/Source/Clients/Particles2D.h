@@ -7,9 +7,9 @@
 
 #pragma once
 
-#include <AzCore/base.h>
 #include <AzCore/Math/Color.h>
 #include <AzCore/Math/Vector2.h>
+#include <AzCore/base.h>
 #include <AzCore/std/containers/vector.h>
 
 // Pure, header-only 2D particle simulation core (Docs/design/2d-particles.md). It

@@ -52,11 +52,9 @@ namespace Diorama
         // so fractional layers stay distinct.
         SpriteBatchPlan::BatchKey MakeBatchKey(const SpriteComponentConfig& config)
         {
-            return SpriteBatchPlan::BatchKey{ config.m_texture.GetId(),  config.m_sortOffset,
-                                              config.m_normalMap.GetId(), config.m_flashAmount,
-                                              config.m_flashColor.ToU32(), config.m_outlineThickness,
-                                              config.m_outlineColor.ToU32(), config.m_emissiveIntensity,
-                                              config.m_emissiveColor.ToU32() };
+            return SpriteBatchPlan::BatchKey{ config.m_texture.GetId(),      config.m_sortOffset,         config.m_normalMap.GetId(),
+                                              config.m_flashAmount,          config.m_flashColor.ToU32(), config.m_outlineThickness,
+                                              config.m_outlineColor.ToU32(), config.m_emissiveIntensity,  config.m_emissiveColor.ToU32() };
         }
     } // namespace
 
@@ -66,27 +64,41 @@ namespace Diorama
     // a lower sort offset to keep it behind. Off restores the cached static order
     // driven solely by sort offset + texture.
     AZ_CVAR(
-        bool, r_dioramaSpriteDepthSort, true, nullptr, AZ::ConsoleFunctorFlags::Null,
+        bool,
+        r_dioramaSpriteDepthSort,
+        true,
+        nullptr,
+        AZ::ConsoleFunctorFlags::Null,
         "Order Diorama sprites by camera distance each frame so nearer sprites draw in front (within their sort layer).");
 
     // Soft ground shadows under billboarded sprites: a 2.5D grounding cue. Drawn in
     // one batch just above the floor, below the sprites.
     AZ_CVAR(
-        bool, r_dioramaSpriteShadows, true, nullptr, AZ::ConsoleFunctorFlags::Null,
+        bool,
+        r_dioramaSpriteShadows,
+        true,
+        nullptr,
+        AZ::ConsoleFunctorFlags::Null,
         "Render soft drop shadows on the ground under billboarded Diorama sprites.");
-    AZ_CVAR(
-        float, r_dioramaShadowAlpha, 0.35f, nullptr, AZ::ConsoleFunctorFlags::Null,
-        "Opacity of Diorama sprite ground shadows (0..1).");
+    AZ_CVAR(float, r_dioramaShadowAlpha, 0.35f, nullptr, AZ::ConsoleFunctorFlags::Null, "Opacity of Diorama sprite ground shadows (0..1).");
 
     // Gem-native 2D lighting: sprites are modulated by the registered DioramaLight
     // components (gathered into the per-draw lighting constants). Off, or a scene
     // with no lights, leaves sprites at full brightness (ambient forced to 1), so
     // existing unlit scenes are unchanged.
     AZ_CVAR(
-        bool, r_dioramaSpriteLighting, true, nullptr, AZ::ConsoleFunctorFlags::Null,
+        bool,
+        r_dioramaSpriteLighting,
+        true,
+        nullptr,
+        AZ::ConsoleFunctorFlags::Null,
         "Modulate Diorama sprites by registered 2D lights (no effect in scenes without DioramaLight).");
     AZ_CVAR(
-        float, r_dioramaSpriteAmbient, 0.35f, nullptr, AZ::ConsoleFunctorFlags::Null,
+        float,
+        r_dioramaSpriteAmbient,
+        0.35f,
+        nullptr,
+        AZ::ConsoleFunctorFlags::Null,
         "Ambient light level for Diorama sprites when a scene has 2D lights (0..1).");
 
     void SpriteFeatureProcessor::Reflect(AZ::ReflectContext* context)
@@ -513,8 +525,15 @@ namespace Diorama
         }
         SetLightingConstants(drawSrg.get());
         SetMaterialConstants(
-            drawSrg.get(), cameraTransform, false, 0.0f, AZ::Color(1.0f, 1.0f, 1.0f, 1.0f), 0.0f, AZ::Color(1.0f, 1.0f, 1.0f, 1.0f),
-            AZ::Color(1.0f, 1.0f, 1.0f, 1.0f), 0.0f);
+            drawSrg.get(),
+            cameraTransform,
+            false,
+            0.0f,
+            AZ::Color(1.0f, 1.0f, 1.0f, 1.0f),
+            0.0f,
+            AZ::Color(1.0f, 1.0f, 1.0f, 1.0f),
+            AZ::Color(1.0f, 1.0f, 1.0f, 1.0f),
+            0.0f);
         drawSrg->Compile();
 
         m_dynamicDraw->SetSortKey(sortKey);

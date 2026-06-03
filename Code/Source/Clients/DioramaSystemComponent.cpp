@@ -168,8 +168,7 @@ namespace Diorama
             AZ_Warning("Diorama", false, "PlayOneShot: sound '%s' not found", productPath.c_str());
             return;
         }
-        auto asset = AZ::Data::AssetManager::Instance().GetAsset<MiniAudio::SoundAsset>(
-            assetId, AZ::Data::AssetLoadBehavior::PreLoad);
+        auto asset = AZ::Data::AssetManager::Instance().GetAsset<MiniAudio::SoundAsset>(assetId, AZ::Data::AssetLoadBehavior::PreLoad);
         asset.BlockUntilLoadComplete();
 
         const AZ::EntityId voice = m_audioVoices[m_nextVoice]->GetId();
@@ -185,8 +184,7 @@ namespace Diorama
 
     void DioramaSystemComponent::SetMasterVolume(float volume)
     {
-        MiniAudio::MiniAudioRequestBus::Broadcast(
-            &MiniAudio::MiniAudioRequests::SetGlobalVolume, AZ::GetClamp(volume, 0.0f, 1.0f));
+        MiniAudio::MiniAudioRequestBus::Broadcast(&MiniAudio::MiniAudioRequests::SetGlobalVolume, AZ::GetClamp(volume, 0.0f, 1.0f));
     }
 
 } // namespace Diorama

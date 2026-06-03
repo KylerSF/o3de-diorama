@@ -19,18 +19,19 @@ namespace Diorama
         // it again here or the type registers twice.
         if (auto* serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
         {
-            serializeContext->Class<EditorDioramaParallaxComponent, AzToolsFramework::Components::EditorComponentBase>()
-                ->Version(1)
-                ->Field("Config", &EditorDioramaParallaxComponent::m_config);
+            serializeContext->Class<EditorDioramaParallaxComponent, AzToolsFramework::Components::EditorComponentBase>()->Version(1)->Field(
+                "Config", &EditorDioramaParallaxComponent::m_config);
 
             if (auto* editContext = serializeContext->GetEditContext())
             {
-                editContext->Class<EditorDioramaParallaxComponent>("2D Parallax Layer", "Offsets a layer relative to the camera for 2.5D parallax")
+                editContext
+                    ->Class<EditorDioramaParallaxComponent>("2D Parallax Layer", "Offsets a layer relative to the camera for 2.5D parallax")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::Category, "Diorama")
                     ->Attribute(AZ::Edit::Attributes::AppearsInAddComponentMenu, AZ_CRC_CE("Game"))
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &EditorDioramaParallaxComponent::m_config, "Config", "Parallax configuration")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default, &EditorDioramaParallaxComponent::m_config, "Config", "Parallax configuration")
                     ->Attribute(AZ::Edit::Attributes::Visibility, AZ::Edit::PropertyVisibility::ShowChildrenOnly);
             }
         }

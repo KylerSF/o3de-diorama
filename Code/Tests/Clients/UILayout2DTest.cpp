@@ -46,8 +46,7 @@ namespace Diorama
     TEST_F(UILayout2DTest, ResolveRect_TopLeftAnchorPlacesAtOffset)
     {
         // Same resolution, top-left anchor, pivot at the element's top-left.
-        const ScreenRect r = ResolveRect(
-            1280.0f, 720.0f, 1280.0f, 720.0f, Anchor::TopLeft, 10.0f, 20.0f, 100.0f, 40.0f, 0.0f, 0.0f);
+        const ScreenRect r = ResolveRect(1280.0f, 720.0f, 1280.0f, 720.0f, Anchor::TopLeft, 10.0f, 20.0f, 100.0f, 40.0f, 0.0f, 0.0f);
         EXPECT_NEAR(r.m_x, 10.0f, Tol);
         EXPECT_NEAR(r.m_y, 20.0f, Tol);
         EXPECT_NEAR(r.m_width, 100.0f, Tol);
@@ -57,8 +56,7 @@ namespace Diorama
     TEST_F(UILayout2DTest, ResolveRect_CenterAnchorCenteredPivotIsScreenCentered)
     {
         const float w = 200.0f, h = 80.0f;
-        const ScreenRect r = ResolveRect(
-            1280.0f, 720.0f, 1280.0f, 720.0f, Anchor::Center, 0.0f, 0.0f, w, h, 0.5f, 0.5f);
+        const ScreenRect r = ResolveRect(1280.0f, 720.0f, 1280.0f, 720.0f, Anchor::Center, 0.0f, 0.0f, w, h, 0.5f, 0.5f);
         EXPECT_NEAR(r.m_x, 640.0f - w * 0.5f, Tol);
         EXPECT_NEAR(r.m_y, 360.0f - h * 0.5f, Tol);
     }
@@ -68,8 +66,7 @@ namespace Diorama
         // Bottom-right anchor with the element's bottom-right pivot and no offset puts
         // the element flush in the bottom-right corner.
         const float w = 120.0f, h = 30.0f;
-        const ScreenRect r = ResolveRect(
-            1280.0f, 720.0f, 1280.0f, 720.0f, Anchor::BottomRight, 0.0f, 0.0f, w, h, 1.0f, 1.0f);
+        const ScreenRect r = ResolveRect(1280.0f, 720.0f, 1280.0f, 720.0f, Anchor::BottomRight, 0.0f, 0.0f, w, h, 1.0f, 1.0f);
         EXPECT_NEAR(r.m_x + r.m_width, 1280.0f, Tol);
         EXPECT_NEAR(r.m_y + r.m_height, 720.0f, Tol);
     }
@@ -78,8 +75,7 @@ namespace Diorama
     {
         // Real is 2x the reference: size and offset double, the anchor stays in the
         // corner.
-        const ScreenRect r = ResolveRect(
-            1280.0f, 720.0f, 2560.0f, 1440.0f, Anchor::TopLeft, 10.0f, 10.0f, 100.0f, 50.0f, 0.0f, 0.0f);
+        const ScreenRect r = ResolveRect(1280.0f, 720.0f, 2560.0f, 1440.0f, Anchor::TopLeft, 10.0f, 10.0f, 100.0f, 50.0f, 0.0f, 0.0f);
         EXPECT_NEAR(r.m_x, 20.0f, Tol);
         EXPECT_NEAR(r.m_y, 20.0f, Tol);
         EXPECT_NEAR(r.m_width, 200.0f, Tol);
@@ -92,4 +88,4 @@ namespace Diorama
         EXPECT_NEAR(ClampFill(0.42f), 0.42f, Tol);
         EXPECT_NEAR(ClampFill(1.7f), 1.0f, Tol);
     }
-}
+} // namespace Diorama

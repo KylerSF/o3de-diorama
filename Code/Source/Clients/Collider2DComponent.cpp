@@ -43,18 +43,45 @@ namespace Diorama
                 editContext->Class<Collider2DConfig>("2D Collider Config", "Shape and filtering for a 2D collider")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
-                    ->DataElement(AZ::Edit::UIHandlers::ComboBox, &Collider2DConfig::m_plane, "Plane", "World axes the collider lives in (XY screen, XZ ground)")
-                        ->EnumAttribute(CollisionPlane::XY, "XY (screen)")
-                        ->EnumAttribute(CollisionPlane::XZ, "XZ (ground)")
-                        ->EnumAttribute(CollisionPlane::YZ, "YZ")
-                    ->DataElement(AZ::Edit::UIHandlers::CheckBox, &Collider2DConfig::m_isCircle, "Circle", "Circle when on, axis-aligned box when off")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &Collider2DConfig::m_radius, "Radius", "Circle radius (used when Circle is on)")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &Collider2DConfig::m_halfExtents, "Half Extents", "Box half width and height (used when Circle is off)")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &Collider2DConfig::m_offset, "Offset", "In-plane offset from the entity origin (plane is X, Z)")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &Collider2DConfig::m_layer, "Layer", "Category bit(s) this collider belongs to")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &Collider2DConfig::m_collidesWith, "Collides With", "Bit mask of categories this collider reports against")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &Collider2DConfig::m_isTrigger, "Trigger", "Reports overlaps (OnTrigger*) but is never a solid contact")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &Collider2DConfig::m_enabled, "Enabled", "Excluded from detection when off");
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::ComboBox,
+                        &Collider2DConfig::m_plane,
+                        "Plane",
+                        "World axes the collider lives in (XY screen, XZ ground)")
+                    ->EnumAttribute(CollisionPlane::XY, "XY (screen)")
+                    ->EnumAttribute(CollisionPlane::XZ, "XZ (ground)")
+                    ->EnumAttribute(CollisionPlane::YZ, "YZ")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::CheckBox,
+                        &Collider2DConfig::m_isCircle,
+                        "Circle",
+                        "Circle when on, axis-aligned box when off")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default, &Collider2DConfig::m_radius, "Radius", "Circle radius (used when Circle is on)")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &Collider2DConfig::m_halfExtents,
+                        "Half Extents",
+                        "Box half width and height (used when Circle is off)")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &Collider2DConfig::m_offset,
+                        "Offset",
+                        "In-plane offset from the entity origin (plane is X, Z)")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default, &Collider2DConfig::m_layer, "Layer", "Category bit(s) this collider belongs to")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &Collider2DConfig::m_collidesWith,
+                        "Collides With",
+                        "Bit mask of categories this collider reports against")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &Collider2DConfig::m_isTrigger,
+                        "Trigger",
+                        "Reports overlaps (OnTrigger*) but is never a solid contact")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default, &Collider2DConfig::m_enabled, "Enabled", "Excluded from detection when off");
             }
         }
     }

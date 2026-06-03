@@ -22,7 +22,9 @@ namespace Diorama
     {
     public:
         AZ_EDITOR_COMPONENT(
-            Diorama::EditorDioramaParallaxComponent, EditorDioramaParallaxComponentTypeId, AzToolsFramework::Components::EditorComponentBase);
+            Diorama::EditorDioramaParallaxComponent,
+            EditorDioramaParallaxComponentTypeId,
+            AzToolsFramework::Components::EditorComponentBase);
 
         static void Reflect(AZ::ReflectContext* context);
 

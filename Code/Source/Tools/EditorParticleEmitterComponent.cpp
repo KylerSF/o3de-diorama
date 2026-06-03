@@ -19,18 +19,20 @@ namespace Diorama
         // it again here or the type registers twice.
         if (auto* serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
         {
-            serializeContext->Class<EditorParticleEmitterComponent, AzToolsFramework::Components::EditorComponentBase>()
-                ->Version(1)
-                ->Field("Config", &EditorParticleEmitterComponent::m_config);
+            serializeContext->Class<EditorParticleEmitterComponent, AzToolsFramework::Components::EditorComponentBase>()->Version(1)->Field(
+                "Config", &EditorParticleEmitterComponent::m_config);
 
             if (auto* editContext = serializeContext->GetEditContext())
             {
-                editContext->Class<EditorParticleEmitterComponent>("2D Particle Emitter", "Pooled 2D particle emitter rendered through the sprite batch")
+                editContext
+                    ->Class<EditorParticleEmitterComponent>(
+                        "2D Particle Emitter", "Pooled 2D particle emitter rendered through the sprite batch")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::Category, "Diorama")
                     ->Attribute(AZ::Edit::Attributes::AppearsInAddComponentMenu, AZ_CRC_CE("Game"))
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &EditorParticleEmitterComponent::m_config, "Config", "Emitter configuration")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default, &EditorParticleEmitterComponent::m_config, "Config", "Emitter configuration")
                     ->Attribute(AZ::Edit::Attributes::Visibility, AZ::Edit::PropertyVisibility::ShowChildrenOnly);
             }
         }

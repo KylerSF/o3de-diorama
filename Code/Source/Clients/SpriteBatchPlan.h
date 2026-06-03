@@ -99,7 +99,8 @@ namespace Diorama::SpriteBatchPlan
     //! Stable ordering: ties keep their original relative order, so sprites that
     //! land in the same batch preserve registration order, which keeps draw
     //! results deterministic frame to frame.
-    inline void Build(const AZStd::vector<Item>& items, AZStd::vector<Item>& outOrdered, AZStd::vector<Batch>& outBatches, bool byDepth = false)
+    inline void Build(
+        const AZStd::vector<Item>& items, AZStd::vector<Item>& outOrdered, AZStd::vector<Batch>& outBatches, bool byDepth = false)
     {
         outOrdered.clear();
         outBatches.clear();

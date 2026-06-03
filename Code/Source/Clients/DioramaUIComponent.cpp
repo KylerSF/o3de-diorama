@@ -59,30 +59,49 @@ namespace Diorama
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
                     ->DataElement(AZ::Edit::UIHandlers::ComboBox, &DioramaUIConfig::m_kind, "Kind", "What the element draws")
-                        ->EnumAttribute(UIElementKind::Text, "Text")
-                        ->EnumAttribute(UIElementKind::Bar, "Bar / Gauge")
-                        ->EnumAttribute(UIElementKind::Panel, "Panel (solid color)")
-                    ->DataElement(AZ::Edit::UIHandlers::ComboBox, &DioramaUIConfig::m_anchor, "Anchor", "Screen corner/edge the element is pinned to")
-                        ->EnumAttribute(UILayout2D::Anchor::TopLeft, "Top Left")
-                        ->EnumAttribute(UILayout2D::Anchor::Top, "Top")
-                        ->EnumAttribute(UILayout2D::Anchor::TopRight, "Top Right")
-                        ->EnumAttribute(UILayout2D::Anchor::Left, "Left")
-                        ->EnumAttribute(UILayout2D::Anchor::Center, "Center")
-                        ->EnumAttribute(UILayout2D::Anchor::Right, "Right")
-                        ->EnumAttribute(UILayout2D::Anchor::BottomLeft, "Bottom Left")
-                        ->EnumAttribute(UILayout2D::Anchor::Bottom, "Bottom")
-                        ->EnumAttribute(UILayout2D::Anchor::BottomRight, "Bottom Right")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaUIConfig::m_offset, "Offset", "Offset from the anchor, in reference pixels (y-down)")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaUIConfig::m_referenceWidth, "Reference Width", "Virtual resolution width the layout is authored in")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaUIConfig::m_referenceHeight, "Reference Height", "Virtual resolution height the layout is authored in")
+                    ->EnumAttribute(UIElementKind::Text, "Text")
+                    ->EnumAttribute(UIElementKind::Bar, "Bar / Gauge")
+                    ->EnumAttribute(UIElementKind::Panel, "Panel (solid color)")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::ComboBox, &DioramaUIConfig::m_anchor, "Anchor", "Screen corner/edge the element is pinned to")
+                    ->EnumAttribute(UILayout2D::Anchor::TopLeft, "Top Left")
+                    ->EnumAttribute(UILayout2D::Anchor::Top, "Top")
+                    ->EnumAttribute(UILayout2D::Anchor::TopRight, "Top Right")
+                    ->EnumAttribute(UILayout2D::Anchor::Left, "Left")
+                    ->EnumAttribute(UILayout2D::Anchor::Center, "Center")
+                    ->EnumAttribute(UILayout2D::Anchor::Right, "Right")
+                    ->EnumAttribute(UILayout2D::Anchor::BottomLeft, "Bottom Left")
+                    ->EnumAttribute(UILayout2D::Anchor::Bottom, "Bottom")
+                    ->EnumAttribute(UILayout2D::Anchor::BottomRight, "Bottom Right")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaUIConfig::m_offset,
+                        "Offset",
+                        "Offset from the anchor, in reference pixels (y-down)")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaUIConfig::m_referenceWidth,
+                        "Reference Width",
+                        "Virtual resolution width the layout is authored in")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaUIConfig::m_referenceHeight,
+                        "Reference Height",
+                        "Virtual resolution height the layout is authored in")
                     ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaUIConfig::m_text, "Text", "Label text")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaUIConfig::m_fontSize, "Font Size", "Font size in reference pixels (text)")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default, &DioramaUIConfig::m_fontSize, "Font Size", "Font size in reference pixels (text)")
                     ->DataElement(AZ::Edit::UIHandlers::Color, &DioramaUIConfig::m_color, "Color", "Text color, or bar fill / panel color")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaUIConfig::m_size, "Size", "Element box in reference pixels (bar/panel)")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default, &DioramaUIConfig::m_size, "Size", "Element box in reference pixels (bar/panel)")
                     ->DataElement(AZ::Edit::UIHandlers::Slider, &DioramaUIConfig::m_value, "Value", "Bar fill 0..1")
-                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
-                        ->Attribute(AZ::Edit::Attributes::Max, 1.0f)
-                    ->DataElement(AZ::Edit::UIHandlers::Color, &DioramaUIConfig::m_backgroundColor, "Background Color", "Bar/panel background behind the fill")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                    ->Attribute(AZ::Edit::Attributes::Max, 1.0f)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Color,
+                        &DioramaUIConfig::m_backgroundColor,
+                        "Background Color",
+                        "Bar/panel background behind the fill")
                     ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaUIConfig::m_visible, "Visible", "Whether the element draws");
             }
         }
@@ -173,8 +192,17 @@ namespace Diorama
         // Size/pivot zero: the resolved rect's position is the anchor+offset point,
         // and the font's own alignment places the text around it.
         const UILayout2D::ScreenRect rect = UILayout2D::ResolveRect(
-            m_config.m_referenceWidth, m_config.m_referenceHeight, realW, realH, m_config.m_anchor,
-            m_config.m_offset.GetX(), m_config.m_offset.GetY(), 0.0f, 0.0f, 0.0f, 0.0f);
+            m_config.m_referenceWidth,
+            m_config.m_referenceHeight,
+            realW,
+            realH,
+            m_config.m_anchor,
+            m_config.m_offset.GetX(),
+            m_config.m_offset.GetY(),
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f);
         m_lastScreenX = rect.m_x;
         m_lastScreenY = rect.m_y;
 
@@ -185,10 +213,12 @@ namespace Diorama
         params.m_textSizeFactor = m_config.m_fontSize * scale;
 
         const float fx = UILayout2D::AnchorFractionX(m_config.m_anchor);
-        params.m_hAlign = fx <= 0.0f ? AzFramework::TextHorizontalAlignment::Left
+        params.m_hAlign = fx <= 0.0f
+            ? AzFramework::TextHorizontalAlignment::Left
             : (fx >= 1.0f ? AzFramework::TextHorizontalAlignment::Right : AzFramework::TextHorizontalAlignment::Center);
         const float fy = UILayout2D::AnchorFractionY(m_config.m_anchor);
-        params.m_vAlign = fy <= 0.0f ? AzFramework::TextVerticalAlignment::Top
+        params.m_vAlign = fy <= 0.0f
+            ? AzFramework::TextVerticalAlignment::Top
             : (fy >= 1.0f ? AzFramework::TextVerticalAlignment::Bottom : AzFramework::TextVerticalAlignment::Center);
 
         fontDraw->DrawScreenAlignedText2d(params, m_config.m_text);
@@ -209,8 +239,17 @@ namespace Diorama
         const float pivotX = UILayout2D::AnchorFractionX(m_config.m_anchor);
         const float pivotY = UILayout2D::AnchorFractionY(m_config.m_anchor);
         const UILayout2D::ScreenRect rect = UILayout2D::ResolveRect(
-            m_config.m_referenceWidth, m_config.m_referenceHeight, realW, realH, m_config.m_anchor,
-            m_config.m_offset.GetX(), m_config.m_offset.GetY(), m_config.m_size.GetX(), m_config.m_size.GetY(), pivotX, pivotY);
+            m_config.m_referenceWidth,
+            m_config.m_referenceHeight,
+            realW,
+            realH,
+            m_config.m_anchor,
+            m_config.m_offset.GetX(),
+            m_config.m_offset.GetY(),
+            m_config.m_size.GetX(),
+            m_config.m_size.GetY(),
+            pivotX,
+            pivotY);
         m_lastScreenX = rect.m_x;
         m_lastScreenY = rect.m_y;
 
@@ -233,8 +272,8 @@ namespace Diorama
             // them to screen. Explicit verts avoid any assumption about which plane a
             // fixed-shape quad is authored in.
             const AZ::Vector3 verts[6] = {
-                AZ::Vector3(x, y, 0.0f),         AZ::Vector3(x + w, y, 0.0f),     AZ::Vector3(x + w, y + h, 0.0f),
-                AZ::Vector3(x, y, 0.0f),         AZ::Vector3(x + w, y + h, 0.0f), AZ::Vector3(x, y + h, 0.0f),
+                AZ::Vector3(x, y, 0.0f), AZ::Vector3(x + w, y, 0.0f),     AZ::Vector3(x + w, y + h, 0.0f),
+                AZ::Vector3(x, y, 0.0f), AZ::Vector3(x + w, y + h, 0.0f), AZ::Vector3(x, y + h, 0.0f),
             };
             const AZ::Color colors[1] = { color };
             AZ::RPI::AuxGeomDraw::AuxGeomDynamicDrawArguments args;
@@ -242,8 +281,8 @@ namespace Diorama
             args.m_vertCount = 6;
             args.m_colors = colors;
             args.m_colorCount = 1;
-            args.m_opacityType = color.GetA() < 1.0f ? AZ::RPI::AuxGeomDraw::OpacityType::Translucent
-                                                      : AZ::RPI::AuxGeomDraw::OpacityType::Opaque;
+            args.m_opacityType =
+                color.GetA() < 1.0f ? AZ::RPI::AuxGeomDraw::OpacityType::Translucent : AZ::RPI::AuxGeomDraw::OpacityType::Opaque;
             args.m_depthTest = AZ::RPI::AuxGeomDraw::DepthTest::Off;
             args.m_depthWrite = AZ::RPI::AuxGeomDraw::DepthWrite::Off;
             args.m_viewProjectionOverrideIndex = viewProj;

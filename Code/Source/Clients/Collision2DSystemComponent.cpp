@@ -235,8 +235,7 @@ namespace Diorama
         return OverlapShape(query, layerMask);
     }
 
-    Raycast2DResult Collision2DSystemComponent::Raycast2D(
-        float x, float z, float dirX, float dirZ, float maxDistance, AZ::u32 layerMask)
+    Raycast2DResult Collision2DSystemComponent::Raycast2D(float x, float z, float dirX, float dirZ, float maxDistance, AZ::u32 layerMask)
     {
         Raycast2DResult result;
 

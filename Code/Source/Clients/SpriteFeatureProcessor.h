@@ -20,9 +20,9 @@
 #include <Atom/RPI.Public/DynamicDraw/DynamicDrawContext.h>
 #include <Atom/RPI.Public/FeatureProcessor.h>
 #include <Atom/RPI.Public/Image/StreamingImage.h>
-#include <Atom/RPI.Reflect/Image/StreamingImageAsset.h>
 #include <Atom/RPI.Public/Shader/Shader.h>
 #include <Atom/RPI.Public/Shader/ShaderResourceGroup.h>
+#include <Atom/RPI.Reflect/Image/StreamingImageAsset.h>
 #include <Atom/RPI.Reflect/Shader/ShaderAsset.h>
 
 namespace Diorama

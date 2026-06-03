@@ -10,9 +10,9 @@
 #include <Diorama/DioramaTypeIds.h>
 #include <DioramaModuleInterface.h>
 #include <Tools/EditorCollider2DComponent.h>
+#include <Tools/EditorDioramaCRTComponent.h>
 #include <Tools/EditorDioramaCamera2DComponent.h>
 #include <Tools/EditorDioramaLightComponent.h>
-#include <Tools/EditorDioramaCRTComponent.h>
 #include <Tools/EditorDioramaParallaxComponent.h>
 #include <Tools/EditorDioramaUIComponent.h>
 #include <Tools/EditorParticleEmitterComponent.h>

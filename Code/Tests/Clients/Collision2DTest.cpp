@@ -131,8 +131,8 @@ namespace Diorama
     TEST_F(Collision2DRaycastTest, Circle_HitStraightOn)
     {
         float t = -1.0f;
-        const bool hit = Collision2D::RaycastCollider(
-            AZ::Vector2(-5.0f, 0.0f), AZ::Vector2(1.0f, 0.0f), 100.0f, MakeCircle(1, 0.0f, 0.0f, 1.0f), t);
+        const bool hit =
+            Collision2D::RaycastCollider(AZ::Vector2(-5.0f, 0.0f), AZ::Vector2(1.0f, 0.0f), 100.0f, MakeCircle(1, 0.0f, 0.0f, 1.0f), t);
         EXPECT_TRUE(hit);
         EXPECT_NEAR(t, 4.0f, RayEps); // enters at x=-1
     }
@@ -140,16 +140,16 @@ namespace Diorama
     TEST_F(Collision2DRaycastTest, Circle_MissesOffAxis)
     {
         float t = -1.0f;
-        const bool hit = Collision2D::RaycastCollider(
-            AZ::Vector2(-5.0f, 3.0f), AZ::Vector2(1.0f, 0.0f), 100.0f, MakeCircle(1, 0.0f, 0.0f, 1.0f), t);
+        const bool hit =
+            Collision2D::RaycastCollider(AZ::Vector2(-5.0f, 3.0f), AZ::Vector2(1.0f, 0.0f), 100.0f, MakeCircle(1, 0.0f, 0.0f, 1.0f), t);
         EXPECT_FALSE(hit);
     }
 
     TEST_F(Collision2DRaycastTest, Circle_OriginInside_HitsAtZero)
     {
         float t = -1.0f;
-        const bool hit = Collision2D::RaycastCollider(
-            AZ::Vector2(0.0f, 0.0f), AZ::Vector2(1.0f, 0.0f), 100.0f, MakeCircle(1, 0.0f, 0.0f, 1.0f), t);
+        const bool hit =
+            Collision2D::RaycastCollider(AZ::Vector2(0.0f, 0.0f), AZ::Vector2(1.0f, 0.0f), 100.0f, MakeCircle(1, 0.0f, 0.0f, 1.0f), t);
         EXPECT_TRUE(hit);
         EXPECT_NEAR(t, 0.0f, RayEps);
     }
@@ -157,24 +157,24 @@ namespace Diorama
     TEST_F(Collision2DRaycastTest, Circle_BeyondMaxDistance_Misses)
     {
         float t = -1.0f;
-        const bool hit = Collision2D::RaycastCollider(
-            AZ::Vector2(-5.0f, 0.0f), AZ::Vector2(1.0f, 0.0f), 3.0f, MakeCircle(1, 0.0f, 0.0f, 1.0f), t);
+        const bool hit =
+            Collision2D::RaycastCollider(AZ::Vector2(-5.0f, 0.0f), AZ::Vector2(1.0f, 0.0f), 3.0f, MakeCircle(1, 0.0f, 0.0f, 1.0f), t);
         EXPECT_FALSE(hit); // entry at t=4 is past maxDistance 3
     }
 
     TEST_F(Collision2DRaycastTest, Circle_PointingAway_Misses)
     {
         float t = -1.0f;
-        const bool hit = Collision2D::RaycastCollider(
-            AZ::Vector2(-5.0f, 0.0f), AZ::Vector2(-1.0f, 0.0f), 100.0f, MakeCircle(1, 0.0f, 0.0f, 1.0f), t);
+        const bool hit =
+            Collision2D::RaycastCollider(AZ::Vector2(-5.0f, 0.0f), AZ::Vector2(-1.0f, 0.0f), 100.0f, MakeCircle(1, 0.0f, 0.0f, 1.0f), t);
         EXPECT_FALSE(hit);
     }
 
     TEST_F(Collision2DRaycastTest, Box_HitStraightOn)
     {
         float t = -1.0f;
-        const bool hit = Collision2D::RaycastCollider(
-            AZ::Vector2(-5.0f, 0.0f), AZ::Vector2(1.0f, 0.0f), 100.0f, MakeBox(1, 0.0f, 0.0f, 1.0f, 1.0f), t);
+        const bool hit =
+            Collision2D::RaycastCollider(AZ::Vector2(-5.0f, 0.0f), AZ::Vector2(1.0f, 0.0f), 100.0f, MakeBox(1, 0.0f, 0.0f, 1.0f, 1.0f), t);
         EXPECT_TRUE(hit);
         EXPECT_NEAR(t, 4.0f, RayEps); // enters at x=-1
     }
@@ -183,16 +183,16 @@ namespace Diorama
     {
         float t = -1.0f;
         // Ray travels along X at y=5, box spans y in [-1,1]: parallel, outside.
-        const bool hit = Collision2D::RaycastCollider(
-            AZ::Vector2(-5.0f, 5.0f), AZ::Vector2(1.0f, 0.0f), 100.0f, MakeBox(1, 0.0f, 0.0f, 1.0f, 1.0f), t);
+        const bool hit =
+            Collision2D::RaycastCollider(AZ::Vector2(-5.0f, 5.0f), AZ::Vector2(1.0f, 0.0f), 100.0f, MakeBox(1, 0.0f, 0.0f, 1.0f, 1.0f), t);
         EXPECT_FALSE(hit);
     }
 
     TEST_F(Collision2DRaycastTest, Box_OriginInside_HitsAtZero)
     {
         float t = -1.0f;
-        const bool hit = Collision2D::RaycastCollider(
-            AZ::Vector2(0.0f, 0.0f), AZ::Vector2(1.0f, 0.0f), 100.0f, MakeBox(1, 0.0f, 0.0f, 1.0f, 1.0f), t);
+        const bool hit =
+            Collision2D::RaycastCollider(AZ::Vector2(0.0f, 0.0f), AZ::Vector2(1.0f, 0.0f), 100.0f, MakeBox(1, 0.0f, 0.0f, 1.0f, 1.0f), t);
         EXPECT_TRUE(hit);
         EXPECT_NEAR(t, 0.0f, RayEps);
     }

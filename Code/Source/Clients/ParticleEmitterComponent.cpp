@@ -66,40 +66,100 @@ namespace Diorama
 
             if (auto* editContext = serializeContext->GetEditContext())
             {
-                editContext->Class<DioramaParticleConfig>("2D Particle Config", "Emission, motion, and over-life ramps for a particle emitter")
+                editContext
+                    ->Class<DioramaParticleConfig>("2D Particle Config", "Emission, motion, and over-life ramps for a particle emitter")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaParticleConfig::m_texture, "Texture", "Particle texture (a soft dot, spark, heart, ...)")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaParticleConfig::m_maxParticles, "Max Particles", "Hard pool capacity")
-                        ->Attribute(AZ::Edit::Attributes::Min, 1)
-                        ->Attribute(AZ::Edit::Attributes::Max, ParticleMaxCap)
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaParticleConfig::m_rate, "Rate", "Continuous emission (particles/sec); 0 = burst-only")
-                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaParticleConfig::m_burstCount, "Burst Count", "Particles emitted by Burst() / on activate")
-                        ->Attribute(AZ::Edit::Attributes::Min, 0)
-                    ->DataElement(AZ::Edit::UIHandlers::CheckBox, &DioramaParticleConfig::m_emitOnActivate, "Emit On Activate", "Start emitting / fire a burst when the game starts")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaParticleConfig::m_lifetimeMin, "Lifetime Min", "Shortest particle life (seconds)")
-                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaParticleConfig::m_lifetimeMax, "Lifetime Max", "Longest particle life (seconds)")
-                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaParticleConfig::m_speedMin, "Speed Min", "Slowest initial speed (world units/sec)")
-                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaParticleConfig::m_speedMax, "Speed Max", "Fastest initial speed (world units/sec)")
-                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaParticleConfig::m_directionDegrees, "Direction", "Emission direction in degrees (0 = +X, 90 = +Y)")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaParticleConfig::m_spreadDegrees, "Spread", "Cone spread in degrees (360 = radial)")
-                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
-                        ->Attribute(AZ::Edit::Attributes::Max, 360.0f)
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaParticleConfig::m_gravity, "Gravity", "Constant acceleration on every particle (world units/sec^2)")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaParticleConfig::m_drag, "Drag", "Fraction of velocity shed per second (0 = none)")
-                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaParticleConfig::m_startSize, "Start Size", "Size at birth (world units)")
-                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaParticleConfig::m_endSize, "End Size", "Size at death (world units)")
-                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaParticleConfig::m_texture,
+                        "Texture",
+                        "Particle texture (a soft dot, spark, heart, ...)")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default, &DioramaParticleConfig::m_maxParticles, "Max Particles", "Hard pool capacity")
+                    ->Attribute(AZ::Edit::Attributes::Min, 1)
+                    ->Attribute(AZ::Edit::Attributes::Max, ParticleMaxCap)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaParticleConfig::m_rate,
+                        "Rate",
+                        "Continuous emission (particles/sec); 0 = burst-only")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaParticleConfig::m_burstCount,
+                        "Burst Count",
+                        "Particles emitted by Burst() / on activate")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::CheckBox,
+                        &DioramaParticleConfig::m_emitOnActivate,
+                        "Emit On Activate",
+                        "Start emitting / fire a burst when the game starts")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaParticleConfig::m_lifetimeMin,
+                        "Lifetime Min",
+                        "Shortest particle life (seconds)")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaParticleConfig::m_lifetimeMax,
+                        "Lifetime Max",
+                        "Longest particle life (seconds)")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaParticleConfig::m_speedMin,
+                        "Speed Min",
+                        "Slowest initial speed (world units/sec)")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaParticleConfig::m_speedMax,
+                        "Speed Max",
+                        "Fastest initial speed (world units/sec)")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaParticleConfig::m_directionDegrees,
+                        "Direction",
+                        "Emission direction in degrees (0 = +X, 90 = +Y)")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaParticleConfig::m_spreadDegrees,
+                        "Spread",
+                        "Cone spread in degrees (360 = radial)")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                    ->Attribute(AZ::Edit::Attributes::Max, 360.0f)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaParticleConfig::m_gravity,
+                        "Gravity",
+                        "Constant acceleration on every particle (world units/sec^2)")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaParticleConfig::m_drag,
+                        "Drag",
+                        "Fraction of velocity shed per second (0 = none)")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default, &DioramaParticleConfig::m_startSize, "Start Size", "Size at birth (world units)")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default, &DioramaParticleConfig::m_endSize, "End Size", "Size at death (world units)")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
                     ->DataElement(AZ::Edit::UIHandlers::Color, &DioramaParticleConfig::m_startColor, "Start Color", "Color at birth")
-                    ->DataElement(AZ::Edit::UIHandlers::Color, &DioramaParticleConfig::m_endColor, "End Color", "Color at death (drop alpha to fade out)")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaParticleConfig::m_sortOffset, "Sort Offset", "Transparent draw-order bias; larger draws on top");
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Color,
+                        &DioramaParticleConfig::m_endColor,
+                        "End Color",
+                        "Color at death (drop alpha to fade out)")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaParticleConfig::m_sortOffset,
+                        "Sort Offset",
+                        "Transparent draw-order bias; larger draws on top");
             }
         }
     }
@@ -117,13 +177,15 @@ namespace Diorama
 
         if (auto* serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
         {
-            serializeContext->Class<ParticleEmitterComponent, AZ::Component>()->Version(1)->Field("Config", &ParticleEmitterComponent::m_config);
+            serializeContext->Class<ParticleEmitterComponent, AZ::Component>()->Version(1)->Field(
+                "Config", &ParticleEmitterComponent::m_config);
 
             if (auto* editContext = serializeContext->GetEditContext())
             {
                 // No AppearsInAddComponentMenu: built from the editor twin via
                 // BuildGameEntity, like the other runtime Diorama components.
-                editContext->Class<ParticleEmitterComponent>("2D Particle Emitter", "Pooled 2D particle emitter rendered through the sprite batch")
+                editContext
+                    ->Class<ParticleEmitterComponent>("2D Particle Emitter", "Pooled 2D particle emitter rendered through the sprite batch")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::Category, "Diorama")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
@@ -278,8 +340,7 @@ namespace Diorama
         const AZ::Vector2 velocity(cosf(angleRad) * speed, sinf(angleRad) * speed);
         const float spin = m_config.m_spinMin + (m_config.m_spinMax - m_config.m_spinMin) * m_rng.GetRandomFloat();
 
-        m_particles.push_back(
-            Particles2D::Spawn(AZ::Vector2(world.GetX(), world.GetY()), velocity, life, 0.0f, spin));
+        m_particles.push_back(Particles2D::Spawn(AZ::Vector2(world.GetX(), world.GetY()), velocity, life, 0.0f, spin));
     }
 
     void ParticleEmitterComponent::PushToRenderer()
@@ -310,8 +371,7 @@ namespace Diorama
                 const float size = Particles2D::SizeAt(params, lifeFraction);
                 config.m_size = AZ::Vector2(size, size);
                 config.m_tint = Particles2D::ColorAt(params, lifeFraction);
-                const AZ::Transform tm =
-                    AZ::Transform::CreateTranslation(AZ::Vector3(p.m_position.GetX(), p.m_position.GetY(), planeZ));
+                const AZ::Transform tm = AZ::Transform::CreateTranslation(AZ::Vector3(p.m_position.GetX(), p.m_position.GetY(), planeZ));
                 m_featureProcessor->UpdateSprite(m_handles[i], tm, config);
             }
             else
@@ -444,8 +504,8 @@ namespace Diorama
             return false;
         }
         AZ::Data::AssetBus::Handler::BusDisconnect();
-        m_config.m_texture = AZ::Data::AssetManager::Instance().GetAsset<AZ::RPI::StreamingImageAsset>(
-            assetId, AZ::Data::AssetLoadBehavior::PreLoad);
+        m_config.m_texture =
+            AZ::Data::AssetManager::Instance().GetAsset<AZ::RPI::StreamingImageAsset>(assetId, AZ::Data::AssetLoadBehavior::PreLoad);
         QueueTextureLoad();
         return true;
     }

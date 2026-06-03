@@ -261,15 +261,13 @@ namespace Diorama
         SetPos(a, 3.0f, 4.0f);
 
         AZStd::vector<AZ::EntityId> hits;
-        Diorama2DCollisionRequestBus::BroadcastResult(
-            hits, &Diorama2DCollisionRequests::OverlapCircle, 3.0f, 4.0f, 1.0f, AZ::u32(0));
+        Diorama2DCollisionRequestBus::BroadcastResult(hits, &Diorama2DCollisionRequests::OverlapCircle, 3.0f, 4.0f, 1.0f, AZ::u32(0));
 
         ASSERT_EQ(hits.size(), 1u);
         EXPECT_EQ(hits[0], a);
 
         // A query far away finds nothing.
-        Diorama2DCollisionRequestBus::BroadcastResult(
-            hits, &Diorama2DCollisionRequests::OverlapCircle, 100.0f, 0.0f, 1.0f, AZ::u32(0));
+        Diorama2DCollisionRequestBus::BroadcastResult(hits, &Diorama2DCollisionRequests::OverlapCircle, 100.0f, 0.0f, 1.0f, AZ::u32(0));
         EXPECT_TRUE(hits.empty());
     }
 

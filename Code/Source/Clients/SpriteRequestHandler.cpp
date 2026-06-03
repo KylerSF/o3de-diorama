@@ -87,7 +87,8 @@ namespace Diorama
             return false;
         }
 
-        m_config->m_normalMap = AZ::Data::Asset<AZ::RPI::StreamingImageAsset>(assetId, AZ::AzTypeInfo<AZ::RPI::StreamingImageAsset>::Uuid());
+        m_config->m_normalMap =
+            AZ::Data::Asset<AZ::RPI::StreamingImageAsset>(assetId, AZ::AzTypeInfo<AZ::RPI::StreamingImageAsset>::Uuid());
         m_config->m_normalMap.SetAutoLoadBehavior(AZ::Data::AssetLoadBehavior::PreLoad);
         NotifyChanged();
         return true;

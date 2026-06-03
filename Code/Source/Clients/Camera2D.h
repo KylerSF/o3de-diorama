@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include <AzCore/base.h>
 #include <AzCore/Math/Vector2.h>
+#include <AzCore/base.h>
 
 // Pure, header-only math for the 2D camera component (Docs/design/2d-camera.md).
 // These are the frame-rate-independent building blocks of camera follow: smoothing,

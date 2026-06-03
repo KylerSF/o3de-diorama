@@ -19,7 +19,8 @@ namespace Diorama
             return;
         }
 
-        behaviorContext->EBus<DioramaAudioRequestBus>("DioramaAudioRequestBus")
+        behaviorContext
+            ->EBus<DioramaAudioRequestBus>("DioramaAudioRequestBus")
             // Common scope so it is callable from editor Python and runtime script.
             ->Attribute(AZ::Script::Attributes::Scope, AZ::Script::Attributes::ScopeFlags::Common)
             ->Attribute(AZ::Script::Attributes::Category, "Diorama")
@@ -27,8 +28,7 @@ namespace Diorama
             ->Event(
                 "PlayOneShot",
                 &DioramaAudioRequestBus::Events::PlayOneShot,
-                { { { "productPath", "Sound product path, e.g. 'diorama/audio/blip.wav'." },
-                    { "volume", "Volume 0..1 (clamped)." } } })
+                { { { "productPath", "Sound product path, e.g. 'diorama/audio/blip.wav'." }, { "volume", "Volume 0..1 (clamped)." } } })
             ->Event(
                 "SetMasterVolume",
                 &DioramaAudioRequestBus::Events::SetMasterVolume,

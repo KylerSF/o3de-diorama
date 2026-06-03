@@ -42,8 +42,7 @@ namespace Diorama
             return;
         }
 
-        behaviorContext
-            ->EBus<DioramaParallaxRequestBus>("DioramaParallaxRequestBus")
+        behaviorContext->EBus<DioramaParallaxRequestBus>("DioramaParallaxRequestBus")
             ->Attribute(AZ::Script::Attributes::Scope, AZ::Script::Attributes::ScopeFlags::Common)
             ->Attribute(AZ::Script::Attributes::Category, "Diorama")
             ->Attribute(AZ::Script::Attributes::Module, "diorama")

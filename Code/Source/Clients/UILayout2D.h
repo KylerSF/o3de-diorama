@@ -100,8 +100,17 @@ namespace Diorama::UILayout2D
     //! The anchor is taken in real space (so corners stay in corners); offset and
     //! size scale by the uniform reference scale.
     inline ScreenRect ResolveRect(
-        float refW, float refH, float realW, float realH, Anchor anchor,
-        float offsetX, float offsetY, float width, float height, float pivotX, float pivotY)
+        float refW,
+        float refH,
+        float realW,
+        float realH,
+        Anchor anchor,
+        float offsetX,
+        float offsetY,
+        float width,
+        float height,
+        float pivotX,
+        float pivotY)
     {
         const float scale = ReferenceScale(refW, refH, realW, realH);
         const float anchorX = AnchorFractionX(anchor) * realW;
@@ -122,4 +131,4 @@ namespace Diorama::UILayout2D
     {
         return value < 0.0f ? 0.0f : (value > 1.0f ? 1.0f : value);
     }
-}
+} // namespace Diorama::UILayout2D

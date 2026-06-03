@@ -25,7 +25,9 @@ namespace Diorama
     {
     public:
         AZ_EDITOR_COMPONENT(
-            Diorama::EditorParticleEmitterComponent, EditorDioramaParticleEmitterComponentTypeId, AzToolsFramework::Components::EditorComponentBase);
+            Diorama::EditorParticleEmitterComponent,
+            EditorDioramaParticleEmitterComponentTypeId,
+            AzToolsFramework::Components::EditorComponentBase);
 
         static void Reflect(AZ::ReflectContext* context);
 

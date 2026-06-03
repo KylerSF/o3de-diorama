@@ -25,7 +25,9 @@ namespace Diorama
     {
     public:
         AZ_EDITOR_COMPONENT(
-            Diorama::EditorDioramaCamera2DComponent, EditorDioramaCamera2DComponentTypeId, AzToolsFramework::Components::EditorComponentBase);
+            Diorama::EditorDioramaCamera2DComponent,
+            EditorDioramaCamera2DComponentTypeId,
+            AzToolsFramework::Components::EditorComponentBase);
 
         static void Reflect(AZ::ReflectContext* context);
 

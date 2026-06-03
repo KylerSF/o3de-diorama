@@ -12,13 +12,13 @@
 
 #include <Clients/Collider2DComponent.h>
 #include <Clients/Collision2DSystemComponent.h>
+#include <Clients/DioramaCRTComponent.h>
 #include <Clients/DioramaCamera2DComponent.h>
 #include <Clients/DioramaLightComponent.h>
-#include <Clients/DioramaCRTComponent.h>
 #include <Clients/DioramaParallaxComponent.h>
+#include <Clients/DioramaSystemComponent.h>
 #include <Clients/DioramaUIComponent.h>
 #include <Clients/ParticleEmitterComponent.h>
-#include <Clients/DioramaSystemComponent.h>
 #include <Clients/SpriteComponent.h>
 #include <Clients/TilemapComponent.h>
 

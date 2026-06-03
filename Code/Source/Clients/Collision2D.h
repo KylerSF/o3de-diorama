@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include <AzCore/base.h>
 #include <AzCore/Math/Vector2.h>
+#include <AzCore/base.h>
 #include <AzCore/std/containers/unordered_set.h>
 #include <AzCore/std/containers/vector.h>
 #include <AzCore/std/sort.h>
@@ -132,8 +132,7 @@ namespace Diorama::Collision2D
     //! Cast a ray (origin + t*dir, dir assumed unit length) against one collider,
     //! up to maxDistance. Returns the nearest non-negative t in [0, maxDistance].
     //! A ray starting inside the shape hits at t = 0.
-    inline bool RaycastCollider(
-        const AZ::Vector2& origin, const AZ::Vector2& dir, float maxDistance, const Collider& collider, float& outT)
+    inline bool RaycastCollider(const AZ::Vector2& origin, const AZ::Vector2& dir, float maxDistance, const Collider& collider, float& outT)
     {
         if (collider.m_shape.m_type == ShapeType::Circle)
         {

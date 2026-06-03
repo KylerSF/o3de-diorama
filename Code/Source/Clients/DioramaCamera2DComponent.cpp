@@ -53,27 +53,76 @@ namespace Diorama
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
                     ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaCamera2DConfig::m_target, "Target", "Entity to follow")
-                    ->DataElement(AZ::Edit::UIHandlers::ComboBox, &DioramaCamera2DConfig::m_plane, "Plane", "World axes the camera tracks in (XY screen, XZ ground)")
-                        ->EnumAttribute(CameraPlane2D::XY, "XY (screen)")
-                        ->EnumAttribute(CameraPlane2D::XZ, "XZ (ground)")
-                        ->EnumAttribute(CameraPlane2D::YZ, "YZ")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaCamera2DConfig::m_followOffset, "Follow Offset", "Offset added to the target (its out-of-plane part is the camera distance/height)")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaCamera2DConfig::m_smoothTime, "Smooth Time", "Follow smoothing time in seconds (0 snaps)")
-                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaCamera2DConfig::m_deadzoneHalf, "Deadzone Half", "In-plane half-extents the target moves within without moving the camera")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaCamera2DConfig::m_lookahead, "Lookahead", "Distance the view leads the target's motion")
-                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
-                    ->DataElement(AZ::Edit::UIHandlers::CheckBox, &DioramaCamera2DConfig::m_useBounds, "Use Bounds", "Clamp the camera to a world rectangle")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaCamera2DConfig::m_boundsMin, "Bounds Min", "Minimum camera center (when Use Bounds is on)")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaCamera2DConfig::m_boundsMax, "Bounds Max", "Maximum camera center (when Use Bounds is on)")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaCamera2DConfig::m_maxShake, "Max Shake", "Max shake displacement at full trauma (world units)")
-                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaCamera2DConfig::m_traumaDecay, "Trauma Decay", "How fast shake settles (per second)")
-                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
-                    ->DataElement(AZ::Edit::UIHandlers::CheckBox, &DioramaCamera2DConfig::m_pixelSnap, "Pixel Snap", "Snap the camera to a whole-texel grid")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaCamera2DConfig::m_pixelsPerUnit, "Pixels Per Unit", "Texels per world unit for pixel snap (<=0 disables)")
-                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
-                    ->DataElement(AZ::Edit::UIHandlers::CheckBox, &DioramaCamera2DConfig::m_enabled, "Enabled", "Disabled cameras freeze in place");
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::ComboBox,
+                        &DioramaCamera2DConfig::m_plane,
+                        "Plane",
+                        "World axes the camera tracks in (XY screen, XZ ground)")
+                    ->EnumAttribute(CameraPlane2D::XY, "XY (screen)")
+                    ->EnumAttribute(CameraPlane2D::XZ, "XZ (ground)")
+                    ->EnumAttribute(CameraPlane2D::YZ, "YZ")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaCamera2DConfig::m_followOffset,
+                        "Follow Offset",
+                        "Offset added to the target (its out-of-plane part is the camera distance/height)")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaCamera2DConfig::m_smoothTime,
+                        "Smooth Time",
+                        "Follow smoothing time in seconds (0 snaps)")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaCamera2DConfig::m_deadzoneHalf,
+                        "Deadzone Half",
+                        "In-plane half-extents the target moves within without moving the camera")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaCamera2DConfig::m_lookahead,
+                        "Lookahead",
+                        "Distance the view leads the target's motion")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::CheckBox,
+                        &DioramaCamera2DConfig::m_useBounds,
+                        "Use Bounds",
+                        "Clamp the camera to a world rectangle")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaCamera2DConfig::m_boundsMin,
+                        "Bounds Min",
+                        "Minimum camera center (when Use Bounds is on)")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaCamera2DConfig::m_boundsMax,
+                        "Bounds Max",
+                        "Maximum camera center (when Use Bounds is on)")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaCamera2DConfig::m_maxShake,
+                        "Max Shake",
+                        "Max shake displacement at full trauma (world units)")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaCamera2DConfig::m_traumaDecay,
+                        "Trauma Decay",
+                        "How fast shake settles (per second)")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::CheckBox,
+                        &DioramaCamera2DConfig::m_pixelSnap,
+                        "Pixel Snap",
+                        "Snap the camera to a whole-texel grid")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &DioramaCamera2DConfig::m_pixelsPerUnit,
+                        "Pixels Per Unit",
+                        "Texels per world unit for pixel snap (<=0 disables)")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::CheckBox, &DioramaCamera2DConfig::m_enabled, "Enabled", "Disabled cameras freeze in place");
             }
         }
     }
@@ -91,14 +140,17 @@ namespace Diorama
 
         if (auto* serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
         {
-            serializeContext->Class<DioramaCamera2DComponent, AZ::Component>()->Version(1)->Field("Config", &DioramaCamera2DComponent::m_config);
+            serializeContext->Class<DioramaCamera2DComponent, AZ::Component>()->Version(1)->Field(
+                "Config", &DioramaCamera2DComponent::m_config);
 
             if (auto* editContext = serializeContext->GetEditContext())
             {
                 // No AppearsInAddComponentMenu: built from the editor twin via
                 // BuildGameEntity, never added directly (same as the other runtime
                 // Diorama components).
-                editContext->Class<DioramaCamera2DComponent>("2D Camera Controller", "Follows a target with deadzone, bounds, lookahead, and shake")
+                editContext
+                    ->Class<DioramaCamera2DComponent>(
+                        "2D Camera Controller", "Follows a target with deadzone, bounds, lookahead, and shake")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::Category, "Diorama")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true)

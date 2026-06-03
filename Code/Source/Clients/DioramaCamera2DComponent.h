@@ -13,9 +13,9 @@
 #include <AzCore/Component/Component.h>
 #include <AzCore/Component/EntityId.h>
 #include <AzCore/Component/TickBus.h>
+#include <AzCore/Math/Random.h>
 #include <AzCore/Math/Vector2.h>
 #include <AzCore/Math/Vector3.h>
-#include <AzCore/Math/Random.h>
 #include <AzCore/RTTI/RTTI.h>
 
 namespace Diorama
