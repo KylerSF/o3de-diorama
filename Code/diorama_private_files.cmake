@@ -32,6 +32,9 @@ set(FILES
     Source/Clients/LightBus.cpp
     Source/Clients/LightRequestHandler.cpp
     Source/Clients/LightRequestHandler.h
+    Source/Clients/DioramaCamera2DComponent.cpp
+    Source/Clients/DioramaCamera2DComponent.h
+    Source/Clients/CameraBus.cpp
     Source/Clients/TilemapComponent.cpp
     Source/Clients/TilemapComponent.h
     Source/Clients/TilemapComponentConfig.cpp

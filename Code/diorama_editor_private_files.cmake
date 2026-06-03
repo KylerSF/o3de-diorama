@@ -10,4 +10,6 @@ set(FILES
     Source/Tools/EditorCollider2DComponent.h
     Source/Tools/EditorDioramaLightComponent.cpp
     Source/Tools/EditorDioramaLightComponent.h
+    Source/Tools/EditorDioramaCamera2DComponent.cpp
+    Source/Tools/EditorDioramaCamera2DComponent.h
 )

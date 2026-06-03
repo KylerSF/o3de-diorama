@@ -1,8 +1,14 @@
 # Design: 2D camera component (follow, deadzone, bounds, pixel-perfect, shake)
 
-Status: design (Tier-2 roadmap item, task #27). No implementation yet. This is the
-quickest credibility win on the roadmap and it absorbs the deferred gameplay-juice
-work (camera follow + screen shake, task #22).
+Status: **v2 implemented** (Tier-2 roadmap item, task #27). The reusable C++
+`DioramaCamera2DComponent` (+ editor twin + `DioramaCamera2DRequestBus`) ships,
+built on the pure unit-tested `Camera2D` math core: follow, deadzone, bounds,
+lookahead, trauma shake, and position pixel-snap, in any of the XY/XZ/YZ planes.
+This absorbs the deferred gameplay-juice work (camera follow + screen shake, task
+#22). Deferred to v3: orthographic projection switch for true pixel-perfect (the
+component snaps position today but does not yet drive the ortho clip matrix).
+
+The original design notes below are kept for context.
 
 ## Goal
 

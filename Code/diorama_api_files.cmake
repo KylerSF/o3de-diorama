@@ -9,4 +9,5 @@ set(FILES
     Include/Diorama/Collision2DBus.h
     Include/Diorama/DioramaLightConfig.h
     Include/Diorama/DioramaLightBus.h
+    Include/Diorama/DioramaCameraBus.h
 )

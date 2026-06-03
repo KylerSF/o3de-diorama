@@ -55,6 +55,14 @@ namespace Diorama
     inline constexpr const char* DioramaLightRequestsTypeId = "{2D3D5429-D3C6-4769-80D8-424478630B23}";
     inline constexpr const char* DioramaLightInfoTypeId = "{7A1C4B9E-3D52-4F8A-9C16-2E8B5A3D7F40}";
 
+    // 2D camera TypeIds (gem-native follow/deadzone/bounds/lookahead/shake camera
+    // controller; drives a camera entity's transform via the Camera2D math core)
+    inline constexpr const char* DioramaCamera2DConfigTypeId = "{1E6B9D24-7C3F-4A85-9B2E-0C4D8F5A1B36}";
+    inline constexpr const char* DioramaCamera2DComponentTypeId = "{2F7CAE35-8D40-4B96-AC3F-1D5E9061C247}";
+    inline constexpr const char* EditorDioramaCamera2DComponentTypeId = "{3A8DBF46-9E51-4CA7-BD40-2E6FA172D358}";
+    inline constexpr const char* DioramaCamera2DRequestsTypeId = "{4B9EC057-AF62-4DB8-CE51-3F70B283E469}";
+    inline constexpr const char* Camera2DInfoTypeId = "{5CAFD168-B073-4EC9-DF62-4081C394F57A}";
+
     // AI-facing 2D collision API TypeIds
     inline constexpr const char* Diorama2DColliderRequestsTypeId = "{908C687A-9799-4BD9-9E82-3368D3BAEA03}";
     inline constexpr const char* Diorama2DCollisionNotificationsTypeId = "{3E9FB4C7-C577-450B-8CCA-9CEDF0964E06}";

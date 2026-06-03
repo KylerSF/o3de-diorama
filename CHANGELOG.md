@@ -9,6 +9,19 @@ alpha (the 0.x line), minor releases may include breaking changes.
 ## [Unreleased]
 
 ### Added
+- Gem-native 2D camera controller. A `2D Camera Controller` component placed on a
+  camera entity follows a target with frame-rate-independent smoothing, a deadzone
+  (small target motion does not move the view), optional world bounds, lookahead
+  (the view leads the target's motion), optional pixel-perfect snapping, and
+  trauma-based screen shake (`shake = maxShake * trauma^2`, applied after follow so
+  it never fights tracking, decaying over time). It writes only the camera entity's
+  translation, so an authored 2.5D tilt is preserved, and works in any of the three
+  world planes (XY / XZ / YZ). All the feel math is the pure, unit-tested
+  `Camera2D` core. A typed `DioramaCamera2DRequestBus` (Common scope) exposes
+  `SetTarget`, `SetFollowOffset`, `SetSmoothTime`, `SetDeadzone`, `SetLookahead`,
+  `SetBounds` / `ClearBounds`, `AddTrauma` (the gameplay juice hook), `SetEnabled`,
+  and `GetCameraInfo` to Lua, Python, and Script Canvas. See
+  [Docs/design/2d-camera.md](Docs/design/2d-camera.md).
 - Gem-native 2D dynamic lighting (v1a). A `2D Light` component (directional sun or
   point light: color, intensity, direction or attenuation radius, on/off) placed in
   the scene and gathered by the sprite feature processor each frame into the sprite
