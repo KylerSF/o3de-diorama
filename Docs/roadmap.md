@@ -157,6 +157,11 @@ Missing table-stakes (no design doc yet):
   parity model the sprite/tilemap buses follow), with an editor twin and demos,
   rather than a bolt-on. Health/score/menus an agent can build the same way it
   builds sprites. (LyShine is UI-only and outside Diorama's parity model today.)
+  **Started**: design in [design/2d-ui-hud.md](design/2d-ui-hud.md) (text/bar/panel
+  elements, anchor + virtual-resolution scaling, `DioramaUIRequestBus`, render via
+  `AzFramework::FontDrawInterface` + the sprite quad path); the pure
+  `UILayout2D.h` anchor/scale core and its unit tests have landed. Next: the
+  runtime component, the request bus, the editor twin, a HUD demo, and a how-to.
 - **Animation state machine.** Flipbook and skeletal give *clips*; character work
   needs transitions (idle -> run -> jump) with conditions and blends.
 - **Input action-mapping.** A rebindable action surface; the twin-stick wires raw

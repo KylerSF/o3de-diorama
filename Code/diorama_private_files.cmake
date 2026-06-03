@@ -21,6 +21,7 @@ set(FILES
     Source/Clients/Collider2DComponent.h
     Source/Clients/Camera2D.h
     Source/Clients/Particles2D.h
+    Source/Clients/UILayout2D.h
     Source/Clients/SpriteFeatureProcessor.cpp
     Source/Clients/SpriteFeatureProcessor.h
     Source/Clients/SpritePresenter.cpp
