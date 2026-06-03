@@ -41,8 +41,10 @@ a Lua script asset from Python; you do those two clicks once, by hand.
 **Enter game mode** (Ctrl+G). Move the player with **WASD**, the **arrow keys**,
 or a gamepad **left stick**. Escape leaves game mode.
 
-If the framing is off, nudge `QuickCamera`'s transform; it only needs to sit back
-along +Z and look at the XY plane where the player moves.
+The generator pre-frames `QuickCamera` for you (it bakes a `-90` X rotation so the
+camera looks down `-Z` at the XY plane). If you change the scene layout and the
+framing is off, nudge `QuickCamera`'s transform; it only needs to sit back along +Z
+and look at the XY plane where the player moves.
 
 ## How it works
 

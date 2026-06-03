@@ -48,8 +48,13 @@ freely mixed with 3D geometry, lighting, particles, and post effects. See
 | Scripting | Typed Sprite/Tilemap buses (Lua, Python, ScriptCanvas) | Working |
 | Gameplay | 2D collision: colliders, triggers, and queries reachable from scripts | Working |
 | Sample | 2.5D twin-stick shooter with a LyShine HUD | Working |
-| 2.5D | Parallax background layers | Planned |
-| Camera | Orthographic / pixel-perfect camera | Planned |
+| 2.5D | Parallax background layers | Working |
+| Camera | 2D camera controller (follow, deadzone, bounds, shake) | Working |
+| Camera | Orthographic / pixel-perfect camera | Working |
+| Lighting | 2D dynamic lights + normal-mapped sprites | Working |
+| Effects | 2D particle emitter | Working |
+| Effects | Sprite materials (flash, outline, emissive/bloom) | Working |
+| Audio | One-shot SFX + music via MiniAudio | Working |
 | Tilemap | Dedicated tilemap asset + builder | Planned |
 
 A known alpha limitation: the editor preview does not yet live-update to every
@@ -125,7 +130,7 @@ complete game:
 5. Parallax and Layers, 2.5D layering + scroll script (done)
 6. Twin-Stick Shooter, capstone 2.5D sample game (done)
 
-Bonus tracks: custom sprite material/shader, pixel-perfect camera, and a
+Bonus tracks: custom sprite material/shader and a
 thousands-of-sprites stress scene.
 
 ## Versioning
