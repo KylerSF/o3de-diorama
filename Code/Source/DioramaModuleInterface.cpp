@@ -14,6 +14,7 @@
 #include <Clients/Collision2DSystemComponent.h>
 #include <Clients/DioramaCamera2DComponent.h>
 #include <Clients/DioramaLightComponent.h>
+#include <Clients/ParticleEmitterComponent.h>
 #include <Clients/DioramaSystemComponent.h>
 #include <Clients/SpriteComponent.h>
 #include <Clients/TilemapComponent.h>
@@ -40,6 +41,7 @@ namespace Diorama
                 Collider2DComponent::CreateDescriptor(),
                 DioramaLightComponent::CreateDescriptor(),
                 DioramaCamera2DComponent::CreateDescriptor(),
+                ParticleEmitterComponent::CreateDescriptor(),
             });
     }
 

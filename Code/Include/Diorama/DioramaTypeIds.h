@@ -63,6 +63,13 @@ namespace Diorama
     inline constexpr const char* DioramaCamera2DRequestsTypeId = "{4B9EC057-AF62-4DB8-CE51-3F70B283E469}";
     inline constexpr const char* Camera2DInfoTypeId = "{5CAFD168-B073-4EC9-DF62-4081C394F57A}";
 
+    // 2D particle emitter TypeIds (pooled emitter rendered through the sprite batch)
+    inline constexpr const char* DioramaParticleConfigTypeId = "{6DB0E279-C184-4FDA-E073-5192D4A5061B}";
+    inline constexpr const char* DioramaParticleEmitterComponentTypeId = "{7EC1F38A-D295-40EB-F184-62A3E5B6172C}";
+    inline constexpr const char* EditorDioramaParticleEmitterComponentTypeId = "{8FD2A49B-E3A6-41FC-A295-73B4F6C7283D}";
+    inline constexpr const char* DioramaParticleRequestsTypeId = "{9AE3B5AC-F4B7-42AD-B3A6-84C5A7D8394E}";
+    inline constexpr const char* ParticleInfoTypeId = "{ABF4C6BD-A5C8-43BE-C4B7-95D6B8E94A5F}";
+
     // AI-facing 2D collision API TypeIds
     inline constexpr const char* Diorama2DColliderRequestsTypeId = "{908C687A-9799-4BD9-9E82-3368D3BAEA03}";
     inline constexpr const char* Diorama2DCollisionNotificationsTypeId = "{3E9FB4C7-C577-450B-8CCA-9CEDF0964E06}";

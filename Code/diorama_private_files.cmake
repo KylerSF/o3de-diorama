@@ -35,6 +35,9 @@ set(FILES
     Source/Clients/DioramaCamera2DComponent.cpp
     Source/Clients/DioramaCamera2DComponent.h
     Source/Clients/CameraBus.cpp
+    Source/Clients/ParticleEmitterComponent.cpp
+    Source/Clients/ParticleEmitterComponent.h
+    Source/Clients/ParticleBus.cpp
     Source/Clients/TilemapComponent.cpp
     Source/Clients/TilemapComponent.h
     Source/Clients/TilemapComponentConfig.cpp

@@ -1,7 +1,14 @@
 # Design: 2D particle system
 
-Status: design (Tier-2 roadmap item). No implementation yet. Generalizes the
-twin-stick sample's pooled heart-burst FX into a first-class emitter.
+Status: **v1 implemented** (Tier-2 roadmap item). The `ParticleEmitterComponent`
+(+ editor twin + `DioramaParticleRequestBus`) ships, built on the pure unit-tested
+`Particles2D` core: continuous + burst emission, point/cone/radial shape with
+spread, randomized lifetime/speed, gravity/drag, and size + color over life,
+rendered as billboarded quads through the existing sprite batch (one draw per
+emitter) via a pre-acquired handle pool. The pool is fixed-capacity and all ranges
+are clamped. Deferred: additive/multiply blend (v2, pairs with materials),
+per-particle atlas animation, trails/sub-emitters (v3), and porting the
+twin-stick heart-burst onto it. The design notes below are kept for context.
 
 ## Goal
 

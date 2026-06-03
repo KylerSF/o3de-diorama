@@ -12,4 +12,6 @@ set(FILES
     Source/Tools/EditorDioramaLightComponent.h
     Source/Tools/EditorDioramaCamera2DComponent.cpp
     Source/Tools/EditorDioramaCamera2DComponent.h
+    Source/Tools/EditorParticleEmitterComponent.cpp
+    Source/Tools/EditorParticleEmitterComponent.h
 )

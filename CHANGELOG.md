@@ -9,6 +9,19 @@ alpha (the 0.x line), minor releases may include breaking changes.
 ## [Unreleased]
 
 ### Added
+- Gem-native 2D particle emitter. A `2D Particle Emitter` component sprays pooled
+  particles (sparks, smoke, dust, hearts, fountains): continuous rate and/or bursts,
+  a point/cone/radial emission shape with spread, randomized lifetime and speed,
+  gravity and drag, and size + color ramps over life. Each live particle is a
+  billboarded sprite quad pushed through the existing batched sprite path (one draw
+  call per emitter, and particles pick up 2D lighting for free) via a pre-acquired
+  handle pool. The pool is fixed-capacity and every rate/range is clamped, so no
+  script or asset value can spawn unboundedly. The simulation is the pure,
+  unit-tested `Particles2D` core. A typed `DioramaParticleRequestBus` (Common scope)
+  exposes `Emit`, `Burst`, `Play` / `Stop`, `SetRate`, `SetGravity`, `SetLifetime`,
+  `SetSpeed`, `SetDirection`, `SetStartColor` / `SetEndColor`, `SetStartSize` /
+  `SetEndSize`, `SetTextureByPath`, and `GetParticleInfo` to Lua, Python, and Script
+  Canvas. See [Docs/design/2d-particles.md](Docs/design/2d-particles.md).
 - Gem-native 2D camera controller. A `2D Camera Controller` component placed on a
   camera entity follows a target with frame-rate-independent smoothing, a deadzone
   (small target motion does not move the view), optional world bounds, lookahead
