@@ -119,9 +119,10 @@ def main():
         diorama.DioramaSpriteRequestBus(bus.Event, "SetBillboard", eid, True)
         targets.append(eid)
 
-    # Show that the flash also works from the bus directly: pre-flash the last target
-    # halfway so it reads as tinted even before any script runs (readback below).
+    # Show the material effects from the bus directly (no script needed): pre-flash
+    # the last target halfway, and give the first target a cyan silhouette outline.
     diorama.DioramaSpriteRequestBus(bus.Event, "SetFlash", targets[-1], 1.0, 1.0, 1.0, 0.5)
+    diorama.DioramaSpriteRequestBus(bus.Event, "SetOutline", targets[0], 0.1, 0.9, 1.0, 1.5)
 
     general.idle_wait_frames(30)
     if general.get_current_level_name() == LEVEL_NAME:

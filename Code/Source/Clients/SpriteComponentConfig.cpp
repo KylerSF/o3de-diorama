@@ -20,11 +20,13 @@ namespace Diorama
         if (auto* serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
         {
             serializeContext->Class<SpriteComponentConfig, AZ::ComponentConfig>()
-                ->Version(6)
+                ->Version(7)
                 ->Field("Texture", &SpriteComponentConfig::m_texture)
                 ->Field("NormalMap", &SpriteComponentConfig::m_normalMap)
                 ->Field("FlashColor", &SpriteComponentConfig::m_flashColor)
                 ->Field("FlashAmount", &SpriteComponentConfig::m_flashAmount)
+                ->Field("OutlineColor", &SpriteComponentConfig::m_outlineColor)
+                ->Field("OutlineThickness", &SpriteComponentConfig::m_outlineThickness)
                 ->Field("Size", &SpriteComponentConfig::m_size)
                 ->Field("Pivot", &SpriteComponentConfig::m_pivot)
                 ->Field("Tint", &SpriteComponentConfig::m_tint)
@@ -59,6 +61,12 @@ namespace Diorama
                         AZ::Edit::UIHandlers::Slider, &SpriteComponentConfig::m_flashAmount, "Flash Amount", "0 = no flash; 1 = full flash color (drive on a hit)")
                         ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
                         ->Attribute(AZ::Edit::Attributes::Max, 1.0f)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Color, &SpriteComponentConfig::m_outlineColor, "Outline Color", "Color of the silhouette outline")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default, &SpriteComponentConfig::m_outlineThickness, "Outline Thickness", "0 = no outline; larger draws a thicker silhouette outline")
+                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                        ->Attribute(AZ::Edit::Attributes::SoftMax, 4.0f)
                     ->DataElement(
                         AZ::Edit::UIHandlers::Default, &SpriteComponentConfig::m_size, "Size", "Quad size in world units (width, height)")
                     ->Attribute(AZ::Edit::Attributes::Min, 0.0f)

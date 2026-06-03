@@ -35,11 +35,15 @@ namespace Diorama::SpriteBatchPlan
         //! differ in flash must not share a batch. Default 0 amount = no flash.
         float m_flashAmount = 0.0f;
         AZ::u32 m_flashColor = 0xFFFFFFFFu;
+        //! Outline material (2D materials v1), bound per draw like the flash.
+        float m_outlineThickness = 0.0f;
+        AZ::u32 m_outlineColor = 0xFFFFFFFFu;
 
         bool operator==(const BatchKey& other) const
         {
             return m_textureId == other.m_textureId && m_sortOffset == other.m_sortOffset && m_normalMapId == other.m_normalMapId &&
-                m_flashAmount == other.m_flashAmount && m_flashColor == other.m_flashColor;
+                m_flashAmount == other.m_flashAmount && m_flashColor == other.m_flashColor &&
+                m_outlineThickness == other.m_outlineThickness && m_outlineColor == other.m_outlineColor;
         }
         bool operator!=(const BatchKey& other) const
         {
@@ -129,7 +133,15 @@ namespace Diorama::SpriteBatchPlan
                 {
                     return lhs.m_key.m_flashAmount < rhs.m_key.m_flashAmount;
                 }
-                return lhs.m_key.m_flashColor < rhs.m_key.m_flashColor;
+                if (lhs.m_key.m_flashColor != rhs.m_key.m_flashColor)
+                {
+                    return lhs.m_key.m_flashColor < rhs.m_key.m_flashColor;
+                }
+                if (lhs.m_key.m_outlineThickness != rhs.m_key.m_outlineThickness)
+                {
+                    return lhs.m_key.m_outlineThickness < rhs.m_key.m_outlineThickness;
+                }
+                return lhs.m_key.m_outlineColor < rhs.m_key.m_outlineColor;
             });
 
         for (AZ::u32 i = 0; i < outOrdered.size();)

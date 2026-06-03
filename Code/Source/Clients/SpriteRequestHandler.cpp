@@ -135,6 +135,17 @@ namespace Diorama
         NotifyChanged();
     }
 
+    void SpriteRequestHandler::SetOutline(float r, float g, float b, float thickness)
+    {
+        if (m_config == nullptr)
+        {
+            return;
+        }
+        m_config->m_outlineColor = AZ::Color(AZ::GetClamp(r, 0.0f, 1.0f), AZ::GetClamp(g, 0.0f, 1.0f), AZ::GetClamp(b, 0.0f, 1.0f), 1.0f);
+        m_config->m_outlineThickness = thickness < 0.0f ? 0.0f : thickness;
+        NotifyChanged();
+    }
+
     void SpriteRequestHandler::SetBillboard(bool enabled)
     {
         if (m_config == nullptr)

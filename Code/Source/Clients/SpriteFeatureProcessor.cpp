@@ -52,8 +52,10 @@ namespace Diorama
         // so fractional layers stay distinct.
         SpriteBatchPlan::BatchKey MakeBatchKey(const SpriteComponentConfig& config)
         {
-            return SpriteBatchPlan::BatchKey{ config.m_texture.GetId(), config.m_sortOffset, config.m_normalMap.GetId(),
-                                              config.m_flashAmount, config.m_flashColor.ToU32() };
+            return SpriteBatchPlan::BatchKey{ config.m_texture.GetId(),  config.m_sortOffset,
+                                              config.m_normalMap.GetId(), config.m_flashAmount,
+                                              config.m_flashColor.ToU32(), config.m_outlineThickness,
+                                              config.m_outlineColor.ToU32() };
         }
     } // namespace
 
@@ -276,7 +278,9 @@ namespace Diorama
         const AZ::Transform& cameraTransform,
         bool hasNormalMap,
         float flashAmount,
-        const AZ::Color& flashColor)
+        const AZ::Color& flashColor,
+        float outlineThickness,
+        const AZ::Color& outlineColor)
     {
         // Billboard tangent basis: right and up are the camera's, the face normal is
         // their cross product (pointing toward the camera). This matches AppendQuad's
@@ -287,15 +291,22 @@ namespace Diorama
         const AZ::Vector3 fwd = right.Cross(up);
 
         const float flash = flashAmount < 0.0f ? 0.0f : (flashAmount > 1.0f ? 1.0f : flashAmount);
+        const float outline = outlineThickness < 0.0f ? 0.0f : outlineThickness;
         const AZ::RHI::ShaderInputConstantIndex materialIdx = drawSrg->FindShaderInputConstantIndex(AZ::Name{ "m_material" });
         if (materialIdx.IsValid())
         {
-            drawSrg->SetConstant(materialIdx, AZ::Vector4(hasNormalMap ? 1.0f : 0.0f, flash, 0.0f, 0.0f));
+            drawSrg->SetConstant(materialIdx, AZ::Vector4(hasNormalMap ? 1.0f : 0.0f, flash, outline, 0.0f));
         }
         const AZ::RHI::ShaderInputConstantIndex flashIdx = drawSrg->FindShaderInputConstantIndex(AZ::Name{ "m_flashColor" });
         if (flashIdx.IsValid())
         {
             drawSrg->SetConstant(flashIdx, AZ::Vector4(flashColor.GetR(), flashColor.GetG(), flashColor.GetB(), flashColor.GetA()));
+        }
+        const AZ::RHI::ShaderInputConstantIndex outlineIdx = drawSrg->FindShaderInputConstantIndex(AZ::Name{ "m_outlineColor" });
+        if (outlineIdx.IsValid())
+        {
+            drawSrg->SetConstant(
+                outlineIdx, AZ::Vector4(outlineColor.GetR(), outlineColor.GetG(), outlineColor.GetB(), outlineColor.GetA()));
         }
         const AZ::RHI::ShaderInputConstantIndex rightIdx = drawSrg->FindShaderInputConstantIndex(AZ::Name{ "m_camBasisRight" });
         if (rightIdx.IsValid())
@@ -488,7 +499,8 @@ namespace Diorama
             drawSrg->SetImage(normalIndex, shadowImage);
         }
         SetLightingConstants(drawSrg.get());
-        SetMaterialConstants(drawSrg.get(), cameraTransform, false, 0.0f, AZ::Color(1.0f, 1.0f, 1.0f, 1.0f));
+        SetMaterialConstants(
+            drawSrg.get(), cameraTransform, false, 0.0f, AZ::Color(1.0f, 1.0f, 1.0f, 1.0f), 0.0f, AZ::Color(1.0f, 1.0f, 1.0f, 1.0f));
         drawSrg->Compile();
 
         m_dynamicDraw->SetSortKey(sortKey);
@@ -633,7 +645,13 @@ namespace Diorama
 
             SetLightingConstants(drawSrg.get());
             SetMaterialConstants(
-                drawSrg.get(), cameraTransform, hasNormalMap, first->m_config.m_flashAmount, first->m_config.m_flashColor);
+                drawSrg.get(),
+                cameraTransform,
+                hasNormalMap,
+                first->m_config.m_flashAmount,
+                first->m_config.m_flashColor,
+                first->m_config.m_outlineThickness,
+                first->m_config.m_outlineColor);
             drawSrg->Compile();
 
             // Pack all quads in this batch into one vertex/index stream. 32-bit

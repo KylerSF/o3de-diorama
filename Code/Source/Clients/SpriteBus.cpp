@@ -123,6 +123,13 @@ namespace Diorama
                     { "b", "Flash blue, clamped 0..1." },
                     { "amount", "Blend toward the flash color after lighting, 0..1 (1 on a hit, ease back to 0)." } } })
             ->Event(
+                "SetOutline",
+                &DioramaSpriteRequestBus::Events::SetOutline,
+                { { { "r", "Outline red, clamped 0..1." },
+                    { "g", "Outline green, clamped 0..1." },
+                    { "b", "Outline blue, clamped 0..1." },
+                    { "thickness", "Silhouette outline thickness (0 = off); screen-relative, clamped non-negative." } } })
+            ->Event(
                 "SetBillboard",
                 &DioramaSpriteRequestBus::Events::SetBillboard,
                 { { { "enabled", "When true the sprite always faces the camera." } } })

@@ -52,6 +52,23 @@ After running `materials_demo.py`:
 2. **Enter game mode** (Ctrl+G): the sprite flashes on the timer. Tune the
    script's `FlashR/G/B`, `Interval`, and `FadeTime` properties.
 
+## Outline
+
+The other shipped material is a **silhouette outline** for selection or hit
+highlights. Set it from the inspector (the Sprite component's **Outline Color** /
+**Outline Thickness**) or from script:
+
+```lua
+DioramaSpriteRequestBus.Event.SetOutline(enemy, 0.1, 0.9, 1.0, 1.5)  -- cyan outline
+DioramaSpriteRequestBus.Event.SetOutline(enemy, 0.0, 0.0, 0.0, 0.0)  -- clear it
+```
+
+The shader draws the outline color in the transparent fringe just outside the
+sprite's opaque silhouette (it samples neighbor texels via the UV derivative, so
+thickness stays roughly constant on screen). The demo gives its first target a
+cyan outline directly from the bus. Outline works on any sprite that has a
+transparent margin around its art.
+
 ## How it works
 
 A flashing sprite carries its flash color + amount in its batch key, so it draws

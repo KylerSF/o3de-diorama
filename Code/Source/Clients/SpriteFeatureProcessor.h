@@ -159,7 +159,9 @@ namespace Diorama
             const AZ::Transform& cameraTransform,
             bool hasNormalMap,
             float flashAmount,
-            const AZ::Color& flashColor);
+            const AZ::Color& flashColor,
+            float outlineThickness,
+            const AZ::Color& outlineColor);
 
         // The batch plan (grouping + ordering) only changes when a sprite is
         // added, removed, or its batch key (texture or sort layer) changes. It is

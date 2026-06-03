@@ -52,6 +52,14 @@ namespace Diorama
         AZ::Color m_flashColor = AZ::Color(1.0f, 1.0f, 1.0f, 1.0f);
         float m_flashAmount = 0.0f;
 
+        //! Outline material effect (2D materials v1). m_outlineThickness > 0 draws an
+        //! outline of m_outlineColor around the sprite's opaque silhouette (in the
+        //! transparent fringe of the quad), for selection/hit highlights. 0 = off.
+        //! Thickness is a screen-relative multiplier (uses the UV derivative), so it
+        //! stays roughly constant on screen regardless of texture resolution.
+        AZ::Color m_outlineColor = AZ::Color(1.0f, 1.0f, 1.0f, 1.0f);
+        float m_outlineThickness = 0.0f;
+
         //! Size of the quad in world units (width, height).
         AZ::Vector2 m_size = AZ::Vector2(1.0f, 1.0f);
 

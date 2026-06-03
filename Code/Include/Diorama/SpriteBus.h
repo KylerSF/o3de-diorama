@@ -78,6 +78,10 @@ namespace Diorama
         //! amount (0..1) after lighting. Drive amount to 1 on a hit and ease back to
         //! 0. Channels and amount are clamped to 0..1.
         virtual void SetFlash(float r, float g, float b, float amount) = 0;
+        //! Outline material (2D materials v1): draw a silhouette outline of color
+        //! (r,g,b) with the given thickness (0 = off). Channels clamped to 0..1,
+        //! thickness clamped non-negative.
+        virtual void SetOutline(float r, float g, float b, float thickness) = 0;
         //! Always face the camera when true.
         virtual void SetBillboard(bool enabled) = 0;
         //! Visible from both sides when true (default); when false the sprite is

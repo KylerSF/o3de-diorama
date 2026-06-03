@@ -9,14 +9,16 @@ alpha (the 0.x line), minor releases may include breaking changes.
 ## [Unreleased]
 
 ### Added
-- 2D materials: hit-flash (materials v1). Sprites gain a **Flash Color** + **Flash
-  Amount**; the shader blends the lit sprite toward the flash color by the amount as
-  its last step, for the classic damage/hit pop. A `SetFlash(r, g, b, amount)` verb
-  on `DioramaSpriteRequestBus` drives it from script / Python / Script Canvas (snap
-  to 1 on a hit, ease back to 0). The flash is part of the batch key (bound per
-  draw), so a flashing sprite splits into its own batch while the rest (amount 0,
-  the default and unchanged look) batch together. This is the material backbone for
-  the planned outline/dissolve/additive-blend effects. See
+- 2D materials: hit-flash and outline (materials v1). Sprites gain a **Flash Color**
+  + **Flash Amount** (the shader blends the lit sprite toward the flash color, for
+  the classic damage/hit pop) and an **Outline Color** + **Outline Thickness** (a
+  silhouette outline drawn in the transparent fringe, for selection/hit highlights;
+  thickness is screen-relative via the UV derivative). `SetFlash(r,g,b,amount)` and
+  `SetOutline(r,g,b,thickness)` verbs on `DioramaSpriteRequestBus` drive them from
+  script / Python / Script Canvas. Both are part of the batch key (bound per draw),
+  so a sprite using an effect splits into its own batch while the rest (the default,
+  unchanged look) batch together. This is the per-draw material backbone for the
+  planned dissolve / additive-blend effects. See
   [Docs/design/2d-materials.md](Docs/design/2d-materials.md).
 - Normal-mapped 2D lighting (lighting v1b). Sprites gain an optional **normal map**
   slot: when set, the gem's 2D lights shape the flat art with a Lambertian N.L term

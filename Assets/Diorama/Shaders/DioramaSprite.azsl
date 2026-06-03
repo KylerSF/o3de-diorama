@@ -37,7 +37,8 @@ ShaderResourceGroup SpriteSrg : SRG_PerDraw
     // m_camBasis{Right,Up,Fwd}.xyz are the billboard's tangent basis for the frame
     // (camera right/up and the quad normal toward the camera), used to bring a
     // tangent-space normal into world space.
-    // m_material.x = has-normal-map flag; m_material.y = hit-flash amount (0..1).
+    // m_material.x = has-normal-map flag; m_material.y = hit-flash amount (0..1);
+    // m_material.z = outline thickness (screen-relative; 0 = no outline).
     Texture2D m_normalMap;
     float4 m_material;
     float4 m_camBasisRight;
@@ -45,6 +46,8 @@ ShaderResourceGroup SpriteSrg : SRG_PerDraw
     float4 m_camBasisFwd;
     // Hit-flash color blended in after lighting by m_material.y (2D materials v1).
     float4 m_flashColor;
+    // Silhouette outline color drawn in the transparent fringe (2D materials v1).
+    float4 m_outlineColor;
 
     Sampler m_sampler
     {
@@ -139,6 +142,25 @@ PSOutput MainPS(VSOutput input)
     float flash = saturate(SpriteSrg::m_material.y);
     rgb = lerp(rgb, SpriteSrg::m_flashColor.rgb, flash);
 
-    OUT.m_color = float4(rgb, sampled.a * input.m_color.a);
+    float alpha = sampled.a * input.m_color.a;
+
+    // Outline (2D materials v1): where this pixel is (mostly) transparent but a
+    // neighbor texel is opaque, draw the outline color. The sample offset uses the
+    // UV derivative so the outline stays roughly constant on screen. 0 = off.
+    float outlineW = SpriteSrg::m_material.z;
+    if (outlineW > 0.0)
+    {
+        float2 px = fwidth(input.m_uv) * outlineW;
+        float aN = max(
+            max(SpriteSrg::m_texture.Sample(SpriteSrg::m_sampler, input.m_uv + float2(px.x, 0.0)).a,
+                SpriteSrg::m_texture.Sample(SpriteSrg::m_sampler, input.m_uv - float2(px.x, 0.0)).a),
+            max(SpriteSrg::m_texture.Sample(SpriteSrg::m_sampler, input.m_uv + float2(0.0, px.y)).a,
+                SpriteSrg::m_texture.Sample(SpriteSrg::m_sampler, input.m_uv - float2(0.0, px.y)).a));
+        float outlineMask = saturate(aN) * (1.0 - saturate(sampled.a));
+        rgb = lerp(rgb, SpriteSrg::m_outlineColor.rgb, outlineMask);
+        alpha = max(alpha, outlineMask * SpriteSrg::m_outlineColor.a);
+    }
+
+    OUT.m_color = float4(rgb, alpha);
     return OUT;
 }

@@ -1,14 +1,15 @@
 # Design: per-sprite materials and effects (flash, tint, dissolve, outline, blend)
 
-Status: **v1 implemented (hit-flash)**. The first material effect ships: a per-sprite
-hit-flash (Flash Color + Flash Amount on SpriteComponentConfig; `SetFlash` on the
-sprite bus) that blends the lit sprite toward the flash color as the shader's last
-step. The flash is part of the batch key (bound per draw) so flashing sprites split
-into their own batch while amount-0 sprites are unchanged. This established the
-per-draw material constant path (shared with normal-mapped lighting v1b) that the
-remaining effects below build on. Deferred: tint-as-material, dissolve (noise +
-threshold), outline (multi-tap), and additive/multiply blend modes. The original
-design notes below are kept for context.
+Status: **v1 implemented (hit-flash + outline)**. Two per-sprite material effects
+ship: a hit-flash (Flash Color + Flash Amount; `SetFlash`) that blends the lit
+sprite toward the flash color, and a silhouette outline (Outline Color + Outline
+Thickness; `SetOutline`) drawn in the transparent fringe via neighbor sampling
+(UV-derivative thickness, so it is screen-relative). Both are part of the batch key
+(bound per draw) so a sprite using an effect splits into its own batch while the
+default (no-effect) sprites are unchanged. This established the per-draw material
+constant path (shared with normal-mapped lighting v1b). Deferred: dissolve (noise +
+threshold) and additive/multiply blend modes. The original design notes below are
+kept for context.
 
 ## Goal
 
