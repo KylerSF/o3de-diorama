@@ -27,6 +27,7 @@ Each has a written guide and a runnable example.
 | Feature | Guide | Status |
 | ------- | ----- | ------ |
 | 2D Dynamic Lighting | [07-lighting.md](07-lighting.md) | Written |
+| 2D Camera Controller | [08-camera.md](08-camera.md) | Written |
 
 ## Reference
 
@@ -53,6 +54,7 @@ the design, see:
 | Parallax and Layers | [../examples/parallax_layers.py](../examples/parallax_layers.py) |
 | Twin-Stick Shooter | [../../Samples/TwinStick](../../Samples/TwinStick) |
 | 2D Dynamic Lighting | [../examples/lighting_demo.py](../examples/lighting_demo.py) |
+| 2D Camera Controller | [../examples/camera_demo.py](../examples/camera_demo.py) |
 
 Run an example in the editor:
 
