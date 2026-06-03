@@ -5,7 +5,7 @@ covered by this repository's license. Third-party assets are listed below.
 
 ## o3de_mascot.png
 
-The Open 3D Engine mascot ("Robbie"), used as the default character sprite across
+The Open 3D Engine mascot ("Odie"), used as the default character sprite across
 the Diorama demos (the side-scroller player and props, the lighting/materials
 subjects, the camera-follow target, and the hello-sprite intro).
 
