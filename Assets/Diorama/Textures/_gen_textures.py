@@ -69,7 +69,6 @@ def octopus():
     d = ImageDraw.Draw(img)
     body = (236, 228, 246, 255)   # light, near-neutral body (tint sets the real colour)
     sucker = (198, 184, 222, 255) # soft suckers along the tentacle undersides
-    shade = (212, 200, 230, 255)  # gentle underside shading
     dark = (44, 36, 60, 255)      # eyes + smile
 
     def tentacle(bx, by, theta0, curl, length, w0):
@@ -111,8 +110,6 @@ def octopus():
 
     # head / mantle
     d.ellipse([W * 0.22, W * 0.14, W * 0.78, W * 0.60], fill=body)
-    # a soft shaded crescent low on the mantle for a little roundness (below the eyes)
-    d.ellipse([W * 0.32, W * 0.50, W * 0.68, W * 0.605], fill=shade)
     # eyes: dark ovals with a catchlight
     for ex in (0.42, 0.58):
         px, py = W * ex, W * 0.38
