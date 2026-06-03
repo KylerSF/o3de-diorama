@@ -138,6 +138,37 @@ change that needs to be seen running before it counts as done.
   camera, so it can only flip or coin-spin; a true side-scroller character needs
   a side-profile (or multi-frame directional) sprite asset.
 
+## Gaps to AAA / indie parity (not yet tiered)
+
+Diorama will not win on raw 2D feature parity with Unity or Godot. Its two real
+differentiators are **Atom-quality visuals on 2D** (lean into lighting + post) and
+**AI-friendliness** (a stable, typed, request-bus surface that an agent or Script
+Canvas drives exactly like a human). The path to "worthy" is to close the missing
+table-stakes below, then double down on those two and prove it with the flagship
+([living-diorama.md](design/living-diorama.md) + [magic-eye](design/magic-eye-autostereogram.md)).
+
+Missing table-stakes (no design doc yet):
+
+- **Audio.** Nothing exists today (not in any tier or design). No game ships
+  without sound. Thin game-friendly 2D positional audio + music/SFX surface over
+  O3DE's audio system, plus a sample. Highest-priority gap.
+- **UI / HUD parity.** A first-class HUD/UI story that is *at parity* with the rest
+  of Diorama: AI- and human-drivable through a typed request bus (the same
+  parity model the sprite/tilemap buses follow), with an editor twin and demos,
+  rather than a bolt-on. Health/score/menus an agent can build the same way it
+  builds sprites. (LyShine is UI-only and outside Diorama's parity model today.)
+- **Animation state machine.** Flipbook and skeletal give *clips*; character work
+  needs transitions (idle -> run -> jump) with conditions and blends.
+- **Input action-mapping.** A rebindable action surface; the twin-stick wires raw
+  input directly today.
+- **Save/load** of game state, and **off-screen culling** for bullet-hell / large
+  tile scenes (the batch helps, but explicit culling is not there yet).
+
+Recommended order (closes gaps, then leans into the differentiators): audio ->
+post-processing (already designed, biggest "looks AAA" payoff) -> animation depth
+(clip editor + Aseprite import and/or skeletal) -> finish the AI-friendly API
+(the moat) -> UI/HUD parity -> starter template -> flagship demo.
+
 ## Beyond games: simulation and robotics
 
 A 2D engine has no robotics-*simulation* story, but as a 2D content layer Diorama has
