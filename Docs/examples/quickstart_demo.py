@@ -25,6 +25,7 @@ Run in the editor:
 import azlmbr
 import azlmbr.asset
 import azlmbr.bus as bus
+import azlmbr.components
 import azlmbr.editor as editor
 import azlmbr.entity
 import azlmbr.legacy.general as general
@@ -143,7 +144,11 @@ def main():
     cam_types = [controller_type] + ([atom_camera_type] if atom_camera_type is not None else [])
     if atom_camera_type is None:
         log("WARN: Atom 'Camera' component not found; add a Camera to QuickCamera by hand.")
-    make_entity("QuickCamera", math.Vector3(0.0, 0.0, 28.0), cam_types)
+    camera = make_entity("QuickCamera", math.Vector3(0.0, 0.0, 28.0), cam_types)
+    # Aim it at the XY plane. O3DE camera forward is entity +Y, so without a rotation
+    # the camera stares sideways and the level renders empty in game mode. Rotate -90
+    # about X so forward becomes -Z (a front view of the XY-plane scene). -pi/2 rad.
+    azlmbr.components.TransformBus(bus.Event, "SetLocalRotation", camera, math.Vector3(-1.5707963, 0.0, 0.0))
 
     general.idle_wait_frames(40)
     if general.get_current_level_name() == LEVEL_NAME:
