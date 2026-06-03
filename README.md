@@ -174,6 +174,14 @@ Two workflows run in CI:
 
 ## License
 
-Licensed under either of **Apache License 2.0** or **MIT** at your option. See
-[LICENSE.txt](LICENSE.txt). Source files carry
-`SPDX-License-Identifier: Apache-2.0 OR MIT`.
+Licensed under either of
+
+  * **Apache License, Version 2.0** ([LICENSE-APACHE](LICENSE-APACHE)), or
+  * **MIT license** ([LICENSE-MIT](LICENSE-MIT))
+
+at your option. Every source file carries `SPDX-License-Identifier: Apache-2.0 OR MIT`
+declaring the same dual license.
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for
+inclusion in this project by you, as defined in the Apache-2.0 license, shall be dual
+licensed as above, without any additional terms or conditions.
