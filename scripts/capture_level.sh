@@ -59,7 +59,11 @@ if [ -x "$APBATCH" ]; then
   grep -iE "Failed to Process|Successfully Processed" /tmp/diorama_apbatch.log | tail -2
 fi
 
-Xvfb "$DISP" -screen 0 "${W}x${H}x24" -nolisten tcp >/tmp/diorama_xvfb.log 2>&1 & XPID=$!
+# -nocursor: do not render the X11 root cursor into the framebuffer at all. The big
+# "X" pointer parked at screen center is baked into Xvfb's framebuffer, so ffmpeg's
+# -draw_mouse 0 (which only skips the grab-time pointer overlay) cannot remove it;
+# disabling it at the Xvfb level is what actually keeps it out of the capture.
+Xvfb "$DISP" -screen 0 "${W}x${H}x24" -nolisten tcp -nocursor >/tmp/diorama_xvfb.log 2>&1 & XPID=$!
 sleep 3
 : > "$GAMELOG" 2>/dev/null || true
 DISPLAY="$DISP" "$LAUNCHER" --project-path="$PROJ" --rhi=vulkan --r_fullscreen=0 --r_width="$W" --r_height="$H" >/tmp/diorama_launcher.log 2>&1 & GPID=$!
@@ -72,9 +76,8 @@ done
 sleep 8   # settle: re-bake reload + animation populate
 
 if kill -0 $GPID 2>/dev/null; then
-  # -draw_mouse 0: do not record the pointer. Under Xvfb (no window manager) the
-  # default X11 root cursor is a large "X" parked at screen center; the launcher
-  # cannot hide it (logs "ShowCursor failed"), so suppress it at the grab instead.
+  # -draw_mouse 0 also skips the grab-time pointer overlay (belt-and-suspenders with
+  # Xvfb -nocursor above, which is what actually removes the baked-in root cursor).
   DISPLAY="$DISP" ffmpeg -y -f x11grab -draw_mouse 0 -video_size "${W}x${H}" -framerate 30 -i "$DISP" -t "$SECS" -pix_fmt yuv420p "$OUT" >/tmp/diorama_ffmpeg.log 2>&1
   echo "ffmpeg rc=$?"
 else
