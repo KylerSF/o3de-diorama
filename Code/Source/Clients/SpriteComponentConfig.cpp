@@ -84,6 +84,18 @@ namespace Diorama
                     ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
                     ->Attribute(AZ::Edit::Attributes::SoftMax, 4.0f)
                     ->DataElement(
+                        AZ::Edit::UIHandlers::Color,
+                        &SpriteComponentConfig::m_emissiveColor,
+                        "Emissive Color",
+                        "Color the sprite emits (matches the SetEmissive bus verb)")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &SpriteComponentConfig::m_emissiveIntensity,
+                        "Emissive Intensity",
+                        "0 = none; values above 1 push the sprite past HDR 1.0 so it blooms with Atom post (see how-to 14-glow)")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                    ->Attribute(AZ::Edit::Attributes::SoftMax, 8.0f)
+                    ->DataElement(
                         AZ::Edit::UIHandlers::Default, &SpriteComponentConfig::m_size, "Size", "Quad size in world units (width, height)")
                     ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
                     ->Attribute(AZ::Edit::Attributes::Suffix, " m")
