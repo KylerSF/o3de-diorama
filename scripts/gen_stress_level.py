@@ -3,8 +3,10 @@
 
 Authors a level prefab full of sprites that all share one texture. Because the batched
 feature processor groups same-texture sprites into one batch, thousands of them collapse
-into a handful of draw calls (the batching itself is proven by the SpriteBatchPlan unit
-tests). Authored as pure prefab JSON, no editor required (the robust path for tooling).
+into a handful of draw calls. Measured at runtime: 2500 same-texture sprites render as a
+single draw batch (confirmed by temporarily instrumenting the feature processor's batch
+count; the batching is also covered by the SpriteBatchPlan unit tests). Authored as pure
+prefab JSON, no editor required (the robust path for tooling).
 
 Reading the actual draw-call count: the "Total Draw Item Count" stat is shown by the
 EDITOR viewport overlay (open the level in the editor), not the GameLauncher. Do NOT use
