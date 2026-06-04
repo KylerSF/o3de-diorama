@@ -105,10 +105,12 @@ What makes a 2D game look modern/AAA, and what pure-2D engines do awkwardly:
   playable starter (a player you move with WASD / arrows / left stick, a ground,
   and a camera) via the reusable `player_move_2d.lua` controller +
   `diorama/input/diorama_move.inputbindings` + the `quickstart_demo.py` scene
-  builder + [howto/17-quickstart.md](howto/17-quickstart.md). Still open from the
-  design ([design/2d-starter-template.md](design/2d-starter-template.md)): a
-  gem-registered project template and a defaults robustness pass (ship a default
-  texture so a fresh Sprite is visible without authoring).
+  builder + [howto/17-quickstart.md](howto/17-quickstart.md). **Default-texture
+  robustness shipped**: a Sprite with no texture now falls back to a bundled default
+  in the feature processor, so a freshly added Sprite is visible (and tintable)
+  instead of vanishing (capture-verified). Still open from the design
+  ([design/2d-starter-template.md](design/2d-starter-template.md)): a gem-registered
+  project template that lands you in this scene on project creation.
 - **Editor live-preview** (S). Make sprite property edits update the viewport live.
   **Design done** ([design/2d-live-preview.md](design/2d-live-preview.md)): the old
   "doesn't live-update" note is largely stale (the `ChangeNotify -> SetConfig ->
