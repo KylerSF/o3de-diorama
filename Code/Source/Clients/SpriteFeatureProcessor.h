@@ -135,6 +135,11 @@ namespace Diorama
         //! ready. Shadows simply do not draw until it has loaded.
         AZ::Data::Asset<AZ::RPI::StreamingImageAsset> m_shadowImageAsset;
 
+        //! Default texture substituted when a Sprite has no texture assigned, so a
+        //! freshly added Sprite renders (tintable) instead of being dropped from
+        //! batching. Loaded asynchronously in Activate() like the shadow texture.
+        AZ::Data::Asset<AZ::RPI::StreamingImageAsset> m_defaultImageAsset;
+
         AZStd::unordered_map<SpriteHandle, SpriteEntry> m_sprites;
         SpriteHandle m_nextHandle = 1;
 

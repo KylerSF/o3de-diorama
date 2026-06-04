@@ -31,6 +31,10 @@ namespace Diorama
         // Shared soft shadow blob shipped with the gem (Assets/Diorama/Textures/shadow.png).
         constexpr const char* ShadowTexturePath = "diorama/textures/shadow.png.streamingimage";
 
+        // Default texture for a Sprite with no texture assigned, so a freshly added
+        // Sprite is visible (and tintable) instead of being dropped from batching.
+        constexpr const char* DefaultTexturePath = "diorama/textures/white_sprite.png.streamingimage";
+
         // Lazily constructed: a static AZ::Name constructed at namespace scope
         // would run before the NameDictionary exists and crash on load. See the
         // matching note that prompted this pattern across the gem.
@@ -136,6 +140,17 @@ namespace Diorama
                 shadowImageId, AZ::Data::AssetLoadBehavior::PreLoad);
             m_shadowImageAsset.QueueLoad();
         }
+
+        // Default sprite texture (same non-blocking pattern), substituted in
+        // UpdateSprite when a Sprite has no texture so it renders visibly.
+        const AZ::Data::AssetId defaultImageId =
+            AZ::RPI::AssetUtils::GetAssetIdForProductPath(DefaultTexturePath, AZ::RPI::AssetUtils::TraceLevel::Warning);
+        if (defaultImageId.IsValid())
+        {
+            m_defaultImageAsset = AZ::Data::AssetManager::Instance().GetAsset<AZ::RPI::StreamingImageAsset>(
+                defaultImageId, AZ::Data::AssetLoadBehavior::PreLoad);
+            m_defaultImageAsset.QueueLoad();
+        }
     }
 
     void SpriteFeatureProcessor::Deactivate()
@@ -182,9 +197,18 @@ namespace Diorama
         entry.m_worldTransform = worldTransform;
         entry.m_config = config;
 
+        // Robustness: a Sprite with no texture assigned is otherwise dropped from
+        // batching (invisible). Substitute the bundled default texture so a freshly
+        // added Sprite renders; the per-entry Tint still applies on top.
+        if (!entry.m_config.m_texture.GetId().IsValid() && m_defaultImageAsset.GetId().IsValid())
+        {
+            entry.m_config.m_texture = m_defaultImageAsset;
+        }
+
         // Only a texture or sort-layer change affects batching; transform and
-        // animation changes are read per frame and do not dirty the plan.
-        const SpriteBatchPlan::BatchKey newKey = MakeBatchKey(config);
+        // animation changes are read per frame and do not dirty the plan. Key off
+        // entry.m_config so the default-texture substitution is reflected.
+        const SpriteBatchPlan::BatchKey newKey = MakeBatchKey(entry.m_config);
         if (newKey != entry.m_batchKey)
         {
             entry.m_batchKey = newKey;
