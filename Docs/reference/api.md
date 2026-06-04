@@ -1,8 +1,9 @@
 # Reference: Programmatic API (EBuses)
 
 This is the programmer and agent view of Diorama: the typed EBuses that scripts
-(Lua) and agents (Python, o3de-mcp) call to drive sprites and tilemaps. It is
-organized by call and signature. For the same parameters organized by visual
+(Lua) and agents (Python, o3de-mcp) call to drive every Diorama feature: sprites,
+tilemaps, the 2D camera, lights, particles, parallax, collision, UI, audio, and the
+CRT overlay. It is organized by call and signature. For the same parameters organized by visual
 effect (what each value looks like on screen, with screenshots and ranges), see
 the parameter references: [Sprite component](./sprite-component.md) and
 [Tilemap component](./tilemap-component.md). This document cross-links to those
@@ -10,8 +11,13 @@ rather than repeating the effect descriptions.
 
 ## The buses are the front door
 
-`DioramaSpriteRequestBus` and `DioramaTilemapRequestBus` are the stable, typed,
-agent-facing API for driving a sprite or a tilemap. They are a peer of the
+The Diorama request buses (`DioramaSpriteRequestBus`, `DioramaTilemapRequestBus`,
+`DioramaCamera2DRequestBus`, `DioramaLightRequestBus`, `DioramaParticleRequestBus`,
+`DioramaParallaxRequestBus`, `Diorama2DColliderRequestBus`,
+`Diorama2DCollisionRequestBus`, `DioramaUIRequestBus`, `DioramaAudioRequestBus`,
+`DioramaCRTRequestBus`) are the stable, typed, agent-facing API for driving the gem.
+The Sprite and Tilemap buses are documented in full first; the rest follow the same
+conventions and are listed after. They are a peer of the
 editor Inspector over the same backing configuration (`SpriteComponentConfig`,
 `TilemapComponentConfig`): a human edits a field in the Inspector, an agent
 calls the matching verb on the bus, and both land on the same config and the
@@ -153,6 +159,137 @@ parameter in the [Tilemap component reference](./tilemap-component.md).
 | `SetTint` | `r: float, g: float, b: float, a: float` | void | Each channel clamped to `0..1`. | [Tint](./tilemap-component.md#tint) |
 | `SetSortOffset` | `sortOffset: float` | void | None (any value). | [Sort offset](./tilemap-component.md#sort-offset) |
 | `GetTilemapInfo` | (none) | `TilemapInfo` | Read-only. Safe to poll. | [Verify loop](#query-and-verify-the-verify-loop) |
+
+The remaining buses follow the same conventions: per-entity `Event`s addressed by the
+target entity id (except the global/query buses noted below), scalar arguments, a
+`Get<Thing>Info` reader for the verify loop, and forgiving inputs (out-of-range scalars
+are clamped, colors to `0..1`, sizes to `>= 0`). Verb names contain no spaces. Each is
+the script front door to the matching component; see its how-to for usage in context.
+
+## DioramaCamera2DRequestBus
+
+Drives the **2D Camera Controller** on a camera entity (how-to [08-camera](../howto/08-camera.md)).
+
+| Verb | Signature (after entity id) | Returns | Effect |
+| ---- | --------------------------- | ------- | ------ |
+| `SetTarget` | `target: EntityId` | void | Entity the camera follows. |
+| `SetFollowOffset` | `x: float, y: float, z: float` | void | Offset held from the target. |
+| `SetSmoothTime` | `seconds: float` | void | Follow smoothing time (`0` snaps). |
+| `SetDeadzone` | `halfX: float, halfY: float` | void | Half-extents of the no-move deadzone. |
+| `SetLookahead` | `distance: float` | void | Lead the target by its motion. |
+| `SetBounds` | `minX, minY, maxX, maxY: float` | void | Clamp the camera center to a world rect. |
+| `ClearBounds` | (none) | void | Disable bounds clamping. |
+| `AddTrauma` | `amount: float` | void | Add screen-shake trauma (`0..1`, decays). |
+| `SetEnabled` | `enabled: bool` | void | Enable/disable the controller. |
+| `GetCameraInfo` | (none) | `Camera2DInfo` | Read-only. Safe to poll. |
+
+## DioramaLightRequestBus
+
+Drives a **2D Light** (how-to [07-lighting](../howto/07-lighting.md)).
+
+| Verb | Signature (after entity id) | Returns | Effect |
+| ---- | --------------------------- | ------- | ------ |
+| `SetColor` | `r, g, b: float` | void | Light color (`0..1`). |
+| `SetIntensity` | `intensity: float` | void | Brightness multiplier. |
+| `SetRadius` | `radius: float` | void | Falloff radius (point light). |
+| `SetDirectional` | `directional: bool` | void | Switch between point and directional. |
+| `SetDirection` | `x, y, z: float` | void | Direction (directional mode). |
+| `SetEnabled` | `enabled: bool` | void | Enable/disable the light. |
+| `GetLightInfo` | (none) | `LightInfo` | Read-only. Safe to poll. |
+
+## DioramaParticleRequestBus
+
+Drives a **2D Particle Emitter** (how-to [09-particles](../howto/09-particles.md)).
+
+| Verb | Signature (after entity id) | Returns | Effect |
+| ---- | --------------------------- | ------- | ------ |
+| `Emit` | `count: int` | void | Emit `count` particles now. |
+| `Burst` | (none) | void | Fire the configured burst count. |
+| `Play` / `Stop` | (none) | void | Start/stop continuous emission. |
+| `SetRate` | `particlesPerSecond: float` | void | Continuous emission rate. |
+| `SetGravity` | `x, y: float` | void | Per-particle acceleration. |
+| `SetLifetime` | `minSeconds, maxSeconds: float` | void | Particle lifetime range. |
+| `SetSpeed` | `minSpeed, maxSpeed: float` | void | Initial speed range. |
+| `SetDirection` | `degrees, spreadDegrees: float` | void | Emission direction and cone. |
+| `SetStartColor` / `SetEndColor` | `r, g, b, a: float` | void | Color over life (`0..1`). |
+| `SetStartSize` / `SetEndSize` | `size: float` | void | Size over life. |
+| `SetTextureByPath` | `productPath: string` | `bool` | Particle texture; `false` if unresolved. |
+| `GetParticleInfo` | (none) | `ParticleInfo` | Read-only. Safe to poll. |
+
+## DioramaParallaxRequestBus
+
+Drives a **2D Parallax Layer** (how-to [05-parallax-layers](../howto/05-parallax-layers.md)).
+
+| Verb | Signature (after entity id) | Returns | Effect |
+| ---- | --------------------------- | ------- | ------ |
+| `SetCamera` | `camera: EntityId` | void | Camera the layer scrolls against. |
+| `SetFactor` | `factor: float` | void | Parallax factor (0 = locked, 1 = world-fixed). |
+| `SetEnabled` | `enabled: bool` | void | Enable/disable scrolling. |
+| `GetParallaxInfo` | (none) | `ParallaxInfo` | Read-only. Safe to poll. |
+
+## Collision buses
+
+2D collision (how-to in the twin-stick sample). There are two request buses plus a
+notification bus.
+
+**`Diorama2DColliderRequestBus`** — per-entity collider config (addressed by entity id):
+
+| Verb | Signature (after entity id) | Returns | Effect |
+| ---- | --------------------------- | ------- | ------ |
+| `SetCircle` | `radius: float` | void | Make the collider a circle. |
+| `SetBox` | `halfWidth, halfHeight: float` | void | Make the collider a box. |
+| `SetOffset` | `x, z: float` | void | Local offset of the shape. |
+| `SetLayer` | `layer: u32` | void | This collider's layer bit. |
+| `SetCollidesWith` | `mask: u32` | void | Layer mask it collides against. |
+| `SetTrigger` | `isTrigger: bool` | void | Trigger (overlap-only) vs solid. |
+| `SetEnabled` | `enabled: bool` | void | Enable/disable the collider. |
+| `GetColliderInfo` | (none) | `Collider2DInfo` | Read-only. Safe to poll. |
+
+**`Diorama2DCollisionRequestBus`** — global world queries (Broadcast, no entity id):
+
+| Verb | Signature | Returns | Effect |
+| ---- | --------- | ------- | ------ |
+| `OverlapCircle` | `x, z, radius: float, layerMask: u32` | `EntityId[]` | Entities overlapping the circle. |
+| `OverlapBox` | `x, z, halfWidth, halfHeight: float, layerMask: u32` | `EntityId[]` | Entities overlapping the box. |
+| `Raycast2D` | `x, z, dirX, dirZ, maxDistance: float, layerMask: u32` | `Raycast2DResult` | First hit along the ray. |
+
+`Diorama2DCollisionNotificationBus` delivers enter/exit events (see [Notifications](#notifications-event-driven)).
+
+## DioramaUIRequestBus
+
+Drives a **2D UI** element: text, bar, or panel (how-to [13-ui-hud](../howto/13-ui-hud.md)).
+
+| Verb | Signature (after entity id) | Returns | Effect |
+| ---- | --------------------------- | ------- | ------ |
+| `SetText` | `text: string` | void | Text content (Text kind). |
+| `SetFontSize` | `pixels: float` | void | Font size. |
+| `SetColor` | `r, g, b, a: float` | void | Foreground color (`0..1`). |
+| `SetAnchor` | `anchor: int` | void | Screen anchor (corner/edge/center enum). |
+| `SetOffset` | `x, y: float` | void | Pixel offset from the anchor. |
+| `SetSize` | `width, height: float` | void | Element size (Bar/Panel). |
+| `SetValue` | `value: float` | void | Fill fraction `0..1` (Bar kind). |
+| `SetBackgroundColor` | `r, g, b, a: float` | void | Background color (Bar/Panel). |
+| `SetVisible` | `visible: bool` | void | Show/hide. |
+| `GetUIInfo` | (none) | `UIInfo` | Read-only. Safe to poll. |
+
+## DioramaAudioRequestBus
+
+Global audio via MiniAudio (how-to [15-audio](../howto/15-audio.md)). **Broadcast** (no entity id).
+
+| Verb | Signature | Returns | Effect |
+| ---- | --------- | ------- | ------ |
+| `PlayOneShot` | `productPath: string, volume: float` | void | Play a sound once at `volume` (`0..1`). |
+| `SetMasterVolume` | `volume: float` | void | Global volume (`0..1`). |
+
+## DioramaCRTRequestBus
+
+Drives the **CRT Overlay** scanline post effect (how-to [16-crt](../howto/16-crt.md)).
+
+| Verb | Signature (after entity id) | Returns | Effect |
+| ---- | --------------------------- | ------- | ------ |
+| `SetEnabled` | `enabled: bool` | void | Toggle the overlay. |
+| `SetScanlineDarkness` | `darkness: float` | void | Scanline strength (`0..1`). |
+| `SetScanlineSpacing` | `pixels: float` | void | Pixels between scanlines. |
 
 ## Query and verify (the verify loop)
 

@@ -43,13 +43,17 @@ Inspector group them.
 | Inspector label | `Texture` |
 | Config field | `m_texture` (`AZ::Data::Asset<AZ::RPI::StreamingImageAsset>`) |
 | Bus setter | `bool SetTextureByPath(AZStd::string_view productPath)` |
-| Default | none (unassigned) |
+| Default | none (unassigned); renders a bundled default texture so the sprite is still visible |
 | Load behavior | `PreLoad` |
 
 The texture drawn on the quad. In the Inspector you pick a streaming image
 asset; through the bus you assign it by product path (for example
 `"diorama/textures/hero.png"`). `SetTextureByPath` returns `false` if the path
 does not resolve to an asset, so a script can detect a typo without crashing.
+
+If no texture is assigned, the sprite does not vanish: the feature processor
+substitutes a bundled default texture (white, so the per-entity `Tint` still
+shows), which keeps a freshly added Sprite visible until you assign artwork.
 
 The asset reference uses the `PreLoad` load behavior: the texture is requested
 when the component activates and is streamed in before the sprite reports
