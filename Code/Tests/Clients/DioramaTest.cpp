@@ -343,6 +343,50 @@ namespace Diorama
         EXPECT_EQ(m_batches[0].m_key.m_textureId, Tex(3));
     }
 
+    TEST_F(SpriteBatchPlanTest, ByDepth_OrdersFarToNearWithinLayer)
+    {
+        // Same texture and sort layer, different camera depth. With byDepth the
+        // farther sprite (larger m_depth) is ordered first so it draws behind, and
+        // the nearer one draws on top (the sprite shader does not depth-test). They
+        // still share one batch because the BatchKey is identical.
+        SpriteBatchPlan::Item nearItem{ SpriteBatchPlan::BatchKey{ Tex(1), 0.0f }, 0 };
+        nearItem.m_depth = 1.0f;
+        SpriteBatchPlan::Item farItem{ SpriteBatchPlan::BatchKey{ Tex(1), 0.0f }, 1 };
+        farItem.m_depth = 100.0f;
+
+        SpriteBatchPlan::Build({ nearItem, farItem }, m_ordered, m_batches, /*byDepth*/ true);
+
+        ASSERT_EQ(m_ordered.size(), 2u);
+        EXPECT_EQ(m_ordered[0].m_index, 1u); // farther first (drawn behind)
+        EXPECT_EQ(m_ordered[1].m_index, 0u); // nearer last (drawn on top)
+        EXPECT_EQ(m_batches.size(), 1u); // identical key -> one batch
+    }
+
+    TEST_F(SpriteBatchPlanTest, MaterialDifferences_SplitBatches)
+    {
+        // Per-draw material state (flash, outline, emissive, normal map) is bound
+        // once per batch, so sprites that share a texture and sort layer but differ
+        // in any of these must NOT coalesce, or one's material would bleed onto the
+        // others. Five keys differing only by material yield five batches.
+        const SpriteBatchPlan::BatchKey plain{ Tex(5), 0.0f };
+        SpriteBatchPlan::BatchKey flash = plain;
+        flash.m_flashAmount = 0.5f;
+        SpriteBatchPlan::BatchKey emissive = plain;
+        emissive.m_emissiveIntensity = 2.0f;
+        SpriteBatchPlan::BatchKey outline = plain;
+        outline.m_outlineThickness = 0.1f;
+        SpriteBatchPlan::BatchKey normal = plain;
+        normal.m_normalMapId = Tex(6);
+
+        Build({ SpriteBatchPlan::Item{ plain, 0 },
+                SpriteBatchPlan::Item{ flash, 1 },
+                SpriteBatchPlan::Item{ emissive, 2 },
+                SpriteBatchPlan::Item{ outline, 3 },
+                SpriteBatchPlan::Item{ normal, 4 } });
+
+        EXPECT_EQ(m_batches.size(), 5u);
+    }
+
     // Exercises the AI request verbs directly against a handler bound to a local
     // config and presenter (methods are called directly, so no live entity/EBus
     // dispatch is needed). Confirms clamping, the changed callback, the one-shot
