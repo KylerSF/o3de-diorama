@@ -25,9 +25,13 @@ rm -f "/tmp/.X${DISP#:}-lock"
 
 # Point LoadLevel at the target in the live registry AND every cached bootstrap
 # (the cached value is the one the launcher honors last, so it must agree).
-python3 - "$PROJ" "$LEVEL" <<'PY'
+# CAP_CVARS: optional "name=value name=value" of console cvars to run via the
+# bootstrap autoexec (the reliable path for gem cvars, which the command line
+# misses because they register after core cvars parse).
+python3 - "$PROJ" "$LEVEL" "${CAP_CVARS:-}" <<'PY'
 import json, sys, glob, os
-proj, level = sys.argv[1], sys.argv[2]
+proj, level, cvars = sys.argv[1], sys.argv[2], sys.argv[3]
+pairs = [kv.split("=", 1) for kv in cvars.split() if "=" in kv]
 files = [os.path.join(proj, "Registry", "load_level.setreg")]
 files += glob.glob(os.path.join(proj, "Cache", "linux", "bootstrap.*.setreg"))
 for f in files:
@@ -35,16 +39,21 @@ for f in files:
         d = json.load(open(f))
     except Exception:
         continue
-    d.setdefault("O3DE", {}).setdefault("Autoexec", {}).setdefault("ConsoleCommands", {})["LoadLevel"] = level
+    cc = d.setdefault("O3DE", {}).setdefault("Autoexec", {}).setdefault("ConsoleCommands", {})
+    cc["LoadLevel"] = level
+    for k, v in pairs:
+        cc[k] = v
     json.dump(d, open(f, "w"))
-    print("set LoadLevel=%s in %s" % (level, os.path.basename(f)))
+    extra = (" +" + " ".join("%s=%s" % (k, v) for k, v in pairs)) if pairs else ""
+    print("set LoadLevel=%s%s in %s" % (level, extra, os.path.basename(f)))
 PY
 
 Xvfb "$DISP" -screen 0 "${W}x${H}x24" -nolisten tcp -nocursor >/tmp/diorama_xvfb.log 2>&1 & XPID=$!
 sleep 3
 : > "$GAMELOG" 2>/dev/null || true
 # r_displayInfo=0 hides Atom's top-right RHI/FPS/VRAM dev overlay so the frame is clean.
-DISPLAY="$DISP" "$LAUNCHER" --project-path="$PROJ" --rhi=vulkan --r_fullscreen=0 --r_width="$W" --r_height="$H" --r_displayInfo=0 >/tmp/diorama_launcher.log 2>&1 & GPID=$!
+# CAP_EXTRA: optional extra launcher args (e.g. lighting cvars --r_dioramaSpriteLighting=1).
+DISPLAY="$DISP" "$LAUNCHER" --project-path="$PROJ" --rhi=vulkan --r_fullscreen=0 --r_width="$W" --r_height="$H" --r_displayInfo=0 ${CAP_EXTRA:-} >/tmp/diorama_launcher.log 2>&1 & GPID=$!
 
 for i in $(seq 1 40); do
   grep -qiE "$LEVEL.*loaded" "$GAMELOG" 2>/dev/null && break
