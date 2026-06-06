@@ -88,7 +88,7 @@ world the robot perceives):
   planned collision is scenario-trigger-grade, not a physics solver.
 - **Do not force a grand narrative.** The engine's robotics story should lead with the
   real robotics tech (ROS 2 Gem, sensors, physics). Diorama is at most a small,
-  optional content layer, and Diorama itself is still in alpha.
+  optional content layer, and Diorama itself is still pre-1.0 (beta).
 
 ## The `diorama-ros2` bridge (sketch)
 

@@ -1,6 +1,6 @@
 # Diorama roadmap: toward a credible 2D/2.5D engine
 
-This is the feature roadmap beyond the current alpha. It is organized by *why* a
+This is the feature roadmap beyond the current beta. It is organized by *why* a
 feature matters, not just what it is. The guiding thesis: Diorama renders 2D
 through **Atom**, so it can reach modern lighting, post, and material features
 that pure-2D engines cannot. That is the moat; we lean into it.

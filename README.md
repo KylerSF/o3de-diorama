@@ -14,12 +14,13 @@ depth. It is the world-space counterpart to LyShine's screen-space UI: LyShine
 owns the UI layer, Diorama owns world-space 2D content. It ships as a clean,
 upstreamable gem, not an engine fork.
 
-> ### Status: alpha (v0.1.0-alpha)
+> ### Status: beta (v0.2.0-beta)
 >
-> Diorama is in early alpha. The core sprite path works (see the status table
-> below), but the API, serialized formats, and component layout may change
-> between 0.x releases without a compatibility guarantee. Not yet recommended
-> for production. Feedback and issues are welcome.
+> Diorama is in beta. The feature set is broad (see the status table below) and
+> the gem builds with its unit tests green on both Linux and Windows. The API,
+> serialized formats, and component layout may still change before 1.0 without a
+> compatibility guarantee, so it is not yet recommended for production. Feedback
+> and issues are welcome.
 
 ## Why
 
@@ -78,8 +79,9 @@ runtime property change. See the roadmap and issues for tracking.
 
 - Open 3D Engine **26.05** (built and verified against the 26.05 SDK).
 - The **Atom_RPI** gem (a Diorama dependency, included with O3DE).
-- A C++ toolchain and CMake matching your O3DE setup. Linux, Windows, and macOS
-  are targeted; active development is on Linux.
+- A C++ toolchain and CMake matching your O3DE setup. Linux and Windows are
+  verified (the gem builds and its unit tests pass on both); macOS is targeted
+  but unverified. On Windows, Visual Studio 2022 or 2026 with the C++ workload.
 
 ## Install
 
@@ -98,7 +100,17 @@ cmake -B /path/to/YourProject/build/linux -S /path/to/YourProject -G "Ninja Mult
 cmake --build /path/to/YourProject/build/linux --config profile
 ```
 
-On Windows use `o3de.bat` and the appropriate CMake generator.
+On Windows, use `o3de.bat` and a Visual Studio CMake generator (`Visual Studio 18
+2026` for VS2026, `Visual Studio 17 2022` for VS2022). The helper
+`scripts/ci_build_test.ps1` automates the whole register / configure / build /
+test flow and auto-detects the newest installed Visual Studio:
+
+```powershell
+$env:O3DE_ENGINE_PATH = "C:\O3DE\26.05"   # folder with scripts\o3de.bat
+$env:DIORAMA_PROJECT  = "C:\path\to\YourProject"
+$env:GEM_PATH         = "C:\path\to\o3de-diorama"
+powershell -ExecutionPolicy Bypass -File C:\path\to\o3de-diorama\scripts\ci_build_test.ps1
+```
 
 ## Quick start
 
@@ -171,12 +183,13 @@ thousands-of-sprites stress scene.
   which doubles as a deterministic headless capture path.
 - A flagship "Living Diorama" showcase: a layered miniature scene with real
   front-to-back depth.
-- Toward a `0.2.0-beta`: settle the bus API surface, a verified Windows host
-  build, and an always-available build/test CI gate.
+- Toward `1.0`: settle and freeze the bus API surface, and stand up an
+  always-available build/test CI gate (the Windows host build is now verified;
+  see the status note above).
 
 ## Versioning
 
-Diorama follows [Semantic Versioning](https://semver.org/). During alpha the
+Diorama follows [Semantic Versioning](https://semver.org/). Before 1.0 the
 version stays on the **0.x** line, where minor (`0.MINOR.0`) bumps may include
 breaking changes and patch (`0.x.PATCH`) bumps are fixes. Each release is an
 annotated git tag (`vMAJOR.MINOR.PATCH`) and is recorded in

@@ -34,7 +34,25 @@ function Fail($message) {
 
 $GemPath = if ($env:GEM_PATH) { $env:GEM_PATH } else { (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
 $BuildConfig = if ($env:BUILD_CONFIG) { $env:BUILD_CONFIG } else { 'profile' }
-$Generator = if ($env:CMAKE_GENERATOR) { $env:CMAKE_GENERATOR } else { 'Visual Studio 17 2022' }
+
+# Pick the CMake generator: explicit override wins; otherwise auto-detect the
+# newest installed Visual Studio (via vswhere) so VS2026 / VS2022 / VS2019 boxes
+# all work without the caller hand-setting CMAKE_GENERATOR.
+function Get-VsGenerator {
+    $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+    if (-not (Test-Path $vswhere)) { return $null }
+    $ver = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationVersion 2>$null
+    if (-not $ver) { return $null }
+    switch ([int]($ver.Split('.')[0])) {
+        18 { 'Visual Studio 18 2026' }
+        17 { 'Visual Studio 17 2022' }
+        16 { 'Visual Studio 16 2019' }
+        default { $null }
+    }
+}
+$Generator = if ($env:CMAKE_GENERATOR) { $env:CMAKE_GENERATOR }
+             elseif ($g = Get-VsGenerator) { $g }
+             else { 'Visual Studio 17 2022' }
 
 if (-not $env:O3DE_ENGINE_PATH) { Fail 'O3DE_ENGINE_PATH is not set' }
 if (-not $env:DIORAMA_PROJECT) { Fail 'DIORAMA_PROJECT is not set' }
@@ -59,9 +77,20 @@ Write-Host '== register gem =='
 & $O3de register --external-subdirectory $GemPath
 if ($LASTEXITCODE -ne 0) { Fail 'gem registration failed' }
 
-# Configure. The Visual Studio generator is O3DE's documented Windows default;
-# tests are gated by PAL_TRAIT_DIORAMA_TEST_SUPPORTED, now TRUE on Windows.
-Write-Host '== configure =='
+# Configure with the chosen generator. tests are gated by
+# PAL_TRAIT_DIORAMA_TEST_SUPPORTED, now TRUE on Windows.
+# Clear a stale cache first: CMake errors out if a prior configure used a
+# different generator (e.g. switching a box from VS2022 to VS2026).
+$cache = Join-Path $BuildDir 'CMakeCache.txt'
+if (Test-Path $cache) {
+    $prev = (Select-String -Path $cache -Pattern '^CMAKE_GENERATOR:' -ErrorAction SilentlyContinue).Line
+    if ($prev -and ($prev -notlike "*$Generator*")) {
+        Write-Host "  clearing stale CMake cache ($prev)"
+        Remove-Item -Force $cache -ErrorAction SilentlyContinue
+        Remove-Item -Recurse -Force (Join-Path $BuildDir 'CMakeFiles') -ErrorAction SilentlyContinue
+    }
+}
+Write-Host "== configure (generator: $Generator) =="
 cmake -B $BuildDir -S $env:DIORAMA_PROJECT -G $Generator -DLY_UNITY_BUILD=ON
 if ($LASTEXITCODE -ne 0) { Fail 'configure failed' }
 

@@ -3,10 +3,18 @@
 All notable changes to Diorama are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/). While in
-alpha (the 0.x line), minor releases may include breaking changes.
+and this project adheres to [Semantic Versioning](https://semver.org/). Before
+1.0 (the 0.x line), minor releases may include breaking changes.
 
 ## [Unreleased]
+
+## [0.2.0-beta] - 2026-06-05
+
+Beta milestone. The feature set is now broad across sprites, rendering, tilemaps,
+2.5D, lighting, particles, post, camera, 2D collision, and scripting, and the gem
+builds with its unit tests green (166) on both Linux and Windows (VS2026 / MSVC,
+verified on a Windows host). The API and serialized formats may still change
+before 1.0.
 
 ### Added
 - Side-scroller vertical slice sample (`Docs/examples/sidescroller_demo.py` +
