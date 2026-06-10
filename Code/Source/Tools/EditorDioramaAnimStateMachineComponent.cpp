@@ -19,8 +19,7 @@ namespace Diorama
         // reflect it again here or the type registers twice.
         if (auto* serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
         {
-            serializeContext
-                ->Class<EditorDioramaAnimStateMachineComponent, AzToolsFramework::Components::EditorComponentBase>()
+            serializeContext->Class<EditorDioramaAnimStateMachineComponent, AzToolsFramework::Components::EditorComponentBase>()
                 ->Version(1)
                 ->Field("Config", &EditorDioramaAnimStateMachineComponent::m_config);
 

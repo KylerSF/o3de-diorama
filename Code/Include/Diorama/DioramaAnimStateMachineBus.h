@@ -87,10 +87,7 @@ namespace Diorama
     {
     public:
         AZ_EBUS_BEHAVIOR_BINDER(
-            DioramaAnimStateMachineNotificationHandler,
-            "{5D6C7B8A-C9DA-45E6-F708-192A3B4C5D0C}",
-            AZ::SystemAllocator,
-            OnStateChanged);
+            DioramaAnimStateMachineNotificationHandler, "{5D6C7B8A-C9DA-45E6-F708-192A3B4C5D0C}", AZ::SystemAllocator, OnStateChanged);
 
         void OnStateChanged(const AZStd::string& fromState, const AZStd::string& toState) override
         {

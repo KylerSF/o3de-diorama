@@ -47,13 +47,16 @@ namespace Diorama
                 editContext->Class<AnimParamData>("Parameter", "A named blackboard value transitions can test")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &AnimParamData::m_name, "Name", "Parameter name (referenced by conditions)")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default, &AnimParamData::m_name, "Name", "Parameter name (referenced by conditions)")
                     ->DataElement(AZ::Edit::UIHandlers::ComboBox, &AnimParamData::m_kind, "Kind", "Bool, Float, or one-shot Trigger")
                     ->EnumAttribute(AnimSM::ParamKind::Bool, "Bool")
                     ->EnumAttribute(AnimSM::ParamKind::Float, "Float")
                     ->EnumAttribute(AnimSM::ParamKind::Trigger, "Trigger")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &AnimParamData::m_defaultFloat, "Default (float)", "Initial value for a Float")
-                    ->DataElement(AZ::Edit::UIHandlers::CheckBox, &AnimParamData::m_defaultBool, "Default (bool)", "Initial value for a Bool");
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default, &AnimParamData::m_defaultFloat, "Default (float)", "Initial value for a Float")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::CheckBox, &AnimParamData::m_defaultBool, "Default (bool)", "Initial value for a Bool");
             }
         }
     }
@@ -80,8 +83,10 @@ namespace Diorama
                     ->EnumAttribute(AnimSM::Compare::Less, "<")
                     ->EnumAttribute(AnimSM::Compare::GreaterEqual, ">=")
                     ->EnumAttribute(AnimSM::Compare::LessEqual, "<=")
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &AnimConditionData::m_threshold, "Threshold", "Value a Float is compared against")
-                    ->DataElement(AZ::Edit::UIHandlers::CheckBox, &AnimConditionData::m_expected, "Expected", "Required value of a Bool parameter");
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default, &AnimConditionData::m_threshold, "Threshold", "Value a Float is compared against")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::CheckBox, &AnimConditionData::m_expected, "Expected", "Required value of a Bool parameter");
             }
         }
     }
@@ -105,12 +110,14 @@ namespace Diorama
                 editContext->Class<AnimTransitionData>("Transition", "An edge between states, guarded by conditions")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &AnimTransitionData::m_from, "From", "Source state name (empty = Any State)")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default, &AnimTransitionData::m_from, "From", "Source state name (empty = Any State)")
                     ->DataElement(AZ::Edit::UIHandlers::Default, &AnimTransitionData::m_to, "To", "Destination state name")
                     ->DataElement(AZ::Edit::UIHandlers::Default, &AnimTransitionData::m_conditions, "Conditions", "All must hold to fire")
                     ->DataElement(
                         AZ::Edit::UIHandlers::CheckBox, &AnimTransitionData::m_hasExitTime, "Has exit time", "Gate on clip progress")
-                    ->DataElement(AZ::Edit::UIHandlers::Slider, &AnimTransitionData::m_exitTime, "Exit time", "Fraction of the source clip [0,1]")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Slider, &AnimTransitionData::m_exitTime, "Exit time", "Fraction of the source clip [0,1]")
                     ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
                     ->Attribute(AZ::Edit::Attributes::Max, 1.0f);
             }
@@ -147,7 +154,8 @@ namespace Diorama
                     ->Attribute(AZ::Edit::Attributes::Min, 1)
                     ->DataElement(AZ::Edit::UIHandlers::Default, &AnimStateData::m_rows, "Rows", "Sprite-sheet rows")
                     ->Attribute(AZ::Edit::Attributes::Min, 1)
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &AnimStateData::m_frameCount, "Frame count", "Frames in the clip (0 = no sheet)")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default, &AnimStateData::m_frameCount, "Frame count", "Frames in the clip (0 = no sheet)")
                     ->Attribute(AZ::Edit::Attributes::Min, 0)
                     ->DataElement(AZ::Edit::UIHandlers::Default, &AnimStateData::m_fps, "FPS", "Sprite-sheet playback rate")
                     ->Attribute(AZ::Edit::Attributes::Min, 0.0f)

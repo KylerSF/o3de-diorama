@@ -107,8 +107,7 @@ namespace Diorama::AnimSM
 
     //! Whether a transition is eligible to fire right now from currentState.
     //! normalizedTime is timeInState/duration of the current state, clamped by the caller.
-    inline bool TransitionReady(
-        const Transition& transition, int currentState, AZStd::span<const ParamValue> params, float normalizedTime)
+    inline bool TransitionReady(const Transition& transition, int currentState, AZStd::span<const ParamValue> params, float normalizedTime)
     {
         // Any-State (m_from == -1) is eligible everywhere; otherwise the source must match.
         if (transition.m_from >= 0 && transition.m_from != currentState)

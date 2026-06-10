@@ -169,8 +169,7 @@ namespace Diorama
             transitions.push_back(b);
         }
         int fired = -1;
-        const int to = SelectTransition(
-            AZStd::span<const Transition>(transitions.data(), transitions.size()), 0, params, 0.0f, fired);
+        const int to = SelectTransition(AZStd::span<const Transition>(transitions.data(), transitions.size()), 0, params, 0.0f, fired);
         EXPECT_EQ(to, 1); // first eligible wins
         EXPECT_EQ(fired, 0);
     }
@@ -185,8 +184,7 @@ namespace Diorama
         a.m_conditions.push_back(BoolCond(0, true));
         transitions.push_back(a);
         int fired = -1;
-        const int to = SelectTransition(
-            AZStd::span<const Transition>(transitions.data(), transitions.size()), 0, params, 0.0f, fired);
+        const int to = SelectTransition(AZStd::span<const Transition>(transitions.data(), transitions.size()), 0, params, 0.0f, fired);
         EXPECT_EQ(to, -1);
         EXPECT_EQ(fired, -1);
     }
@@ -207,11 +205,8 @@ namespace Diorama
         transitions.push_back(a);
 
         const float durations[2] = { 1.0f, 1.0f };
-        const int changed = Step(
-            rt,
-            AZStd::span<const Transition>(transitions.data(), transitions.size()),
-            AZStd::span<const float>(durations, 2),
-            0.25f);
+        const int changed =
+            Step(rt, AZStd::span<const Transition>(transitions.data(), transitions.size()), AZStd::span<const float>(durations, 2), 0.25f);
         EXPECT_EQ(changed, -1);
         EXPECT_EQ(rt.m_current, 0);
         EXPECT_NEAR(rt.m_time, 0.25f, 1e-5f);
@@ -232,11 +227,8 @@ namespace Diorama
         transitions.push_back(a);
 
         const float durations[2] = { 1.0f, 1.0f };
-        const int changed = Step(
-            rt,
-            AZStd::span<const Transition>(transitions.data(), transitions.size()),
-            AZStd::span<const float>(durations, 2),
-            0.1f);
+        const int changed =
+            Step(rt, AZStd::span<const Transition>(transitions.data(), transitions.size()), AZStd::span<const float>(durations, 2), 0.1f);
         EXPECT_EQ(changed, 1);
         EXPECT_EQ(rt.m_current, 1);
         EXPECT_NEAR(rt.m_time, 0.0f, 1e-5f); // time-in-state reset on entry

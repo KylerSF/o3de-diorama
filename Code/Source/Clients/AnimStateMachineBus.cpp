@@ -44,12 +44,8 @@ namespace Diorama
                 &DioramaAnimStateMachineRequestBus::Events::Play,
                 { { { "stateName", "State to enter immediately, bypassing transitions." } } })
             ->Event("GetCurrentState", &DioramaAnimStateMachineRequestBus::Events::GetCurrentState)
-            ->Event(
-                "GetBool",
-                &DioramaAnimStateMachineRequestBus::Events::GetBool,
-                { { { "name", "Bool/Trigger parameter name." } } })
-            ->Event(
-                "GetFloat", &DioramaAnimStateMachineRequestBus::Events::GetFloat, { { { "name", "Float parameter name." } } });
+            ->Event("GetBool", &DioramaAnimStateMachineRequestBus::Events::GetBool, { { { "name", "Bool/Trigger parameter name." } } })
+            ->Event("GetFloat", &DioramaAnimStateMachineRequestBus::Events::GetFloat, { { { "name", "Float parameter name." } } });
 
         behaviorContext->EBus<DioramaAnimStateMachineNotificationBus>("DioramaAnimStateMachineNotificationBus")
             ->Attribute(AZ::Script::Attributes::Scope, AZ::Script::Attributes::ScopeFlags::Common)

@@ -23,7 +23,7 @@ namespace AZ
 {
     AZ_TYPE_INFO_SPECIALIZE(Diorama::AnimSM::ParamKind, Diorama::AnimSMParamKindTypeId);
     AZ_TYPE_INFO_SPECIALIZE(Diorama::AnimSM::Compare, Diorama::AnimSMCompareTypeId);
-}
+} // namespace AZ
 
 namespace Diorama
 {
