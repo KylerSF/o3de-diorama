@@ -9,6 +9,7 @@
 
 #include <AzCore/base.h>
 #include <AzCore/std/containers/array.h>
+#include <AzCore/std/containers/span.h>
 
 #include <cstddef>
 
@@ -189,5 +190,36 @@ namespace Diorama::TilemapAutotile
     inline int BlobTileIndex(int baseTile, AZ::u8 mask8)
     {
         return baseTile + BlobIndex(mask8);
+    }
+
+    //! One custom autotile rule: when a member cell's 8-bit neighbor mask, normalized
+    //! the same way the blob scheme normalizes it, equals m_mask, the cell uses display
+    //! offset m_offset (added to the group's base tile). This lets a tileset whose art
+    //! is *not* laid out in the gem's canonical blob order (e.g. an imported set with a
+    //! bespoke layout) drive autotiling by mapping each meaningful neighborhood to its
+    //! own art cell. Normalizing first means an author only specifies the 47 meaningful
+    //! neighborhoods, not all 256 raw masks.
+    struct RuleEntry
+    {
+        AZ::u8 m_mask = 0; //!< Normalized neighbor mask (see NormalizeBlobMask).
+        int m_offset = 0; //!< Display offset added to the group base tile.
+    };
+
+    //! Resolve a member cell's display offset from a custom rule set: the first rule
+    //! whose normalized mask matches the cell's normalized neighbor mask wins; if none
+    //! match, fall back to the canonical blob index so an incomplete rule set still
+    //! produces a connected (if not bespoke) result. Rules are matched in order, so an
+    //! author can list specific cases before general ones.
+    inline int RuleSetOffset(AZ::u8 mask8, AZStd::span<const RuleEntry> rules)
+    {
+        const AZ::u8 norm = NormalizeBlobMask(mask8);
+        for (const RuleEntry& rule : rules)
+        {
+            if (rule.m_mask == norm)
+            {
+                return rule.m_offset;
+            }
+        }
+        return BlobIndex(mask8); // canonical fallback
     }
 } // namespace Diorama::TilemapAutotile

@@ -183,12 +183,45 @@ namespace Diorama
         return InBounds(outCol, outRow);
     }
 
-    void TilemapComponentConfig::Reflect(AZ::ReflectContext* context)
+    void TilemapAutotileRuleData::Reflect(AZ::ReflectContext* context)
     {
         if (auto* serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
         {
+            serializeContext->Class<TilemapAutotileRuleData>()
+                ->Version(1)
+                ->Field("mask", &TilemapAutotileRuleData::m_mask)
+                ->Field("offset", &TilemapAutotileRuleData::m_offset);
+
+            if (auto* editContext = serializeContext->GetEditContext())
+            {
+                editContext->Class<TilemapAutotileRuleData>("Autotile Rule", "Map a neighbor mask to a display offset")
+                    ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &TilemapAutotileRuleData::m_mask,
+                        "Mask",
+                        "Normalized 8-bit neighbor mask (0..255)")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0)
+                    ->Attribute(AZ::Edit::Attributes::Max, 255)
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &TilemapAutotileRuleData::m_offset,
+                        "Offset",
+                        "Display offset added to the group base tile")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0);
+            }
+        }
+    }
+
+    void TilemapComponentConfig::Reflect(AZ::ReflectContext* context)
+    {
+        TilemapAutotileRuleData::Reflect(context);
+
+        if (auto* serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
+        {
             serializeContext->Class<TilemapComponentConfig, AZ::ComponentConfig>()
-                ->Version(2)
+                ->Version(3)
                 ->Field("tilemapAsset", &TilemapComponentConfig::m_tilemapAsset)
                 ->Field("atlas", &TilemapComponentConfig::m_atlas)
                 ->Field("columns", &TilemapComponentConfig::m_columns)
@@ -198,7 +231,8 @@ namespace Diorama
                 ->Field("tileSize", &TilemapComponentConfig::m_tileSize)
                 ->Field("tiles", &TilemapComponentConfig::m_tiles)
                 ->Field("tint", &TilemapComponentConfig::m_tint)
-                ->Field("sortOffset", &TilemapComponentConfig::m_sortOffset);
+                ->Field("sortOffset", &TilemapComponentConfig::m_sortOffset)
+                ->Field("autotileRules", &TilemapComponentConfig::m_autotileRules);
 
             if (auto* editContext = serializeContext->GetEditContext())
             {
@@ -232,7 +266,13 @@ namespace Diorama
                         AZ::Edit::UIHandlers::Default,
                         &TilemapComponentConfig::m_sortOffset,
                         "Sort Offset",
-                        "Transparent draw-order bias for the layer");
+                        "Transparent draw-order bias for the layer")
+                    ->ClassElement(AZ::Edit::ClassElements::Group, "Autotiling")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &TilemapComponentConfig::m_autotileRules,
+                        "Autotile Rules",
+                        "Custom neighbor-mask -> offset rules consumed by AutotileRules (empty = canonical blob)");
                 // m_tiles is authored through the request bus or a build script,
                 // not the raw inspector (an integer grid is not usefully editable
                 // as a flat array); it is intentionally not an edit element.

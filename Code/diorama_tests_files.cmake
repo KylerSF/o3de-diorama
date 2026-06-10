@@ -7,5 +7,6 @@ set(FILES
     Tests/Clients/Camera2DTest.cpp
     Tests/Clients/Particles2DTest.cpp
     Tests/Clients/UILayout2DTest.cpp
+    Tests/Clients/TilemapV2Test.cpp
     Tests/Clients/DioramaTestMain.cpp
 )
