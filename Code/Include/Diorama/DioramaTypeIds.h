@@ -128,6 +128,17 @@ namespace Diorama
     inline constexpr const char* AsepriteDirectionTypeId = "{708192A3-B4C5-46D7-E7F8-091A2B3C4D5E}";
     inline constexpr const char* DioramaAsepriteSheetAssetTypeId = "{8192A3B4-C5D6-47E8-F809-1A2B3C4D5E6F}";
 
+    // Input action-mapping TypeIds (rebindable named actions over input channels)
+    inline constexpr const char* DioramaInputConfigTypeId = "{5D6E7F80-9102-4A3B-8C4D-5E6F70819300}";
+    inline constexpr const char* DioramaInputComponentTypeId = "{6E7F8091-0213-4B4C-9D5E-6F708192A401}";
+    inline constexpr const char* EditorDioramaInputComponentTypeId = "{7F809102-1324-4C5D-AE6F-708192A3B502}";
+    inline constexpr const char* DioramaInputRequestsTypeId = "{80910213-2435-4D6E-BF70-8192A3B4C603}";
+    inline constexpr const char* DioramaInputNotificationsTypeId = "{91021324-3546-4E7F-A081-92A3B4C5D704}";
+    inline constexpr const char* DioramaInputActionDataTypeId = "{A1132435-4657-4F80-B192-A3B4C5D6E805}";
+    inline constexpr const char* DioramaInputBindingDataTypeId = "{B2243546-5768-4091-A2A3-B4C5D6E7F906}";
+    inline constexpr const char* InputActionKindTypeId = "{C3354657-6879-41A2-B3B4-C5D6E7F80A07}";
+    inline constexpr const char* InputAxisTypeId = "{D4465768-798A-42B3-C4C5-D6E7F8091B08}";
+
     // AI-facing 2D collision API TypeIds
     inline constexpr const char* Diorama2DColliderRequestsTypeId = "{908C687A-9799-4BD9-9E82-3368D3BAEA03}";
     inline constexpr const char* Diorama2DCollisionNotificationsTypeId = "{3E9FB4C7-C577-450B-8CCA-9CEDF0964E06}";

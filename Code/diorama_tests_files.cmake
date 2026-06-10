@@ -9,5 +9,6 @@ set(FILES
     Tests/Clients/UILayout2DTest.cpp
     Tests/Clients/AsepriteBinaryTest.cpp
     Tests/Clients/TilemapV2Test.cpp
+    Tests/Clients/InputActionMapTest.cpp
     Tests/Clients/DioramaTestMain.cpp
 )

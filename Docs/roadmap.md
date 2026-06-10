@@ -261,8 +261,13 @@ Missing table-stakes (no design doc yet):
   twin-stick score HUD off LyShine onto the Diorama bus.
 - **Animation state machine.** Flipbook and skeletal give *clips*; character work
   needs transitions (idle -> run -> jump) with conditions and blends.
-- **Input action-mapping.** A rebindable action surface; the twin-stick wires raw
-  input directly today.
+- **Input action-mapping.** **Shipped**
+  ([howto/23-input-actions.md](howto/23-input-actions.md)): a rebindable surface of
+  named actions (Button / Axis1D / Axis2D, per-action dead zone + press threshold)
+  over input channels, on the pure tested `InputActionMap.h` core, read through
+  `DioramaInputRequestBus` (values + per-frame pressed/released edges) with
+  `OnActionPressed`/`OnActionReleased` notifications. Replaces the twin-stick's raw
+  input wiring.
 - **Save/load** of game state, and **off-screen culling** for bullet-hell / large
   tile scenes (the batch helps, but explicit culling is not there yet).
 - **Large / streaming worlds** (community ask). Diorama itself ships no

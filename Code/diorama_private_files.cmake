@@ -58,6 +58,10 @@ set(FILES
     Source/Clients/DioramaSkeletalClipComponent.cpp
     Source/Clients/DioramaSkeletalClipComponent.h
     Source/Clients/SkeletalBus.cpp
+    Source/Clients/InputActionMap.h
+    Source/Clients/DioramaInputComponent.cpp
+    Source/Clients/DioramaInputComponent.h
+    Source/Clients/InputBus.cpp
     Source/Clients/DioramaAsepriteComponent.cpp
     Source/Clients/DioramaAsepriteComponent.h
     Source/Clients/DioramaAsepriteSheetAsset.cpp
