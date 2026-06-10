@@ -38,13 +38,13 @@ TILES = [
     ("RENDERING", (255, 150, 52), "Batched feature processor (texture + sort-layer); automatic camera-distance depth sort."),
     ("DEPTH+SHADOW", (90, 210, 255), "2.5D draw order by world depth, plus soft ground shadows under billboarded sprites."),
     ("2.5D+PARALLAX", (120, 235, 150), "Depth-sorted layers, parallax backgrounds, and a tilted 2.5D camera."),
-    ("TILEMAP", (90, 225, 210), "Atlas tilemaps: 4-bit + 47-blob autotiling, in-editor paint, multi-layer .dtilemap / Tiled .tmj."),
-    ("ANIMATION", (200, 150, 255), "Sprite-sheet / flipbook playback with frame events; native .aseprite import via AssetBuilder."),
+    ("TILEMAP", (90, 225, 210), "Atlas tilemaps: 4-bit / 47-blob / custom rule-tile autotiling, in-editor paint, multi-layer .dtilemap / Tiled .tmj."),
+    ("ANIMATION", (200, 150, 255), "Sprite-sheet / flipbook with frame events; native .aseprite import (indexed/grayscale + blend modes); parameter-driven state machine."),
     ("LIGHTING", (255, 224, 110), "Gem-native 2D point + directional lights; normal-mapped sprites for shaped shading."),
     ("EFFECTS", (255, 96, 150), "2D particles; per-sprite flash, outline, emissive; hit-stop / slow-motion time-scale."),
     ("POST", (180, 130, 255), "Bloom + vignette via a 2D Look component, plus a retro CRT scanline pass."),
     ("CAMERA", (90, 200, 255), "Follow, deadzone, bounds, shake; versus framing + auto-zoom; ortho / pixel-perfect."),
-    ("GAMEPLAY", (140, 230, 130), "2D collision: colliders, triggers, queries, and pushbox resolution, from game scripts."),
+    ("GAMEPLAY", (140, 230, 130), "2D collision (colliders, triggers, queries, pushbox) plus rebindable input action mapping, from game scripts."),
     ("SCRIPTING", (255, 210, 90), "Typed per-feature request buses, usable from Lua, Python, and Script Canvas."),
 ]
 cols, rows = 4, 3
