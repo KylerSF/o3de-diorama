@@ -108,8 +108,14 @@ What makes a 2D game look modern/AAA, and what pure-2D engines do awkwardly:
   dedicated `DioramaTilemapAsset` (`.dtilemapc`) with a custom `.dtilemap` JSON builder
   and a Tiled `.tmj` importer, **multiple layers**, and **per-tile flip/rotate**
   (orientation bits packed above the atlas index), driven by the `SetTilemapByPath`
-  bus verb and the editor's **Tilemap Asset** field. Remaining: a `DioramaTilesetRule`
-  asset for custom mask->cell layouts, animated tiles, per-tile collision.
+  bus verb and the editor's **Tilemap Asset** field. **Shipped (v2 rule tiles)**:
+  custom **Autotile Rules** (normalized neighbor-mask -> display offset) on the pure
+  `TilemapAutotile::RuleSetOffset` core, driven by the `AutotileRules` bus verb, for
+  tilesets not laid out in the canonical blob order
+  ([design/2d-tilemap-v2.md](design/2d-tilemap-v2.md)). **Core shipped**: per-tile
+  collision greedy-mesh geometry (`TilemapCollision.h`, tested) ready to drive
+  gem-native colliders. Remaining (needs the on-screen/runtime pass): wiring the
+  collider build, and animated tiles (render-path).
 - **Skeletal 2D animation** (L). Bone deformation (Spine / DragonBones style), the
   AAA-2D animation standard. **Design done**
   ([design/2d-skeletal-animation.md](design/2d-skeletal-animation.md)): phased

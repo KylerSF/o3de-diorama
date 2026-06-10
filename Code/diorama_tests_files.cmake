@@ -8,5 +8,6 @@ set(FILES
     Tests/Clients/Particles2DTest.cpp
     Tests/Clients/UILayout2DTest.cpp
     Tests/Clients/AsepriteBinaryTest.cpp
+    Tests/Clients/TilemapV2Test.cpp
     Tests/Clients/DioramaTestMain.cpp
 )

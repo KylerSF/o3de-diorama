@@ -241,6 +241,32 @@ namespace Diorama
         NotifyChanged();
     }
 
+    void TilemapRequestHandler::AutotileRules(int baseTileIndex)
+    {
+        if (m_config == nullptr)
+        {
+            return;
+        }
+
+        // Build the pure rule list from the config once, then resolve every cell against
+        // it (falling back to the canonical blob index inside RuleSetOffset).
+        AZStd::vector<TilemapAutotile::RuleEntry> rules;
+        rules.reserve(m_config->m_autotileRules.size());
+        for (const TilemapAutotileRuleData& rule : m_config->m_autotileRules)
+        {
+            rules.push_back(TilemapAutotile::RuleEntry{ static_cast<AZ::u8>(rule.m_mask & 0xFF), rule.m_offset });
+        }
+
+        ResolveAutotile(
+            *m_config,
+            AZ::GetMax(baseTileIndex, 0),
+            [&rules](AZ::u8 mask8)
+            {
+                return TilemapAutotile::RuleSetOffset(mask8, AZStd::span<const TilemapAutotile::RuleEntry>(rules.data(), rules.size()));
+            });
+        NotifyChanged();
+    }
+
     void TilemapRequestHandler::SetTint(float r, float g, float b, float a)
     {
         if (m_config == nullptr)

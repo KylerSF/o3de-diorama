@@ -138,6 +138,24 @@ surrounded. Lay the 47-cell block out in that order.
 Pick **4-bit edge** (16 tiles) for simple platforms and **blob** (47 tiles) when you
 have corner art.
 
+### Custom layouts: rule tiles
+
+`Autotile`/`AutotileBlob` assume the art block is laid out in the gem's canonical
+order. An imported tileset is often laid out differently, so the canonical index
+lands on the wrong art. **Rule tiles** map each meaningful neighborhood to your own
+offset: add **Autotile Rules** to the Tilemap component (each is a normalized
+neighbor `mask` and a display `offset`), then call:
+
+```lua
+DioramaTilemapRequestBus.Event.AutotileRules(self.entityId, 64)
+```
+
+Each non-empty cell becomes `baseTileIndex + offset` of the first rule whose
+normalized mask matches its neighbors, or the canonical blob index when no rule
+matches (so a partial rule set still connects). The mask is the 8-bit neighborhood
+(N=1, NE=2, E=4, SE=8, S=16, SW=32, W=64, NW=128), normalized so a corner counts
+only when both its edges are present, the same 47-value space the blob scheme uses.
+
 ## Verifying without a screenshot
 
 `GetTilemapInfo` returns the resolved state: the resolved atlas path, whether the

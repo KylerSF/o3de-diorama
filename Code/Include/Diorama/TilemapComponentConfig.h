@@ -23,6 +23,20 @@
 
 namespace Diorama
 {
+    //! One custom autotile rule used by AutotileRules: when a filled cell's normalized
+    //! neighbor mask equals m_mask, the cell becomes baseTile + m_offset. Lets a tileset
+    //! whose art is not in the gem's canonical blob order drive autotiling.
+    struct TilemapAutotileRuleData final
+    {
+        AZ_TYPE_INFO(Diorama::TilemapAutotileRuleData, TilemapAutotileRuleDataTypeId);
+        static void Reflect(AZ::ReflectContext* context);
+
+        //! Normalized 8-bit neighbor mask (cardinal edges + corners-with-both-edges).
+        int m_mask = 0;
+        //! Display offset added to the group's base tile for this neighborhood.
+        int m_offset = 0;
+    };
+
     //! Shared configuration for a world-space tilemap: a grid of cells, each
     //! drawing one cell of a shared atlas texture as a quad. The same struct is
     //! used by the runtime TilemapComponent and the EditorTilemapComponent so the
@@ -79,6 +93,11 @@ namespace Diorama
 
         //! Transparent draw-order bias for the whole layer; larger draws on top.
         float m_sortOffset = 0.0f;
+
+        //! Custom autotile rules consumed by the AutotileRules bus verb (a tileset whose
+        //! art is not laid out in the gem's canonical blob order). Empty = the verb falls
+        //! back to the canonical blob index for every cell.
+        AZStd::vector<TilemapAutotileRuleData> m_autotileRules;
 
         // --- Pure helpers (no asset access), shared by the renderer and the bus,
         // and unit-tested independently of any running application. ---

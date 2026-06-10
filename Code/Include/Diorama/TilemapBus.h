@@ -86,6 +86,12 @@ namespace Diorama
         //! blob index 0..46, so the group's 47-cell art block connects edges and
         //! corners. baseTileIndex is clamped to >= 0.
         virtual void AutotileBlob(int baseTileIndex) = 0;
+        //! Autotile every non-empty cell using the component's custom Autotile Rules:
+        //! each cell becomes baseTileIndex + the offset of the first rule whose
+        //! normalized neighbor mask matches, or the canonical blob index when no rule
+        //! matches. Use this for a tileset whose art is not laid out in the gem's
+        //! blob order. baseTileIndex is clamped to >= 0.
+        virtual void AutotileRules(int baseTileIndex) = 0;
         //! Tint multiplied into every tile; channels clamped to 0..1.
         virtual void SetTint(float r, float g, float b, float a) = 0;
         //! Transparent draw-order bias for the layer; larger draws on top.
