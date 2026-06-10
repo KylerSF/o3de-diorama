@@ -87,5 +87,8 @@ namespace Diorama
         TilemapExtraLayers m_extraLayers;
         //! Tilemap asset id currently loaded, to detect a SetTilemapByPath change.
         AZ::Data::AssetId m_loadedTilemapAssetId;
+        //! Set once a non-axis-aligned-rotation warning has fired for per-tile
+        //! collision, so the warning is not repeated on every tile change.
+        bool m_warnedNonAxisAligned = false;
     };
 } // namespace Diorama

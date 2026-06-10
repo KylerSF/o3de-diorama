@@ -302,4 +302,45 @@ namespace Diorama
         EXPECT_NEAR(info.m_radius, 2.0f, 1e-5f);
         EXPECT_EQ(info.m_contactCount, 1);
     }
+
+    // Static collider sets (tilemap solid tiles): query-only geometry that joins
+    // overlap / push-out / raycast but not contact dispatch. Verifies the new
+    // SetStaticColliders path end to end, the integration the per-tile collision
+    // feature relies on.
+    TEST_F(Collision2DSystemTest, StaticColliders_JoinQueriesLayerFilterAndClear)
+    {
+        Collision2D::Collider box;
+        box.m_center = AZ::Vector2(10.0f, 0.0f);
+        box.m_shape.m_type = Collision2D::ShapeType::Box;
+        box.m_shape.m_halfExtents = AZ::Vector2(1.0f, 1.0f);
+        box.m_layer = 1;
+        const AZ::EntityId owner(0x7654u);
+        Collision2DWorld::Get()->SetStaticColliders(owner, { box });
+
+        // Overlapping the static box returns its owner entity.
+        AZStd::vector<AZ::EntityId> hits;
+        Diorama2DCollisionRequestBus::BroadcastResult(hits, &Diorama2DCollisionRequests::OverlapBox, 10.0f, 0.0f, 0.5f, 0.5f, 1u);
+        ASSERT_EQ(hits.size(), 1u);
+        EXPECT_EQ(hits[0], owner);
+
+        // Far from the box: no hit.
+        Diorama2DCollisionRequestBus::BroadcastResult(hits, &Diorama2DCollisionRequests::OverlapBox, 100.0f, 100.0f, 0.5f, 0.5f, 1u);
+        EXPECT_TRUE(hits.empty());
+
+        // A layer mask that excludes the box's layer filters it out.
+        Diorama2DCollisionRequestBus::BroadcastResult(hits, &Diorama2DCollisionRequests::OverlapBox, 10.0f, 0.0f, 0.5f, 0.5f, 2u);
+        EXPECT_TRUE(hits.empty());
+
+        // Push-out of a query box overlapping the static box is non-zero (a moving
+        // collider would be ejected from the wall).
+        AZ::Vector2 push(0.0f, 0.0f);
+        Diorama2DCollisionRequestBus::BroadcastResult(
+            push, &Diorama2DCollisionRequests::ComputeBoxPushOut, 10.6f, 0.0f, 0.5f, 0.5f, 1u, AZ::EntityId());
+        EXPECT_GT(push.GetLength(), 0.0f);
+
+        // Clearing removes the static set from queries.
+        Collision2DWorld::Get()->ClearStaticColliders(owner);
+        Diorama2DCollisionRequestBus::BroadcastResult(hits, &Diorama2DCollisionRequests::OverlapBox, 10.0f, 0.0f, 0.5f, 0.5f, 1u);
+        EXPECT_TRUE(hits.empty());
+    }
 } // namespace Diorama
