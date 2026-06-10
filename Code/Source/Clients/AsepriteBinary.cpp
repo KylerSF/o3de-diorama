@@ -268,15 +268,15 @@ namespace Diorama::Aseprite
         case BlendMode::HardLight:
             return cs <= 0.5f ? (2.0f * cb * cs) : (1.0f - 2.0f * (1.0f - cb) * (1.0f - cs));
         case BlendMode::SoftLight:
-        {
-            // W3C soft-light.
-            if (cs <= 0.5f)
             {
-                return cb - (1.0f - 2.0f * cs) * cb * (1.0f - cb);
+                // W3C soft-light.
+                if (cs <= 0.5f)
+                {
+                    return cb - (1.0f - 2.0f * cs) * cb * (1.0f - cb);
+                }
+                const float d = cb <= 0.25f ? (((16.0f * cb - 12.0f) * cb + 4.0f) * cb) : std::sqrt(cb);
+                return cb + (2.0f * cs - 1.0f) * (d - cb);
             }
-            const float d = cb <= 0.25f ? (((16.0f * cb - 12.0f) * cb + 4.0f) * cb) : std::sqrt(cb);
-            return cb + (2.0f * cs - 1.0f) * (d - cb);
-        }
         case BlendMode::Difference:
             return std::fabs(cb - cs);
         case BlendMode::Exclusion:
@@ -441,10 +441,7 @@ namespace Diorama::Aseprite
                                 const size_t compLen = chunkEnd - reader.Pos();
                                 if (reader.Pos() + compLen > bytes.size() ||
                                     !InflateExact(
-                                        reader.Ptr(),
-                                        static_cast<AZ::u32>(compLen),
-                                        rawPixels.data(),
-                                        static_cast<AZ::u32>(rawExpected)))
+                                        reader.Ptr(), static_cast<AZ::u32>(compLen), rawPixels.data(), static_cast<AZ::u32>(rawExpected)))
                                 {
                                     return false;
                                 }

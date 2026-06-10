@@ -132,7 +132,12 @@ namespace Diorama
 
         // Assemble a 1-frame file: 128-byte header + one frame holding the given chunks.
         AZStd::vector<AZ::u8> BuildFile(
-            AZ::u16 width, AZ::u16 height, AZ::u16 colorDepth, AZ::u8 transparentIndex, const AZStd::vector<AZStd::vector<AZ::u8>>& chunks, const AZStd::vector<AZ::u16>& chunkTypes)
+            AZ::u16 width,
+            AZ::u16 height,
+            AZ::u16 colorDepth,
+            AZ::u8 transparentIndex,
+            const AZStd::vector<AZStd::vector<AZ::u8>>& chunks,
+            const AZStd::vector<AZ::u16>& chunkTypes)
         {
             AseBuilder b;
             b.U32(0); // file size (ignored)
@@ -176,8 +181,16 @@ namespace Diorama
         pal.U32(0); // first index
         pal.U32(1); // last index
         pal.Zeros(8); // reserved
-        pal.U16(0); pal.U8(0); pal.U8(0); pal.U8(0); pal.U8(0); // entry 0 (flags + RGBA)
-        pal.U16(0); pal.U8(10); pal.U8(20); pal.U8(30); pal.U8(255); // entry 1
+        pal.U16(0);
+        pal.U8(0);
+        pal.U8(0);
+        pal.U8(0);
+        pal.U8(0); // entry 0 (flags + RGBA)
+        pal.U16(0);
+        pal.U8(10);
+        pal.U8(20);
+        pal.U8(30);
+        pal.U8(255); // entry 1
 
         // 2x1 indexed cel: [transparent index 0, palette index 1].
         const AZStd::vector<AZ::u8> cel = CelBody(2, 1, { 0, 1 });
