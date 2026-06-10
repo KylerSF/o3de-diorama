@@ -96,7 +96,8 @@ the design, see:
   parameter in depth.
 - [API reference](../reference/api.md): the typed request buses for every feature
   (sprite, tilemap, camera, lighting, particles, parallax, collision, UI, audio,
-  post-processing, CRT, skeletal, Aseprite) for scripts and agents.
+  post-processing, CRT, skeletal, Aseprite, input actions, animation state machine)
+  for scripts and agents.
 
 ## Runnable examples
 

@@ -70,6 +70,7 @@ freely mixed with 3D geometry, lighting, particles, and post effects. See
 | Scripting | Typed per-feature request buses (Lua, Python, ScriptCanvas) | Working |
 | Gameplay | 2D collision: colliders, triggers, and queries reachable from scripts | Working |
 | Gameplay | Pushbox resolution (`ComputeBoxPushOut` minimum-translation) | Working |
+| Input | Rebindable input action mapping (Button / Axis1D / Axis2D actions) | Working |
 | 2.5D | Parallax background layers | Working |
 | Camera | 2D camera controller (follow, deadzone, bounds, shake) | Working |
 | Camera | Versus framing (two-target midpoint) + distance zoom/dolly | Working |
@@ -79,12 +80,15 @@ freely mixed with 3D geometry, lighting, particles, and post effects. See
 | Effects | Sprite materials (flash, outline, emissive/bloom) | Working |
 | Tilemap | In-editor tile paint tool (editor component mode) | Working |
 | Tilemap | Autotiling: 4-bit edge set and 47-tile blob (corner-aware) | Working |
+| Tilemap | Custom rule-tile autotiling (neighbor-mask &rarr; tile offset) | Working |
 | UI | World/screen HUD: text, bars, panels via a typed bus | Working |
 | Post | 2D Look: bloom + vignette over Atom's PostProcess | Working |
 | Post | Retro CRT scanline overlay | Working |
 | Animation | Skeletal cutout clip player (keyframed bone hierarchy) | Working |
 | Animation | Aseprite sprite-sheet import (tags + per-frame timing) | Working |
+| Animation | Animation state machine (parameter-driven clip switching) | Working |
 | Asset pipeline | Native `.aseprite` AssetBuilder (packs atlas + sheet metadata) | Working |
+| Asset pipeline | Native `.aseprite`: indexed + grayscale color depths, separable blend modes | Working |
 | Asset pipeline | Runtime asset reference: play a `.dioramasheet` product directly | Working |
 | Audio | One-shot SFX + music via MiniAudio | Working |
 | Project | `Diorama2DGame` "New 2.5D Game" project template | Working |

@@ -16,7 +16,8 @@ The Diorama request buses (`DioramaSpriteRequestBus`, `DioramaTilemapRequestBus`
 `DioramaParallaxRequestBus`, `Diorama2DColliderRequestBus`,
 `Diorama2DCollisionRequestBus`, `DioramaUIRequestBus`, `DioramaAudioRequestBus`,
 `DioramaCRTRequestBus`, `DioramaLookRequestBus`, `DioramaSkeletalRequestBus`,
-`DioramaAsepriteRequestBus`) are the stable, typed, agent-facing API for driving the gem.
+`DioramaAsepriteRequestBus`, `DioramaInputRequestBus`,
+`DioramaAnimStateMachineRequestBus`) are the stable, typed, agent-facing API for driving the gem.
 The Sprite and Tilemap buses are documented in full first; the rest follow the same
 conventions and are listed after. They are a peer of the
 editor Inspector over the same backing configuration (`SpriteComponentConfig`,
