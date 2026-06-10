@@ -120,7 +120,8 @@ namespace Diorama
                 "AutotileRules",
                 &DioramaTilemapRequestBus::Events::AutotileRules,
                 { { { "baseTileIndex",
-                      "Group base tile; each non-empty cell becomes baseTileIndex + the matching custom rule's offset (or the blob index)." } } })
+                      "Group base tile; each non-empty cell becomes baseTileIndex + the matching custom rule's offset (or the blob "
+                      "index)." } } })
             ->Event(
                 "SetTint",
                 &DioramaTilemapRequestBus::Events::SetTint,

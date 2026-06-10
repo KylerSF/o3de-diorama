@@ -198,10 +198,7 @@ namespace Diorama
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
                     ->DataElement(
-                        AZ::Edit::UIHandlers::Default,
-                        &TilemapAutotileRuleData::m_mask,
-                        "Mask",
-                        "Normalized 8-bit neighbor mask (0..255)")
+                        AZ::Edit::UIHandlers::Default, &TilemapAutotileRuleData::m_mask, "Mask", "Normalized 8-bit neighbor mask (0..255)")
                     ->Attribute(AZ::Edit::Attributes::Min, 0)
                     ->Attribute(AZ::Edit::Attributes::Max, 255)
                     ->DataElement(

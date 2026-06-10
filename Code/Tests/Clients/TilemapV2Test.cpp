@@ -22,12 +22,11 @@ namespace Diorama
     {
         // A fully surrounded cell normalizes to all eight neighbors present.
         const AZ::u8 full = TilemapAutotile::NormalizeBlobMask(
-            TilemapAutotile::N | TilemapAutotile::E | TilemapAutotile::S | TilemapAutotile::W | TilemapAutotile::NE |
-            TilemapAutotile::SE | TilemapAutotile::SW | TilemapAutotile::NW);
+            TilemapAutotile::N | TilemapAutotile::E | TilemapAutotile::S | TilemapAutotile::W | TilemapAutotile::NE | TilemapAutotile::SE |
+            TilemapAutotile::SW | TilemapAutotile::NW);
 
         const TilemapAutotile::RuleEntry rules[1] = { { full, 42 } };
-        const int offset =
-            TilemapAutotile::RuleSetOffset(0xFF, AZStd::span<const TilemapAutotile::RuleEntry>(rules, 1));
+        const int offset = TilemapAutotile::RuleSetOffset(0xFF, AZStd::span<const TilemapAutotile::RuleEntry>(rules, 1));
         EXPECT_EQ(offset, 42);
     }
 
