@@ -357,6 +357,24 @@ entity (its texture + per-frame UV), honoring per-frame durations and tag direct
 | `IsPlaying` | (none) | `bool` | n/a | True while a tag is advancing. |
 | `GetCurrentFrame` | (none) | `int` | n/a | The frame index currently shown. |
 
+## DioramaInputRequestBus
+
+Reads the **2D Input Actions** component: named, rebindable gameplay actions mapped
+from raw input channels (how-to [23-input-actions](../howto/23-input-actions.md)).
+Actions are addressed by their authored names; an unknown name reads as zero / not
+pressed.
+
+| Verb | Signature (after entity id) | Returns | Effect |
+| ---- | --------------------------- | ------- | ------ |
+| `IsPressed` | `action: string` | `bool` | True while the action is held. |
+| `WasPressedThisFrame` | `action: string` | `bool` | True only on the press edge. |
+| `WasReleasedThisFrame` | `action: string` | `bool` | True only on the release edge. |
+| `GetValue` | `action: string` | `float` | Button 0..1, Axis1D [-1,1], or Axis2D X. |
+| `GetValueY` | `action: string` | `float` | Axis2D Y (0 otherwise). |
+
+`DioramaInputNotificationBus` fires `OnActionPressed(action)` /
+`OnActionReleased(action)` on the edges, for event-driven input.
+
 ## Query and verify (the verify loop)
 
 `GetSpriteInfo` returns a `SpriteInfo` and `GetTilemapInfo` returns a

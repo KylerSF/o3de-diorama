@@ -15,6 +15,7 @@
 #include <Clients/DioramaAsepriteComponent.h>
 #include <Clients/DioramaCRTComponent.h>
 #include <Clients/DioramaCamera2DComponent.h>
+#include <Clients/DioramaInputComponent.h>
 #include <Clients/DioramaLightComponent.h>
 #include <Clients/DioramaLookComponent.h>
 #include <Clients/DioramaParallaxComponent.h>
@@ -53,6 +54,7 @@ namespace Diorama
                 DioramaCRTComponent::CreateDescriptor(),
                 DioramaLookComponent::CreateDescriptor(),
                 DioramaSkeletalClipComponent::CreateDescriptor(),
+                DioramaInputComponent::CreateDescriptor(),
                 DioramaAsepriteComponent::CreateDescriptor(),
             });
     }
