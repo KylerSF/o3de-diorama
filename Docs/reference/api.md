@@ -374,6 +374,28 @@ pressed.
 
 `DioramaInputNotificationBus` fires `OnActionPressed(action)` /
 `OnActionReleased(action)` on the edges, for event-driven input.
+## DioramaAnimStateMachineRequestBus
+
+Drives the **2D Animation State Machine** component: a parameter-driven graph that
+decides which clip plays from game state, then plays it through the Sprite/Aseprite
+component on the target entity (how-to
+[22-anim-state-machine](../howto/22-anim-state-machine.md)). Parameters and states
+are addressed by the names authored in the Inspector; an unknown name is ignored.
+
+| Verb | Signature (after entity id) | Returns | Clamping | Effect |
+| ---- | --------------------------- | ------- | -------- | ------ |
+| `SetBool` | `name: string, value: bool` | void | Unknown name ignored. | Set a Bool parameter. |
+| `SetFloat` | `name: string, value: float` | void | Unknown name ignored. | Set a Float parameter. |
+| `SetTrigger` | `name: string` | void | Unknown name ignored. | Pulse a Trigger; fires a matching transition once, then auto-clears. |
+| `ResetTrigger` | `name: string` | void | Unknown name ignored. | Clear a pending Trigger before it fires. |
+| `Play` | `stateName: string` | void | Unknown name = no change. | Force a state immediately, bypassing transitions. |
+| `GetCurrentState` | (none) | `string` | n/a | Name of the current state (empty if not entered). |
+| `GetBool` | `name: string` | `bool` | n/a | Current Bool/Trigger value (false if unknown). |
+| `GetFloat` | `name: string` | `float` | n/a | Current Float value (0 if unknown). |
+
+`DioramaAnimStateMachineNotificationBus` fires `OnStateChanged(fromState, toState)`
+on every state entry (`fromState` empty for the initial state), for event-driven
+logic and headless verification.
 
 ## Query and verify (the verify loop)
 

@@ -26,6 +26,8 @@ set(FILES
     Source/Tools/EditorDioramaSkeletalClipComponent.h
     Source/Tools/EditorDioramaInputComponent.cpp
     Source/Tools/EditorDioramaInputComponent.h
+    Source/Tools/EditorDioramaAnimStateMachineComponent.cpp
+    Source/Tools/EditorDioramaAnimStateMachineComponent.h
     Source/Tools/EditorDioramaAsepriteComponent.cpp
     Source/Tools/EditorDioramaAsepriteComponent.h
     Source/Tools/EditorTilemapPaintComponentMode.cpp

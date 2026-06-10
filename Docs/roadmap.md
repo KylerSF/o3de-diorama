@@ -259,8 +259,15 @@ Missing table-stakes (no design doc yet):
   rendering a title + score + health bar + panel over the lighting demo. Next:
   textured-image panels (sprite path), a HUD demo + how-to, and porting the
   twin-stick score HUD off LyShine onto the Diorama bus.
-- **Animation state machine.** Flipbook and skeletal give *clips*; character work
-  needs transitions (idle -> run -> jump) with conditions and blends.
+- **Animation state machine.** **Shipped (v1)**
+  ([design/2d-animation-state-machine.md](design/2d-animation-state-machine.md),
+  [howto/22-anim-state-machine.md](howto/22-anim-state-machine.md)): a
+  parameter-driven graph (Bool/Float/Trigger parameters, conditions, exit-time and
+  Any-State transitions) on the pure tested `AnimStateMachine.h` core, driven through
+  `DioramaAnimStateMachineRequestBus` and playing the bound Sprite-sheet or Aseprite
+  tag on the target each state change (with an `OnStateChanged` notification). Flipbook
+  and skeletal give *clips*; this decides which one plays. Remaining (v2): blend trees
+  / cross-fades.
 - **Input action-mapping.** **Shipped**
   ([howto/23-input-actions.md](howto/23-input-actions.md)): a rebindable surface of
   named actions (Button / Axis1D / Axis2D, per-action dead zone + press threshold)

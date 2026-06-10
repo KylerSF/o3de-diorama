@@ -138,6 +138,19 @@ namespace Diorama
     inline constexpr const char* DioramaInputBindingDataTypeId = "{B2243546-5768-4091-A2A3-B4C5D6E7F906}";
     inline constexpr const char* InputActionKindTypeId = "{C3354657-6879-41A2-B3B4-C5D6E7F80A07}";
     inline constexpr const char* InputAxisTypeId = "{D4465768-798A-42B3-C4C5-D6E7F8091B08}";
+    // 2D animation state machine TypeIds (parameter-driven graph over the existing
+    // Sprite/Aseprite animation players)
+    inline constexpr const char* DioramaAnimStateMachineConfigTypeId = "{A2B1C0D9-1E2F-4A3B-8C4D-5E6F70819201}";
+    inline constexpr const char* DioramaAnimStateMachineComponentTypeId = "{B3C2D1E0-2F30-4B4C-9D5E-6F708192A302}";
+    inline constexpr const char* EditorDioramaAnimStateMachineComponentTypeId = "{C4D3E2F1-3041-4C5D-AE6F-708192A3B403}";
+    inline constexpr const char* DioramaAnimStateMachineRequestsTypeId = "{D5E4F302-4152-4D6E-BF70-8192A3B4C504}";
+    inline constexpr const char* DioramaAnimStateMachineNotificationsTypeId = "{E6F50413-5263-4E7F-A081-92A3B4C5D605}";
+    inline constexpr const char* AnimStateDataTypeId = "{F7061524-6374-4F80-B192-A3B4C5D6E706}";
+    inline constexpr const char* AnimParamDataTypeId = "{08172635-7485-4091-A2A3-B4C5D6E7F807}";
+    inline constexpr const char* AnimConditionDataTypeId = "{19283746-8596-41A2-B3B4-C5D6E7F80908}";
+    inline constexpr const char* AnimTransitionDataTypeId = "{2A394857-96A7-42B3-C4C5-D6E7F8091A09}";
+    inline constexpr const char* AnimSMParamKindTypeId = "{3B4A5968-A7B8-43C4-D5D6-E7F8091A2B0A}";
+    inline constexpr const char* AnimSMCompareTypeId = "{4C5B6A79-B8C9-44D5-E6E7-F8091A2B3C0B}";
 
     // AI-facing 2D collision API TypeIds
     inline constexpr const char* Diorama2DColliderRequestsTypeId = "{908C687A-9799-4BD9-9E82-3368D3BAEA03}";
