@@ -248,6 +248,26 @@ namespace Diorama
         }
         AZ::Vector3 worldPos = AZ::Vector3::CreateZero();
         AZ::TransformBus::EventResult(worldPos, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
+
+        // Per-tile collision builds boxes from the tile grid directly into the X,Z
+        // collision plane and ignores the entity's rotation. Warn (once) if the
+        // tilemap is rotated, since the colliders would then not line up with the
+        // rendered tiles -- a silent mismatch otherwise. Keep collidable tilemaps
+        // axis-aligned in the X,Z plane.
+        AZ::Quaternion rotation = AZ::Quaternion::CreateIdentity();
+        AZ::TransformBus::EventResult(rotation, GetEntityId(), &AZ::TransformBus::Events::GetWorldRotationQuaternion);
+        if (!m_warnedNonAxisAligned && !rotation.IsClose(AZ::Quaternion::CreateIdentity()))
+        {
+            m_warnedNonAxisAligned = true;
+            AZ_Warning(
+                "Diorama",
+                false,
+                "Tilemap %s has Solid Tiles but is rotated; per-tile collision assumes the tilemap is axis-aligned in "
+                "the X,Z collision plane, so the generated colliders will not line up with the rendered tiles. Keep a "
+                "collidable tilemap un-rotated.",
+                GetEntityId().ToString().c_str());
+        }
+
         world->SetStaticColliders(
             GetEntityId(), BuildTilemapColliders(m_config, worldPos.GetX(), worldPos.GetZ(), m_config.m_collisionLayer));
     }
