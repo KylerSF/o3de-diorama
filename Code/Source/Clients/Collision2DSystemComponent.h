@@ -37,6 +37,15 @@ namespace Diorama
         virtual void RemoveCollider(AZ::EntityId entityId) = 0;
         //! Number of colliders this entity currently overlaps (for GetColliderInfo).
         virtual int GetContactCount(AZ::EntityId entityId) const = 0;
+
+        //! Register a set of STATIC colliders owned by one entity (e.g. a tilemap's
+        //! solid-tile boxes). Unlike UpsertCollider these are query-only blocking
+        //! geometry: they participate in overlap / raycast / push-out (so a moving
+        //! collider resolves against them) but do not generate contact-pair
+        //! begin/stay/end notifications. An empty set clears the owner's static set.
+        virtual void SetStaticColliders(AZ::EntityId owner, const AZStd::vector<Collision2D::Collider>& colliders) = 0;
+        //! Remove an owner's static collider set.
+        virtual void ClearStaticColliders(AZ::EntityId owner) = 0;
     };
 
     using Collision2DWorld = AZ::Interface<Collision2DWorldRequests>;
@@ -81,6 +90,8 @@ namespace Diorama
         // Collision2DWorldRequests
         void UpsertCollider(AZ::EntityId entityId, const Collision2D::Collider& collider) override;
         void RemoveCollider(AZ::EntityId entityId) override;
+        void SetStaticColliders(AZ::EntityId owner, const AZStd::vector<Collision2D::Collider>& colliders) override;
+        void ClearStaticColliders(AZ::EntityId owner) override;
 
         // Diorama2DCollisionRequestBus
         AZStd::vector<AZ::EntityId> OverlapCircle(float x, float z, float radius, AZ::u32 layerMask) override;
@@ -107,6 +118,10 @@ namespace Diorama
         //! Registered colliders, keyed by owning entity. Values carry the current
         //! center (pushed by the component on move) and shape/layer/trigger flags.
         AZStd::unordered_map<AZ::EntityId, Collision2D::Collider> m_colliders;
+
+        //! Static, query-only collider sets keyed by owning entity (tilemap solid
+        //! tiles). Included in overlap/raycast/push-out but not in contact dispatch.
+        AZStd::unordered_map<AZ::EntityId, AZStd::vector<Collision2D::Collider>> m_staticSets;
 
         Collision2D::ContactTracker m_tracker;
 

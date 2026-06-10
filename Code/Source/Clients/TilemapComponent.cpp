@@ -5,18 +5,68 @@
  * SPDX-License-Identifier: Apache-2.0 OR MIT
  */
 
+#include <Clients/Collision2DSystemComponent.h>
 #include <Clients/DioramaAssetUtils.h>
+#include <Clients/TilemapCollision.h>
 #include <Clients/TilemapComponent.h>
 #include <Diorama/TilemapBus.h>
 
 #include <Atom/RPI.Reflect/Image/StreamingImageAsset.h>
 
+#include <AzCore/Component/TransformBus.h>
 #include <AzCore/Serialization/EditContext.h>
 #include <AzCore/Serialization/EditContextConstants.inl>
 #include <AzCore/Serialization/SerializeContext.h>
 
 namespace Diorama
 {
+    AZStd::vector<Collision2D::Collider> BuildTilemapColliders(
+        const TilemapComponentConfig& config, float worldX, float worldZ, AZ::u32 layer)
+    {
+        AZStd::vector<Collision2D::Collider> boxes;
+        if (config.m_solidTiles.empty())
+        {
+            return boxes;
+        }
+
+        const int columns = config.GetColumns();
+        const int rows = config.GetRows();
+        const auto isSolid = [&config](int col, int row)
+        {
+            const AZ::s32 tile = config.GetTile(col, row);
+            for (const AZ::s32 solid : config.m_solidTiles)
+            {
+                if (solid == tile)
+                {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        const AZStd::vector<TilemapCollision::CellBox> cells = TilemapCollision::MergeSolidCells(columns, rows, isSolid);
+        const float tileW = config.m_tileSize.GetX();
+        const float tileH = config.m_tileSize.GetY();
+        boxes.reserve(cells.size());
+        for (const TilemapCollision::CellBox& cell : cells)
+        {
+            // Average the two corner cells' local centers (cells are uniform), then
+            // offset by the entity's world position in the X,Z collision plane.
+            const AZ::Vector3 localMin = config.GetTileLocalPosition(cell.m_col, cell.m_row);
+            const AZ::Vector3 localMax = config.GetTileLocalPosition(cell.m_col + cell.m_width - 1, cell.m_row + cell.m_height - 1);
+
+            Collision2D::Collider box;
+            box.m_center =
+                AZ::Vector2(worldX + 0.5f * (localMin.GetX() + localMax.GetX()), worldZ + 0.5f * (localMin.GetZ() + localMax.GetZ()));
+            box.m_shape.m_type = Collision2D::ShapeType::Box;
+            box.m_shape.m_halfExtents =
+                AZ::Vector2(0.5f * tileW * static_cast<float>(cell.m_width), 0.5f * tileH * static_cast<float>(cell.m_height));
+            box.m_layer = (layer == 0u) ? 1u : layer;
+            boxes.push_back(box);
+        }
+        return boxes;
+    }
+
     TilemapComponent::TilemapComponent(const TilemapComponentConfig& config)
         : m_config(config)
     {
@@ -89,12 +139,18 @@ namespace Diorama
                 // A verb may have assigned a different tilemap asset (SetTilemapByPath);
                 // load and apply it if the id changed.
                 RefreshTilemapAsset();
+                // Tiles or solid-set may have changed: refresh the collision boxes.
+                RebuildCollision();
             });
 
         // Asset-reference mode: when a compiled tilemap asset is assigned, load it
         // and apply it on ready (over the inline config). With none, the inline
         // config the presenter already has is authoritative.
         RefreshTilemapAsset();
+
+        // Register solid-tile collision (inline-tile maps; asset-driven maps rebuild in
+        // ApplyTilemapAsset once the grid loads).
+        RebuildCollision();
     }
 
     void TilemapComponent::RefreshTilemapAsset()
@@ -118,6 +174,10 @@ namespace Diorama
     {
         AZ::Data::AssetBus::Handler::BusDisconnect();
         m_extraLayers.Clear();
+        if (auto* world = Collision2DWorld::Get())
+        {
+            world->ClearStaticColliders(GetEntityId());
+        }
         m_requestHandler.Disconnect();
         m_presenter.Disconnect();
     }
@@ -170,5 +230,25 @@ namespace Diorama
 
         // Render every layer beyond the first as additional batched layers.
         m_extraLayers.Rebuild(GetEntityId(), asset);
+
+        RebuildCollision();
+    }
+
+    void TilemapComponent::RebuildCollision()
+    {
+        auto* world = Collision2DWorld::Get();
+        if (world == nullptr)
+        {
+            return; // no collision world in this context (e.g. a renderer-only tool)
+        }
+        if (m_config.m_solidTiles.empty())
+        {
+            world->ClearStaticColliders(GetEntityId());
+            return;
+        }
+        AZ::Vector3 worldPos = AZ::Vector3::CreateZero();
+        AZ::TransformBus::EventResult(worldPos, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
+        world->SetStaticColliders(
+            GetEntityId(), BuildTilemapColliders(m_config, worldPos.GetX(), worldPos.GetZ(), m_config.m_collisionLayer));
     }
 } // namespace Diorama

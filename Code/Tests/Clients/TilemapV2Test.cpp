@@ -13,6 +13,8 @@
 
 #include <Clients/TilemapAutotile.h>
 #include <Clients/TilemapCollision.h>
+#include <Clients/TilemapComponent.h>
+#include <Diorama/TilemapComponentConfig.h>
 
 namespace Diorama
 {
@@ -138,5 +140,46 @@ namespace Diorama
         EXPECT_NEAR(world.m_halfHeight, 5.0f, 1e-4f);
         EXPECT_NEAR(world.m_centerX, 10.0f, 1e-4f); // spans X [0,20] -> center 10
         EXPECT_NEAR(world.m_centerY, -5.0f, 1e-4f); // row grows downward -> negative Y
+    }
+
+    // ---- BuildTilemapColliders: config solid tiles -> merged world boxes ----------
+
+    TEST(TilemapCollisionTest, BuildTilemapCollidersMergesSolidRow)
+    {
+        TilemapComponentConfig config;
+        config.m_columns = 3;
+        config.m_rows = 1;
+        config.m_tileSize = AZ::Vector2(2.0f, 2.0f);
+        config.SetTile(0, 0, 5);
+        config.SetTile(1, 0, 5);
+        config.SetTile(2, 0, 5);
+        config.m_solidTiles = { 5 };
+
+        const AZStd::vector<Collision2D::Collider> boxes = BuildTilemapColliders(config, 0.0f, 0.0f, 4u);
+        ASSERT_EQ(boxes.size(), 1u); // a 3-wide solid run merges into one box
+        EXPECT_EQ(boxes[0].m_shape.m_type, Collision2D::ShapeType::Box);
+        EXPECT_NEAR(boxes[0].m_shape.m_halfExtents.GetX(), 3.0f, 1e-4f); // 3 cells * 2 / 2
+        EXPECT_NEAR(boxes[0].m_shape.m_halfExtents.GetY(), 1.0f, 1e-4f); // 1 cell * 2 / 2
+        EXPECT_NEAR(boxes[0].m_center.GetX(), 0.0f, 1e-4f); // grid centered on the origin
+        EXPECT_EQ(boxes[0].m_layer, 4u);
+    }
+
+    TEST(TilemapCollisionTest, BuildTilemapCollidersHonorsSolidSetAndWorldOffset)
+    {
+        TilemapComponentConfig config;
+        config.m_columns = 2;
+        config.m_rows = 1;
+        config.m_tileSize = AZ::Vector2(1.0f, 1.0f);
+        config.SetTile(0, 0, 1); // solid
+        config.SetTile(1, 0, 9); // not in the solid set
+        config.m_solidTiles = { 1 };
+
+        const auto boxes = BuildTilemapColliders(config, 100.0f, 50.0f, 1u);
+        ASSERT_EQ(boxes.size(), 1u); // only the tile-1 cell is solid
+        EXPECT_NEAR(boxes[0].m_shape.m_halfExtents.GetX(), 0.5f, 1e-4f);
+        EXPECT_GT(boxes[0].m_center.GetX(), 99.0f); // offset by the world position
+
+        config.m_solidTiles.clear();
+        EXPECT_TRUE(BuildTilemapColliders(config, 0.0f, 0.0f, 1u).empty());
     }
 } // namespace Diorama
