@@ -81,9 +81,15 @@ the current frame's UV rect each tick.
 ## Scope
 
 Two import paths are supported: the standard **non-trimmed sprite-sheet export** (PNG +
-JSON, imported in the editor), and the native **`.aseprite` binary** directly (layers,
-cels, blend modes, no export step) via the AssetBuilder, which packs a `.dioramasheet`
-you reference as above. Both reuse the same `Document` model and timeline, and the binary
-format is parsed ourselves (the documented open format) rather than bundling any
-third-party runtime, keeping the licensing clean. Trimmed-frame source offsets and slices
-are follow-ups.
+JSON, imported in the editor), and the native **`.aseprite` binary** directly (no export
+step) via the AssetBuilder, which packs a `.dioramasheet` you reference as above. Both
+reuse the same `Document` model and timeline, and the binary format is parsed ourselves
+(the documented open format) rather than bundling any third-party runtime, keeping the
+licensing clean.
+
+The native reader handles all three Aseprite **color depths** -- RGBA, grayscale, and
+indexed (resolved through the file's palette and transparent index) -- and composites
+layers with the **separable blend modes** (multiply, screen, overlay, darken, lighten,
+dodge, burn, hard/soft light, difference, exclusion, addition, subtract, divide). The
+non-separable HSL modes (hue, saturation, color, luminosity) fall back to normal, and
+trimmed-frame source offsets and slices are follow-ups.

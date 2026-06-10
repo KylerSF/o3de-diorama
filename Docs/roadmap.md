@@ -141,10 +141,15 @@ What makes a 2D game look modern/AAA, and what pure-2D engines do awkwardly:
   **Native binary (phase 1) shipped**: `AsepriteBinary.h/.cpp` parses the native
   `.aseprite`/`.ase` container (header, frames, layers, cels incl. ZLIB-compressed via
   AzCore's portable inflate, tags) into an in-memory model and composites visible
-  layers per frame to RGBA; bounds-checked against untrusted input; v1 is 32-bpp RGBA.
-  Remaining (phase 2): the asset builder that packs the composited frames into an atlas
-  product (delegating compression to the image pipeline) and feeds the existing Aseprite
-  component/bus; then indexed/grayscale color depths and non-normal blend modes.
+  layers per frame to RGBA; bounds-checked against untrusted input. **Phase 2 shipped**:
+  `DioramaAsepriteBuilder` registers `*.aseprite`/`*.ase`, parses the native binary,
+  packs the composited frames to a grid atlas, and emits the image + sheet-metadata
+  products that the Aseprite component/bus already consume. **Phase 3 shipped**: all
+  three color depths (32-bpp RGBA, 16-bpp grayscale, 8-bpp indexed via the palette
+  chunk + transparent index) and the separable layer blend modes (multiply/screen/
+  overlay/darken/lighten/dodge/burn/hard+soft-light/difference/exclusion/add/subtract/
+  divide), on the pure tested `BlendModeChannel` + crafted-file parser tests; the HSL
+  modes (hue/sat/color/luminosity) remain a documented fall-back to normal.
 - **In-editor sprite/atlas slicer + animation clip editor** (M). Define frames,
   fps, loop, and frame events visually. **Design done**
   ([design/2d-editor-authoring.md](design/2d-editor-authoring.md)): a Qt front-end

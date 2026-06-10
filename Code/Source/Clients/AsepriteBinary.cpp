@@ -11,6 +11,7 @@
 #include <AzCore/Math/MathUtils.h>
 #include <AzCore/std/utils.h>
 
+#include <cmath>
 #include <cstring>
 
 namespace Diorama::Aseprite
@@ -22,7 +23,61 @@ namespace Diorama::Aseprite
         constexpr AZ::u32 ChunkLayer = 0x2004;
         constexpr AZ::u32 ChunkCel = 0x2005;
         constexpr AZ::u32 ChunkTags = 0x2018;
+        constexpr AZ::u32 ChunkPalette = 0x2019; //!< modern palette chunk (indexed mode)
         constexpr int MaxDimension = 16384; //!< guard against absurd canvas/cel sizes from a bad file
+        constexpr int MaxPaletteEntries = 256;
+
+        //! Expand one cel's raw pixel buffer (bytesPerPixel per pixel: 4=RGBA, 2=grayscale
+        //! value+alpha, 1=indexed) into straight RGBA. For indexed pixels, the palette
+        //! supplies the color and the transparent index maps to a fully transparent texel;
+        //! an out-of-range index is treated as transparent too (defensive against bad data).
+        void ExpandToRgba(
+            const AZ::u8* raw,
+            size_t pixelCount,
+            int bytesPerPixel,
+            const AZStd::vector<AZ::u8>& palette,
+            AZ::u8 transparentIndex,
+            AZ::u8* dst)
+        {
+            if (bytesPerPixel == 4)
+            {
+                ::memcpy(dst, raw, pixelCount * 4);
+                return;
+            }
+            if (bytesPerPixel == 2) // grayscale: value, alpha
+            {
+                for (size_t i = 0; i < pixelCount; ++i)
+                {
+                    const AZ::u8 value = raw[i * 2];
+                    const AZ::u8 alpha = raw[i * 2 + 1];
+                    dst[i * 4 + 0] = value;
+                    dst[i * 4 + 1] = value;
+                    dst[i * 4 + 2] = value;
+                    dst[i * 4 + 3] = alpha;
+                }
+                return;
+            }
+            // indexed: one palette index per pixel
+            for (size_t i = 0; i < pixelCount; ++i)
+            {
+                const AZ::u8 index = raw[i];
+                const size_t base = static_cast<size_t>(index) * 4;
+                if (index == transparentIndex || base + 3 >= palette.size())
+                {
+                    dst[i * 4 + 0] = 0;
+                    dst[i * 4 + 1] = 0;
+                    dst[i * 4 + 2] = 0;
+                    dst[i * 4 + 3] = 0;
+                }
+                else
+                {
+                    dst[i * 4 + 0] = palette[base + 0];
+                    dst[i * 4 + 1] = palette[base + 1];
+                    dst[i * 4 + 2] = palette[base + 2];
+                    dst[i * 4 + 3] = palette[base + 3];
+                }
+            }
+        }
 
         //! Bounds-checked, little-endian byte reader over an untrusted buffer. Any read
         //! past the end sets a sticky failure flag and returns 0, so the parser can read
@@ -163,8 +218,11 @@ namespace Diorama::Aseprite
             return destSize == 0;
         }
 
-        //! Normal alpha-over of src (premultiplied by a) onto dst, both straight RGBA.
-        void BlendPixelOver(AZ::u8* dst, const AZ::u8* src, float coverage)
+        //! Alpha-over of src onto dst (both straight RGBA), with the source color first
+        //! run through the layer's blend mode against the backdrop. The blended color is
+        //! mixed in proportion to the backdrop alpha (PDF compositing), so where there is
+        //! no backdrop the source shows through unchanged.
+        void BlendPixelOver(AZ::u8* dst, const AZ::u8* src, float coverage, int blendMode)
         {
             const float srcA = (static_cast<float>(src[3]) / 255.0f) * coverage;
             if (srcA <= 0.0f)
@@ -175,14 +233,67 @@ namespace Diorama::Aseprite
             const float outA = srcA + dstA * (1.0f - srcA);
             for (int i = 0; i < 3; ++i)
             {
-                const float s = static_cast<float>(src[i]) / 255.0f;
-                const float d = static_cast<float>(dst[i]) / 255.0f;
-                const float o = outA > 0.0f ? (s * srcA + d * dstA * (1.0f - srcA)) / outA : 0.0f;
+                const float cs = static_cast<float>(src[i]) / 255.0f;
+                const float cb = static_cast<float>(dst[i]) / 255.0f;
+                // Source color after blending with the backdrop, weighted by backdrop alpha.
+                const float blended = BlendModeChannel(blendMode, cb, cs);
+                const float s = (1.0f - dstA) * cs + dstA * blended;
+                const float o = outA > 0.0f ? (s * srcA + cb * dstA * (1.0f - srcA)) / outA : 0.0f;
                 dst[i] = static_cast<AZ::u8>(AZ::GetClamp(o, 0.0f, 1.0f) * 255.0f + 0.5f);
             }
             dst[3] = static_cast<AZ::u8>(AZ::GetClamp(outA, 0.0f, 1.0f) * 255.0f + 0.5f);
         }
     } // namespace
+
+    float BlendModeChannel(int blendMode, float backdrop, float source)
+    {
+        const float cb = AZ::GetClamp(backdrop, 0.0f, 1.0f);
+        const float cs = AZ::GetClamp(source, 0.0f, 1.0f);
+        switch (static_cast<BlendMode>(blendMode))
+        {
+        case BlendMode::Multiply:
+            return cb * cs;
+        case BlendMode::Screen:
+            return cb + cs - cb * cs;
+        case BlendMode::Overlay: // = HardLight with operands swapped
+            return cb <= 0.5f ? (2.0f * cb * cs) : (1.0f - 2.0f * (1.0f - cb) * (1.0f - cs));
+        case BlendMode::Darken:
+            return AZ::GetMin(cb, cs);
+        case BlendMode::Lighten:
+            return AZ::GetMax(cb, cs);
+        case BlendMode::ColorDodge:
+            return cs >= 1.0f ? 1.0f : AZ::GetMin(1.0f, cb / (1.0f - cs));
+        case BlendMode::ColorBurn:
+            return cs <= 0.0f ? 0.0f : (1.0f - AZ::GetMin(1.0f, (1.0f - cb) / cs));
+        case BlendMode::HardLight:
+            return cs <= 0.5f ? (2.0f * cb * cs) : (1.0f - 2.0f * (1.0f - cb) * (1.0f - cs));
+        case BlendMode::SoftLight:
+        {
+            // W3C soft-light.
+            if (cs <= 0.5f)
+            {
+                return cb - (1.0f - 2.0f * cs) * cb * (1.0f - cb);
+            }
+            const float d = cb <= 0.25f ? (((16.0f * cb - 12.0f) * cb + 4.0f) * cb) : std::sqrt(cb);
+            return cb + (2.0f * cs - 1.0f) * (d - cb);
+        }
+        case BlendMode::Difference:
+            return std::fabs(cb - cs);
+        case BlendMode::Exclusion:
+            return cb + cs - 2.0f * cb * cs;
+        case BlendMode::Addition:
+            return AZ::GetMin(1.0f, cb + cs);
+        case BlendMode::Subtract:
+            return AZ::GetMax(0.0f, cb - cs);
+        case BlendMode::Divide:
+            return cs <= 0.0f ? 1.0f : AZ::GetMin(1.0f, cb / cs);
+        case BlendMode::Normal:
+        default:
+            // Normal and the non-separable HSL modes (Hue/Saturation/Color/Luminosity)
+            // fall back to passing the source through unchanged.
+            return cs;
+        }
+    }
 
     bool ParseAsepriteBinary(AZStd::span<const AZ::u8> bytes, BinarySprite& out)
     {
@@ -194,22 +305,33 @@ namespace Diorama::Aseprite
         const AZ::u16 frameCount = reader.U16();
         const AZ::u16 width = reader.U16();
         const AZ::u16 height = reader.U16();
-        const AZ::u16 colorDepth = reader.U16();
-        reader.Skip(114); // remainder of the 128-byte header
+        const AZ::u16 colorDepth = reader.U16(); // bits per pixel: 32 RGBA, 16 grayscale, 8 indexed
+        reader.U32(); // flags
+        reader.U16(); // speed (deprecated)
+        reader.U32(); // 0
+        reader.U32(); // 0
+        const AZ::u8 transparentIndex = reader.U8(); // palette index treated as transparent (indexed mode)
+        reader.Skip(3); // ignore
+        reader.U16(); // number of colors
+        reader.Skip(94); // remainder of the 128-byte header
         if (!reader.Ok() || magic != FileMagic)
         {
             return false;
         }
-        if (colorDepth != 32) // v1: RGBA only
+        if (colorDepth != 32 && colorDepth != 16 && colorDepth != 8)
         {
             return false;
         }
+        const int bytesPerPixel = colorDepth / 8; // 4, 2, or 1
         if (width == 0 || height == 0 || width > MaxDimension || height > MaxDimension)
         {
             return false;
         }
         out.m_width = width;
         out.m_height = height;
+
+        // Palette for indexed mode, filled by the palette chunk (RGBA per entry).
+        AZStd::vector<AZ::u8> palette;
 
         for (AZ::u16 f = 0; f < frameCount; ++f)
         {
@@ -298,15 +420,18 @@ namespace Diorama::Aseprite
                         {
                             return false;
                         }
-                        const size_t expected = static_cast<size_t>(cw) * ch * 4;
+                        const size_t pixelCount = static_cast<size_t>(cw) * ch;
+                        const size_t rawExpected = pixelCount * static_cast<size_t>(bytesPerPixel);
                         cel.m_width = cw;
                         cel.m_height = ch;
-                        cel.m_rgba.resize(expected);
-                        if (expected > 0)
+                        cel.m_rgba.resize(pixelCount * 4);
+                        if (pixelCount > 0)
                         {
+                            // Read/inflate the cel's native-depth pixels, then expand to RGBA.
+                            AZStd::vector<AZ::u8> rawPixels(rawExpected);
                             if (celType == 0)
                             {
-                                if (!reader.ReadBytes(cel.m_rgba.data(), expected))
+                                if (!reader.ReadBytes(rawPixels.data(), rawExpected))
                                 {
                                     return false;
                                 }
@@ -316,12 +441,16 @@ namespace Diorama::Aseprite
                                 const size_t compLen = chunkEnd - reader.Pos();
                                 if (reader.Pos() + compLen > bytes.size() ||
                                     !InflateExact(
-                                        reader.Ptr(), static_cast<AZ::u32>(compLen), cel.m_rgba.data(), static_cast<AZ::u32>(expected)))
+                                        reader.Ptr(),
+                                        static_cast<AZ::u32>(compLen),
+                                        rawPixels.data(),
+                                        static_cast<AZ::u32>(rawExpected)))
                                 {
                                     return false;
                                 }
                                 reader.Skip(compLen);
                             }
+                            ExpandToRgba(rawPixels.data(), pixelCount, bytesPerPixel, palette, transparentIndex, cel.m_rgba.data());
                         }
                         frame.m_cels.push_back(AZStd::move(cel));
                     }
@@ -347,6 +476,42 @@ namespace Diorama::Aseprite
                         }
                     }
                     // celType 3 (tilemap) is not supported in v1; the chunk is skipped below.
+                }
+                else if (chunkType == ChunkPalette)
+                {
+                    const AZ::u32 newSize = reader.U32();
+                    const AZ::u32 first = reader.U32();
+                    const AZ::u32 last = reader.U32();
+                    reader.Skip(8); // reserved
+                    if (!reader.Ok() || newSize > MaxPaletteEntries || first > last || last >= newSize)
+                    {
+                        return false;
+                    }
+                    if (palette.size() < static_cast<size_t>(newSize) * 4)
+                    {
+                        palette.resize(static_cast<size_t>(newSize) * 4, 0);
+                    }
+                    for (AZ::u32 e = first; e <= last; ++e)
+                    {
+                        const AZ::u16 entryFlags = reader.U16();
+                        const AZ::u8 r = reader.U8();
+                        const AZ::u8 g = reader.U8();
+                        const AZ::u8 b = reader.U8();
+                        const AZ::u8 a = reader.U8();
+                        if (entryFlags & 0x1)
+                        {
+                            reader.ReadString(); // entry name (unused)
+                        }
+                        if (!reader.Ok())
+                        {
+                            return false;
+                        }
+                        const size_t base = static_cast<size_t>(e) * 4;
+                        palette[base + 0] = r;
+                        palette[base + 1] = g;
+                        palette[base + 2] = b;
+                        palette[base + 3] = a;
+                    }
                 }
                 else if (chunkType == ChunkTags)
                 {
@@ -435,7 +600,7 @@ namespace Diorama::Aseprite
                         }
                         const AZ::u8* src = &cel.m_rgba[(static_cast<size_t>(cy) * cel.m_width + cx) * 4];
                         AZ::u8* dst = &image.m_rgba[(static_cast<size_t>(dy) * sprite.m_width + dx) * 4];
-                        BlendPixelOver(dst, src, coverage);
+                        BlendPixelOver(dst, src, coverage, layer.m_blendMode);
                     }
                 }
             }

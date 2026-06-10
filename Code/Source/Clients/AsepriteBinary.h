@@ -23,21 +23,56 @@
 // and composite each frame's visible layers into an RGBA image. Phase 2 packs those
 // frames into an atlas product and wires them to the Sprite/Aseprite component.
 //
-// v1 supports 32-bpp RGBA color depth (the common export); indexed/grayscale and
-// non-normal layer blend modes are documented follow-ups. The parser treats the file
-// as untrusted: every offset and length is bounds-checked before a read, so a
-// malformed file fails cleanly instead of over-reading (the VISION untrusted-asset
-// criterion). The ZLIB inflate uses AzCore's portable wrapper (no new dependency,
-// Windows-safe).
+// Supports all three Aseprite color depths: 32-bpp RGBA, 16-bpp grayscale
+// (value + alpha), and 8-bpp indexed (a palette index per pixel, resolved through the
+// file's palette chunk, with the header's transparent index mapped to a clear texel).
+// Layer compositing honors the separable blend modes (multiply, screen, overlay,
+// darken, lighten, dodge, burn, hard/soft light, difference, exclusion, addition,
+// subtract, divide); the non-separable HSL modes (hue/saturation/color/luminosity)
+// fall back to normal. The parser treats the file as untrusted: every offset and
+// length is bounds-checked before a read, so a malformed file fails cleanly instead of
+// over-reading (the VISION untrusted-asset criterion). The ZLIB inflate uses AzCore's
+// portable wrapper (no new dependency, Windows-safe).
 namespace Diorama::Aseprite
 {
+    //! Aseprite layer blend modes, in the file's numeric order. Only the separable
+    //! modes are composited exactly; the HSL modes fall back to Normal (see
+    //! BlendModeChannel).
+    enum class BlendMode : int
+    {
+        Normal = 0,
+        Multiply = 1,
+        Screen = 2,
+        Overlay = 3,
+        Darken = 4,
+        Lighten = 5,
+        ColorDodge = 6,
+        ColorBurn = 7,
+        HardLight = 8,
+        SoftLight = 9,
+        Difference = 10,
+        Exclusion = 11,
+        Hue = 12,
+        Saturation = 13,
+        Color = 14,
+        Luminosity = 15,
+        Addition = 16,
+        Subtract = 17,
+        Divide = 18,
+    };
+
+    //! Blend one straight-alpha color channel (backdrop, source each in [0,1]) under the
+    //! given Aseprite blend mode, returning the blended channel in [0,1]. Pure and
+    //! unit-tested; the HSL modes and any unknown value return the source unchanged.
+    float BlendModeChannel(int blendMode, float backdrop, float source);
+
     //! One layer's metadata (cels reference a layer by its 0-based order in the file).
     struct BinaryLayer
     {
         AZStd::string m_name;
         bool m_visible = true;
         AZ::u8 m_opacity = 255;
-        int m_blendMode = 0; //!< 0 = normal; other modes are not composited in v1.
+        int m_blendMode = 0; //!< Aseprite BlendMode value; composited by BlendModeChannel.
     };
 
     //! One decoded cel: a rectangle of RGBA pixels placed at (x, y) on a layer.
@@ -82,9 +117,9 @@ namespace Diorama::Aseprite
     //! on a malformed file or an unsupported color depth (v1 is 32-bpp RGBA only).
     bool ParseAsepriteBinary(AZStd::span<const AZ::u8> bytes, BinarySprite& out);
 
-    //! Composite a frame's visible layers (normal alpha-over, in layer order, honoring
-    //! layer + cel opacity) into a canvas-sized RGBA image. Out-of-range frame -> a
-    //! transparent canvas. Non-normal blend modes fall back to normal in v1.
+    //! Composite a frame's visible layers (alpha-over in layer order, honoring layer +
+    //! cel opacity and each layer's blend mode) into a canvas-sized RGBA image.
+    //! Out-of-range frame -> a transparent canvas.
     FrameImage CompositeFrame(const BinarySprite& sprite, int frameIndex);
 
     //! A packed sprite-sheet: the atlas pixels plus a Document (the JSON-path model:
