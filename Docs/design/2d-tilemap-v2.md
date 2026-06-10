@@ -1,7 +1,7 @@
 # Tilemap v2: rule tiles, animated tiles, per-tile collision
 
-Status: rule tiles **shipped**; per-tile collision **core shipped** (runtime
-collider build pending on-screen verification); animated tiles **designed**.
+Status: rule tiles **shipped**; per-tile collision **shipped** (greedy-mesh core +
+runtime collider registration); animated tiles **designed**.
 
 The base tilemap (atlas grid, multi-layer asset + builder, Tiled import, paint
 tool, 4-bit and 47-blob autotiling, per-tile flip/rotate) is in. v2 closes the
@@ -39,12 +39,17 @@ solid cells into a few large boxes.
   `CellBox`es; `ToWorldBox` turns a cell box into a centered world AABB. Pure and
   unit tested (a full grid collapses to one box; an L-shape covers exactly the solid
   cells with no overlap).
-- **Remaining (needs the editor/runtime pass):** mark which atlas indices are solid
-  on the config, and at activate have the tilemap build static Diorama 2D colliders
-  (one `Collider2DComponent` box per merged region, via the gem-native
-  [collision system](2d-collision.md)). The geometry is ready; wiring the colliders
-  and confirming contacts in play-in-editor is the on-screen step, since it is a
-  physics behaviour, not a pure computation.
+- **Runtime (shipped):** the config gains a **Solid Tiles** set (atlas indices that
+  collide) and a **Collision Layer**. At activate (and whenever the tiles change) the
+  runtime tilemap greedy-meshes its solid cells, converts each merged `CellBox` to a
+  box `Collision2D::Collider` in the world X,Z plane (`BuildTilemapColliders`, unit
+  tested), and registers the set with the collision world via the new
+  `SetStaticColliders(owner, boxes)` path. These are **query-only static geometry**:
+  they participate in overlap / raycast / push-out (so a moving collider blocks against
+  the map) but do not generate per-box contact-begin/stay/end notifications, which keeps
+  the change small and avoids spawning one entity per region. Assumes the tilemap is
+  axis-aligned in the X,Z collision plane (its default orientation). A future option:
+  opt-in contact events, and an oriented-plane mode for rotated maps.
 
 ## 3. Animated tiles (designed)
 

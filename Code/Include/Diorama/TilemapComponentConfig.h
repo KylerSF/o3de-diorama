@@ -99,6 +99,17 @@ namespace Diorama
         //! back to the canonical blob index for every cell.
         AZStd::vector<TilemapAutotileRuleData> m_autotileRules;
 
+        //! Atlas tile indices that count as SOLID for per-tile collision. At runtime
+        //! the tilemap merges its solid cells into a few static collider boxes (greedy
+        //! mesh) registered with the 2D collision world, so a moving collider blocks
+        //! against the map. Empty = no collision. Assumes the tilemap is axis-aligned
+        //! in the X,Z collision plane (its default, un-rotated orientation).
+        AZStd::vector<AZ::s32> m_solidTiles;
+
+        //! Collision category (layer bit) the generated solid-tile boxes belong to, so
+        //! a query/push-out can filter to the map. Default 1.
+        AZ::u32 m_collisionLayer = 1;
+
         // --- Pure helpers (no asset access), shared by the renderer and the bus,
         // and unit-tested independently of any running application. ---
 

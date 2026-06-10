@@ -218,7 +218,7 @@ namespace Diorama
         if (auto* serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
         {
             serializeContext->Class<TilemapComponentConfig, AZ::ComponentConfig>()
-                ->Version(3)
+                ->Version(4)
                 ->Field("tilemapAsset", &TilemapComponentConfig::m_tilemapAsset)
                 ->Field("atlas", &TilemapComponentConfig::m_atlas)
                 ->Field("columns", &TilemapComponentConfig::m_columns)
@@ -229,7 +229,9 @@ namespace Diorama
                 ->Field("tiles", &TilemapComponentConfig::m_tiles)
                 ->Field("tint", &TilemapComponentConfig::m_tint)
                 ->Field("sortOffset", &TilemapComponentConfig::m_sortOffset)
-                ->Field("autotileRules", &TilemapComponentConfig::m_autotileRules);
+                ->Field("autotileRules", &TilemapComponentConfig::m_autotileRules)
+                ->Field("solidTiles", &TilemapComponentConfig::m_solidTiles)
+                ->Field("collisionLayer", &TilemapComponentConfig::m_collisionLayer);
 
             if (auto* editContext = serializeContext->GetEditContext())
             {
@@ -269,7 +271,19 @@ namespace Diorama
                         AZ::Edit::UIHandlers::Default,
                         &TilemapComponentConfig::m_autotileRules,
                         "Autotile Rules",
-                        "Custom neighbor-mask -> offset rules consumed by AutotileRules (empty = canonical blob)");
+                        "Custom neighbor-mask -> offset rules consumed by AutotileRules (empty = canonical blob)")
+                    ->ClassElement(AZ::Edit::ClassElements::Group, "Collision")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &TilemapComponentConfig::m_solidTiles,
+                        "Solid Tiles",
+                        "Atlas tile indices treated as solid; their cells are merged into static collider boxes "
+                        "(empty = no collision). Assumes the tilemap is axis-aligned in the X,Z collision plane")
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default,
+                        &TilemapComponentConfig::m_collisionLayer,
+                        "Collision Layer",
+                        "Collision category bit the solid-tile boxes belong to");
                 // m_tiles is authored through the request bus or a build script,
                 // not the raw inspector (an integer grid is not usefully editable
                 // as a flat array); it is intentionally not an edit element.

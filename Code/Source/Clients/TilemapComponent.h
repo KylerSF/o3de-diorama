@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <Clients/Collision2D.h>
 #include <Clients/TilemapLayers.h>
 #include <Clients/TilemapPresenter.h>
 #include <Clients/TilemapRequestHandler.h>
@@ -14,9 +15,18 @@
 
 #include <AzCore/Asset/AssetCommon.h>
 #include <AzCore/Component/Component.h>
+#include <AzCore/std/containers/vector.h>
 
 namespace Diorama
 {
+    //! Build the static collider boxes for a tilemap's solid tiles: greedy-mesh the
+    //! cells whose tile index is in config.m_solidTiles into a few merged boxes, placed
+    //! in the world X,Z collision plane given the entity's world (X, Z). Pure (config +
+    //! TilemapCollision core + math only), so it is unit tested directly. Returns empty
+    //! when no tiles are solid.
+    AZStd::vector<Collision2D::Collider> BuildTilemapColliders(
+        const TilemapComponentConfig& config, float worldX, float worldZ, AZ::u32 layer);
+
     //! Lightweight runtime component that draws a world-space tilemap: a grid of
     //! atlas cells batched into a single draw call. It holds the configuration and
     //! delegates all rendering to the shared TilemapPresenter. No Qt or tools
@@ -63,6 +73,11 @@ namespace Diorama
         //! resolved to a streaming image id; the inline config is the fallback when
         //! no asset is assigned.
         void ApplyTilemapAsset(const DioramaTilemapAsset& asset);
+
+        //! (Re)register the solid-tile collider boxes with the 2D collision world (or
+        //! clear them when no tiles are solid / no collision world is present). Called
+        //! on activate and whenever the tiles change.
+        void RebuildCollision();
 
         TilemapComponentConfig m_config;
         TilemapPresenter m_presenter;

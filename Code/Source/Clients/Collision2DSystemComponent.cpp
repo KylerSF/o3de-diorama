@@ -75,6 +75,7 @@ namespace Diorama
             Collision2DWorld::Unregister(this);
         }
         m_colliders.clear();
+        m_staticSets.clear();
         m_tracker.Clear();
     }
 
@@ -90,6 +91,27 @@ namespace Diorama
     void Collision2DSystemComponent::RemoveCollider(AZ::EntityId entityId)
     {
         m_colliders.erase(entityId);
+    }
+
+    void Collision2DSystemComponent::SetStaticColliders(AZ::EntityId owner, const AZStd::vector<Collision2D::Collider>& colliders)
+    {
+        if (colliders.empty())
+        {
+            m_staticSets.erase(owner);
+            return;
+        }
+        AZStd::vector<Collision2D::Collider>& stored = m_staticSets[owner];
+        stored = colliders;
+        // Pin every box's contact id to the owner (queries report the owner entity).
+        for (Collision2D::Collider& c : stored)
+        {
+            c.m_id = static_cast<AZ::u64>(owner);
+        }
+    }
+
+    void Collision2DSystemComponent::ClearStaticColliders(AZ::EntityId owner)
+    {
+        m_staticSets.erase(owner);
     }
 
     void Collision2DSystemComponent::OnTick([[maybe_unused]] float deltaTime, [[maybe_unused]] AZ::ScriptTimePoint time)
@@ -213,6 +235,22 @@ namespace Diorama
                 result.push_back(entry.first);
             }
         }
+        // Static sets (tilemap solid tiles): one result per owner that overlaps.
+        for (const auto& set : m_staticSets)
+        {
+            for (const Collision2D::Collider& c : set.second)
+            {
+                if (!c.m_enabled || (layerMask != 0u && (c.m_layer & layerMask) == 0u))
+                {
+                    continue;
+                }
+                if (Collision2D::Overlaps(query, c))
+                {
+                    result.push_back(set.first);
+                    break;
+                }
+            }
+        }
         return result;
     }
 
@@ -257,6 +295,22 @@ namespace Diorama
             }
             total += Collision2D::MinimumTranslation(query, c);
         }
+        // Push out of static tilemap geometry too.
+        for (const auto& set : m_staticSets)
+        {
+            if (set.first == exclude)
+            {
+                continue;
+            }
+            for (const Collision2D::Collider& c : set.second)
+            {
+                if (!c.m_enabled || (layerMask != 0u && (c.m_layer & layerMask) == 0u))
+                {
+                    continue;
+                }
+                total += Collision2D::MinimumTranslation(query, c);
+            }
+        }
         return total;
     }
 
@@ -293,6 +347,24 @@ namespace Diorama
                 found = true;
                 bestT = t;
                 bestEntity = entry.first;
+            }
+        }
+        // Static tilemap geometry.
+        for (const auto& set : m_staticSets)
+        {
+            for (const Collision2D::Collider& c : set.second)
+            {
+                if (!c.m_enabled || (layerMask != 0u && (c.m_layer & layerMask) == 0u))
+                {
+                    continue;
+                }
+                float t = 0.0f;
+                if (Collision2D::RaycastCollider(origin, dir, maxDistance, c, t) && (!found || t < bestT))
+                {
+                    found = true;
+                    bestT = t;
+                    bestEntity = set.first;
+                }
             }
         }
 

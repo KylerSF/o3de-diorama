@@ -156,6 +156,31 @@ matches (so a partial rule set still connects). The mask is the 8-bit neighborho
 (N=1, NE=2, E=4, SE=8, S=16, SW=32, W=64, NW=128), normalized so a corner counts
 only when both its edges are present, the same 47-value space the blob scheme uses.
 
+## Solid tiles (collision)
+
+To make a tile world block movement without hand-placing colliders, mark which atlas
+indices are **solid**. In the Tilemap component's **Collision** group, add those
+indices to **Solid Tiles** (and optionally set a **Collision Layer**). At runtime the
+tilemap merges its solid cells into a few large boxes (a greedy mesh, so a wall is one
+box, not one per cell) and registers them with the 2D collision world.
+
+These boxes are **static blocking geometry**: a moving collider resolves against them
+through the collision queries. The common use is to push a character out of walls each
+frame with `ComputeBoxPushOut`:
+
+```lua
+-- Move intent first, then un-penetrate the tilemap (and anything else on layer 1):
+local push = Diorama2DCollisionRequestBus.Broadcast.ComputeBoxPushOut(
+    posX, posZ, halfW, halfH, 1, self.entityId)
+posX = posX + push.x
+posZ = posZ + push.y
+```
+
+`OverlapBox` and `Raycast2D` see the tile boxes too (for ground checks, line-of-sight,
+etc.). Notes: the tile boxes do not fire `OnContactBegin`-style events (they are
+query-only); and per-tile collision assumes the tilemap is axis-aligned in the X,Z
+collision plane (its default, un-rotated orientation).
+
 ## Verifying without a screenshot
 
 `GetTilemapInfo` returns the resolved state: the resolved atlas path, whether the
