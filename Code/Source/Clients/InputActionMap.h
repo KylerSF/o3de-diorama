@@ -118,53 +118,53 @@ namespace Diorama::InputMap
         switch (action.m_kind)
         {
         case ActionKind::Button:
-        {
-            // The strongest contribution wins (any bound key/button presses it).
-            float value = 0.0f;
-            for (const Binding& b : action.m_bindings)
             {
-                const float contribution = std::fabs(ReadSource(sources, b.m_source) * b.m_scale);
-                value = contribution > value ? contribution : value;
+                // The strongest contribution wins (any bound key/button presses it).
+                float value = 0.0f;
+                for (const Binding& b : action.m_bindings)
+                {
+                    const float contribution = std::fabs(ReadSource(sources, b.m_source) * b.m_scale);
+                    value = contribution > value ? contribution : value;
+                }
+                out.m_x = Clamp(value, 0.0f, 1.0f);
+                out.m_pressed = out.m_x >= action.m_pressThreshold;
+                break;
             }
-            out.m_x = Clamp(value, 0.0f, 1.0f);
-            out.m_pressed = out.m_x >= action.m_pressThreshold;
-            break;
-        }
         case ActionKind::Axis1D:
-        {
-            float value = 0.0f;
-            for (const Binding& b : action.m_bindings)
             {
-                value += ReadSource(sources, b.m_source) * b.m_scale;
+                float value = 0.0f;
+                for (const Binding& b : action.m_bindings)
+                {
+                    value += ReadSource(sources, b.m_source) * b.m_scale;
+                }
+                out.m_x = ApplyDeadZone1D(Clamp(value, -1.0f, 1.0f), action.m_deadZone);
+                out.m_pressed = std::fabs(out.m_x) >= action.m_pressThreshold;
+                break;
             }
-            out.m_x = ApplyDeadZone1D(Clamp(value, -1.0f, 1.0f), action.m_deadZone);
-            out.m_pressed = std::fabs(out.m_x) >= action.m_pressThreshold;
-            break;
-        }
         case ActionKind::Axis2D:
-        {
-            float x = 0.0f;
-            float y = 0.0f;
-            for (const Binding& b : action.m_bindings)
             {
-                const float v = ReadSource(sources, b.m_source) * b.m_scale;
-                if (b.m_axis == Axis::Y)
+                float x = 0.0f;
+                float y = 0.0f;
+                for (const Binding& b : action.m_bindings)
                 {
-                    y += v;
+                    const float v = ReadSource(sources, b.m_source) * b.m_scale;
+                    if (b.m_axis == Axis::Y)
+                    {
+                        y += v;
+                    }
+                    else
+                    {
+                        x += v;
+                    }
                 }
-                else
-                {
-                    x += v;
-                }
+                x = Clamp(x, -1.0f, 1.0f);
+                y = Clamp(y, -1.0f, 1.0f);
+                ApplyDeadZone2D(x, y, action.m_deadZone);
+                out.m_x = x;
+                out.m_y = y;
+                out.m_pressed = std::sqrt(x * x + y * y) >= action.m_pressThreshold;
+                break;
             }
-            x = Clamp(x, -1.0f, 1.0f);
-            y = Clamp(y, -1.0f, 1.0f);
-            ApplyDeadZone2D(x, y, action.m_deadZone);
-            out.m_x = x;
-            out.m_y = y;
-            out.m_pressed = std::sqrt(x * x + y * y) >= action.m_pressThreshold;
-            break;
-        }
         }
 
         out.m_pressedThisFrame = out.m_pressed && !prevPressed;

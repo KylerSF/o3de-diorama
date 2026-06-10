@@ -24,14 +24,8 @@ namespace Diorama
             ->Attribute(AZ::Script::Attributes::Category, "Diorama/Input")
             ->Attribute(AZ::Script::Attributes::Module, "diorama")
             ->Event("IsPressed", &DioramaInputRequestBus::Events::IsPressed, { { { "action", "Action name." } } })
-            ->Event(
-                "WasPressedThisFrame",
-                &DioramaInputRequestBus::Events::WasPressedThisFrame,
-                { { { "action", "Action name." } } })
-            ->Event(
-                "WasReleasedThisFrame",
-                &DioramaInputRequestBus::Events::WasReleasedThisFrame,
-                { { { "action", "Action name." } } })
+            ->Event("WasPressedThisFrame", &DioramaInputRequestBus::Events::WasPressedThisFrame, { { { "action", "Action name." } } })
+            ->Event("WasReleasedThisFrame", &DioramaInputRequestBus::Events::WasReleasedThisFrame, { { { "action", "Action name." } } })
             ->Event("GetValue", &DioramaInputRequestBus::Events::GetValue, { { { "action", "Action name." } } })
             ->Event("GetValueY", &DioramaInputRequestBus::Events::GetValueY, { { { "action", "Action name." } } });
 

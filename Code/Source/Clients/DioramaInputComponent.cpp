@@ -81,7 +81,8 @@ namespace Diorama
                         "Magnitude at/above which the action counts as pressed")
                     ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
                     ->Attribute(AZ::Edit::Attributes::Max, 1.0f)
-                    ->DataElement(AZ::Edit::UIHandlers::Default, &DioramaInputActionData::m_bindings, "Bindings", "Inputs feeding this action");
+                    ->DataElement(
+                        AZ::Edit::UIHandlers::Default, &DioramaInputActionData::m_bindings, "Bindings", "Inputs feeding this action");
             }
         }
     }
@@ -165,8 +166,7 @@ namespace Diorama
 
         if (auto* serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
         {
-            serializeContext->Class<DioramaInputComponent, AZ::Component>()->Version(1)->Field(
-                "Config", &DioramaInputComponent::m_config);
+            serializeContext->Class<DioramaInputComponent, AZ::Component>()->Version(1)->Field("Config", &DioramaInputComponent::m_config);
         }
 
         ReflectInputBuses(context);

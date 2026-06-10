@@ -19,14 +19,12 @@ namespace Diorama
         // again here or the type registers twice.
         if (auto* serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
         {
-            serializeContext->Class<EditorDioramaInputComponent, AzToolsFramework::Components::EditorComponentBase>()
-                ->Version(1)
-                ->Field("Config", &EditorDioramaInputComponent::m_config);
+            serializeContext->Class<EditorDioramaInputComponent, AzToolsFramework::Components::EditorComponentBase>()->Version(1)->Field(
+                "Config", &EditorDioramaInputComponent::m_config);
 
             if (auto* editContext = serializeContext->GetEditContext())
             {
-                editContext
-                    ->Class<EditorDioramaInputComponent>("2D Input Actions", "Named, rebindable input actions read over a typed bus")
+                editContext->Class<EditorDioramaInputComponent>("2D Input Actions", "Named, rebindable input actions read over a typed bus")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::Category, "Diorama")
                     ->Attribute(AZ::Edit::Attributes::AppearsInAddComponentMenu, AZ_CRC_CE("Game"))

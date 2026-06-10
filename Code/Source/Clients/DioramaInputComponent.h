@@ -23,7 +23,7 @@ namespace AZ
 {
     AZ_TYPE_INFO_SPECIALIZE(Diorama::InputMap::ActionKind, Diorama::InputActionKindTypeId);
     AZ_TYPE_INFO_SPECIALIZE(Diorama::InputMap::Axis, Diorama::InputAxisTypeId);
-}
+} // namespace AZ
 
 namespace Diorama
 {
