@@ -326,7 +326,9 @@ transform over the clip (how-to [18-skeletal](../howto/18-skeletal.md)).
 | `SetSpeed` | `speed: float` | void | None (negative = reverse). | Playback rate multiplier. |
 | `SetLooping` | `looping: bool` | void | None. | Wrap at the end vs. hold the last frame. |
 | `SetDuration` | `seconds: float` | void | `> 0`. | Clip length the normalized time maps onto. |
+| `CrossFadeTo` | `clipName: string, durationSeconds: float` | void | Unknown name ignored; non-positive duration switches instantly. | Blend to a named clip from the config's clip library, easing each bone's pose across the transition, then continue on the target clip. |
 | `IsPlaying` | (none) | `bool` | n/a | True while the clip is advancing. |
+
 ## DioramaAsepriteRequestBus
 
 Drives the **Aseprite Animation** component: it plays named animations (Aseprite

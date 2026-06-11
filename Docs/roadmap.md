@@ -133,8 +133,12 @@ What makes a 2D game look modern/AAA, and what pure-2D engines do awkwardly:
   `DioramaSkeletalRequestBus` + editor twin with a non-destructive pose-scrub
   preview, on the pure tested `SkeletalClip.h` keyframe/easing core; bones are
   descendant entities matched by name, posed via TransformBus each tick
-  ([howto/18-skeletal.md](howto/18-skeletal.md)). Remaining: the DragonBones
-  open-format mesh-deform path (v2, reuses the same sampling core).
+  ([howto/18-skeletal.md](howto/18-skeletal.md)). **Shipped (cross-fade)**: a named
+  clip library + `CrossFadeTo(clip, duration)` that blends the current and target
+  clips per bone over a transition, on the pure tested `SkeletalClip::BlendPose` +
+  `CrossfadeWeight` cores (the same primitives back 1D blend trees later). Remaining:
+  1D blend trees, and the DragonBones open-format mesh-deform path (v2, an open
+  MIT-licensed format the builder can parse, reusing the same sampling core).
 - **2D particle system** (M). A real emitter component (the sample's heart-burst
   pool, generalized): rate/burst, velocity/gravity/drag, size/color over life,
   blend modes. **Design done** ([design/2d-particles.md](design/2d-particles.md)):
@@ -275,17 +279,23 @@ Missing table-stakes (no design doc yet):
   `DioramaInputRequestBus` (values + per-frame pressed/released edges) with
   `OnActionPressed`/`OnActionReleased` notifications. Replaces the twin-stick's raw
   input wiring.
-- **Save/load** of game state, and **off-screen culling** for bullet-hell / large
-  tile scenes (the batch helps, but explicit culling is not there yet).
+- **Off-screen culling.** **Shipped**: the sprite feature processor builds the view
+  frustum each frame and skips any sprite whose bounding sphere is fully outside the
+  side planes, on the pure tested `SpriteCull.h` core (conservative and
+  reverse-depth-independent, so it never hides a visible sprite; toggled by
+  `r_dioramaSpriteCull`). Saves the vertex packing and draw for off-screen sprites in
+  large sparse scenes. (Game-state **save/load** is intentionally out of scope: it is
+  generic game infrastructure served by O3DE's serialization, not world-space 2D
+  rendering.)
 - **Large / streaming worlds** (community ask). Diorama itself ships no
   chunk-pager or LOD; its components are plain per-entity components that register
   on activate and unregister on deactivate, so they already spawn and despawn
   cleanly with O3DE's spawnable/prefab streaming, and tilemap chunks can be
-  hot-swapped at runtime via `SetTilemapByPath`. What is missing is a region/grid
-  paging layer on top of the spawnable system (stream prefabs and tilemap chunks
-  by camera proximity) plus the off-screen culling above, so an open 2.5D world
-  with thousands of entities (grass, trees, walls all as entities, per the
-  *Edentopia* approach) stays affordable. A natural complementary gem rather than
+  hot-swapped at runtime via `SetTilemapByPath`. Off-screen sprite culling already
+  ships (above). What is still missing is a region/grid paging layer on top of the
+  spawnable system (stream prefabs and tilemap chunks by camera proximity), so an
+  open 2.5D world with thousands of entities (grass, trees, walls all as entities,
+  per the *Edentopia* approach) stays affordable. A natural complementary gem rather than
   core, but worth a design once a concrete world size/shape is in hand.
 
 Recommended order (closes gaps, then leans into the differentiators): audio ->

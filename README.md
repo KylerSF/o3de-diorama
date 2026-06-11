@@ -64,6 +64,7 @@ freely mixed with 3D geometry, lighting, particles, and post effects. See
 | Sprite | Playback speed / time-scale (hit-stop, slow motion) | Working |
 | Rendering | Batched feature processor (texture + sort-layer batching) | Working |
 | Rendering | Automatic camera-distance depth sort | Working |
+| Rendering | Off-screen sprite culling (view side-plane frustum reject) | Working |
 | Rendering | Soft ground shadows under billboards | Working |
 | Tilemap | Atlas-grid tilemap component + typed bus | Working |
 | 2.5D | Depth-sorted layers + tilted 2.5D camera | Working |
@@ -83,7 +84,7 @@ freely mixed with 3D geometry, lighting, particles, and post effects. See
 | Tilemap | Custom rule-tile autotiling (neighbor-mask &rarr; tile offset) | Working |
 | Post | 2D Look: bloom + vignette over Atom's PostProcess | Working |
 | Post | Retro CRT scanline overlay | Working |
-| Animation | Skeletal cutout clip player (keyframed bone hierarchy) | Working |
+| Animation | Skeletal cutout clip player (keyframed bone hierarchy) + clip cross-fade | Working |
 | Animation | Aseprite sprite-sheet import (tags + per-frame timing) | Working |
 | Animation | Animation state machine (parameter-driven clip switching) | Working |
 | Asset pipeline | Native `.aseprite` AssetBuilder (packs atlas + sheet metadata) | Working |

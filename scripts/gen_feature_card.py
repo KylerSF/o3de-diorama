@@ -35,11 +35,11 @@ def neon_text(xy, text, font, color, glow=8):
 # arcade neon palette (echoes the logo's sunset + cyan)
 TILES = [
     ("SPRITE", (255, 206, 70), "World-space sprite quads via Atom; atlas UV, flip, 90-degree transpose, point-filter pixel art."),
-    ("RENDERING", (255, 150, 52), "Batched feature processor (texture + sort-layer); automatic camera-distance depth sort."),
+    ("RENDERING", (255, 150, 52), "Batched feature processor (texture + sort-layer); camera-distance depth sort; off-screen culling."),
     ("DEPTH+SHADOW", (90, 210, 255), "2.5D draw order by world depth, plus soft ground shadows under billboarded sprites."),
     ("2.5D+PARALLAX", (120, 235, 150), "Depth-sorted layers, parallax backgrounds, and a tilted 2.5D camera."),
     ("TILEMAP", (90, 225, 210), "Atlas tilemaps: 4-bit / 47-blob / custom rule-tile autotiling, in-editor paint, multi-layer .dtilemap / Tiled .tmj."),
-    ("ANIMATION", (200, 150, 255), "Sprite-sheet / flipbook with frame events; native .aseprite import (indexed/grayscale + blend modes); parameter-driven state machine."),
+    ("ANIMATION", (200, 150, 255), "Sprite-sheet flipbook + frame events; skeletal cutout with clip cross-fade; native .aseprite import; parameter-driven state machine."),
     ("LIGHTING", (255, 224, 110), "Gem-native 2D point + directional lights; normal-mapped sprites for shaped shading."),
     ("EFFECTS", (255, 96, 150), "2D particles; per-sprite flash, outline, emissive; hit-stop / slow-motion time-scale."),
     ("POST", (180, 130, 255), "Bloom + vignette via a 2D Look component, plus a retro CRT scanline pass."),

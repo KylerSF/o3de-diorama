@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/). Before
 ## [Unreleased]
 
 ### Added
+- **Skeletal cross-fade** (animation depth v2). The cutout skeletal player gains a
+  named-clip library and `CrossFadeTo(clipName, durationSeconds)`, which blends the
+  current and target clips per bone over a transition (then promotes the target),
+  backed by the pure tested `SkeletalClip::BlendPose` + `CrossfadeWeight` cores. A
+  non-positive duration switches instantly; an unknown name is ignored. Additive: an
+  empty clip library leaves the v1 single-clip behavior unchanged
+  ([Docs/howto/18-skeletal.md](Docs/howto/18-skeletal.md)).
+- **Off-screen sprite culling.** The sprite feature processor builds the view frustum
+  each frame and skips any sprite whose bounding sphere is fully outside the side
+  planes, on the pure tested `SpriteCull.h` core. Conservative and reverse-depth
+  independent (it never hides a visible sprite); saves the vertex packing and draw for
+  off-screen sprites in large sparse scenes. Toggled by the `r_dioramaSpriteCull` cvar.
 - **Hit-stop / slow-motion + pushbox resolution** (fighting follow-ups). Sprites
   gain a `m_playbackSpeed` time-scale (Inspector + `SetPlaybackSpeed` bus verb;
   0 = freeze for hit-stop, <1 = slow motion), matching the Aseprite component's
@@ -64,6 +76,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/). Before
   ([Docs/howto/06-pixel-art.md](Docs/howto/06-pixel-art.md)) plus an example
   `pixel_sprite.png`, covering both halves of crisp pixel art (sampler + mipmaps).
   Came out of an O3DE community request for explicit nearest-neighbor filtering.
+
+### Removed
+- **Screen-space UI/HUD component.** The early `DioramaUIComponent` (text/bar/panel
+  drawn screen-space) was removed: it competed with LyShine and broke the gem's
+  `VISION.md` boundary (Diorama is world-space only; LyShine owns screen-space UI).
+  In-world HUD elements (a health bar or icon pinned above an entity) are just sprites,
+  documented in [Docs/howto/13-world-space-hud.md](Docs/howto/13-world-space-hud.md).
 
 ## [0.2.0-beta] - 2026-06-05
 
