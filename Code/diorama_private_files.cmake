@@ -56,9 +56,14 @@ set(FILES
     Source/Clients/DioramaSkeletalClipComponent.h
     Source/Clients/SkeletalBus.cpp
     Source/Clients/InputActionMap.h
+    Source/Clients/MotionInput.h
+    Source/Clients/HitboxFrames.h
     Source/Clients/DioramaInputComponent.cpp
     Source/Clients/DioramaInputComponent.h
     Source/Clients/InputBus.cpp
+    Source/Clients/DioramaHitboxComponent.cpp
+    Source/Clients/DioramaHitboxComponent.h
+    Source/Clients/HitboxBus.cpp
     Source/Clients/AnimStateMachine.h
     Source/Clients/DioramaAnimStateMachineComponent.cpp
     Source/Clients/DioramaAnimStateMachineComponent.h
