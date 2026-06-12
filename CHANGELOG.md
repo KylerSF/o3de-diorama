@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/). Before
 ## [Unreleased]
 
 ### Added
+- **2D Simulation Clock** (deterministic sim, phase A of
+  [Docs/design/2d-deterministic-sim.md](Docs/design/2d-deterministic-sim.md)). A new
+  **2D Simulation Clock** component (`DioramaSimClockComponent`, one per level, opt-in:
+  nothing changes without it) turns variable render time into **fixed simulation
+  steps** on the pure tested `SimClock` accumulator core (configurable steps per
+  second, catch-up cap with backlog drop) and broadcasts
+  `DioramaSimTickNotificationBus::OnSimTick(frame, stepSeconds)` once per step: the
+  deterministic heartbeat gameplay scripts advance on so the same inputs replay to the
+  same result. Controlled over `DioramaSimClockRequestBus` (`GetSimFrame`, `SetPaused`,
+  **`StepOnce`** frame advance for training-mode freeze and rollback re-simulation,
+  `SetStepsPerSecond`, read-only `GetSimClockInfo`). The component also hosts a
+  **seeded gameplay RNG** on the pure tested `SimRandom` core (splitmix64-spread
+  xorshift64*, exact integer math, platform-identical) over `DioramaRandomRequestBus`
+  (`SetSeed`, `RandFloat`, `RandRange`, `RandInt`, `GetRandomDraws`), so randomness can
+  be seeded, replayed, and later snapshotted. Not cryptographic; gameplay only.
 - **2D Bullet Emitter: muzzle offset.** A general `Muzzle Offset` (Vector2) on the emitter
   config (Inspector + `SetMuzzleOffset(x, y)` on `DioramaBulletRequestBus`): bullets spawn
   at the entity origin plus this offset, so a gun fires from a ship's nose, a turret's
@@ -176,6 +191,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/). Before
   Came out of an O3DE community request for explicit nearest-neighbor filtering.
 
 ### Fixed
+- **Deterministic 2D collision query order.** `OverlapBox` / `OverlapCircle` results
+  are now sorted by entity id, and `Raycast2D` breaks exact distance ties on the lower
+  entity id. Both previously followed `unordered_map` iteration order, so "the first
+  hit" could differ between runs of the same scene: visible to any script that indexes
+  the result list, and a blocker for replay/rollback determinism
+  ([Docs/design/2d-deterministic-sim.md](Docs/design/2d-deterministic-sim.md)).
 - **Sample scripts: broken `Vector3` access idiom.** The `brawler_*.lua` and
   `platformer_body.lua` examples read/wrote a transform with `pos:GetX()` / `pos:SetX()`,
   which is **nil** in this engine's Lua (so they failed at runtime, never play-tested).
