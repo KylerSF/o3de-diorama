@@ -81,6 +81,7 @@ Each has a written guide and a runnable example.
 | Grid intelligence (FOV, movement range, A* pathfinding) | [27-grid-intelligence.md](27-grid-intelligence.md) | Written |
 | Day/night cycle (time-of-day lighting) | [28-day-night.md](28-day-night.md) | Written |
 | Small shmup (dogfood vertical slice) | [29-shmup.md](29-shmup.md) | Written |
+| Deterministic simulation (fixed step, snapshots, rewind) | [30-deterministic-sim.md](30-deterministic-sim.md) | Written |
 
 ## Tooling
 
