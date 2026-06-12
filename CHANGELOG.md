@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/). Before
 ## [Unreleased]
 
 ### Added
+- **Typed interaction boxes, phase A (pure core).** `HitboxFrames` grows the full
+  interaction vocabulary: `BoxKind` adds Pushbox, Throwbox, ThrowableBox, ArmorBox,
+  and ProximityBox alongside the v1 Hurtbox/Hitbox; each box carries a
+  `HitProperties` attack payload (damage, hitstun/blockstun/hitstop frames,
+  pushback, guard height, launch, priority, opaque custom id) that the gem stores
+  and delivers but never interprets; and a pure `Resolve(kindA, priorityA, kindB,
+  priorityB)` interaction matrix decides Hit / Clash / Beaten / Absorbed / Throw /
+  Proximity per side (pushbox separation stays positional, not an event). Unit
+  tests cover every matrix cell in both argument orders plus an exhaustive
+  silent-pair sweep; new payload fields default to v1 behavior
+  ([design](Docs/design/2d-box-interactions.md)). Component authoring, events, the
+  box overlay, and samples follow in phases B-D.
 - **Sim-clock migration: the five render-tick gameplay components can now advance
   on the 2D Simulation Clock's fixed steps.** The Sprite sheet playback, the
   Aseprite player, the 2D Animation State Machine, the 2D Frame-Data Hitboxes,
