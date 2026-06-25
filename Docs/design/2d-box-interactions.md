@@ -1,6 +1,7 @@
 # Design: typed interaction boxes with attack payloads
 
-Status: **design approved, not started.** Companion doc:
+Status: **in progress; phase A (pure core: kinds, payload, resolve matrix) shipped.**
+Companion doc:
 [2d-deterministic-sim.md](2d-deterministic-sim.md) (fixed-tick sim + rollback-ready
 state). Driver: fighting games of the SF6 / GGST class. The shipped frame-data rig
 (`DioramaHitboxComponent`, [howto/21-fighting.md](../howto/21-fighting.md)) proved
