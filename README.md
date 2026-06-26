@@ -142,6 +142,10 @@ cmake -B /path/to/YourProject/build/linux -S /path/to/YourProject -G "Ninja Mult
 cmake --build /path/to/YourProject/build/linux --config profile
 ```
 
+The same register / enable / cmake steps build any configuration; swap
+`--config profile` for `debug` (unoptimized, for stepping through gem code) or
+`release` (the optimized shipping build).
+
 On Windows, use `o3de.bat` and a Visual Studio CMake generator (`Visual Studio 18
 2026` for VS2026, `Visual Studio 17 2022` for VS2022). The helper
 `scripts/ci_build_test.ps1` automates the whole register / configure / build /
