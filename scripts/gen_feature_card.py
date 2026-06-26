@@ -34,14 +34,14 @@ def neon_text(xy, text, font, color, glow=8):
 
 # arcade neon palette (echoes the logo's sunset + cyan)
 TILES = [
-    ("SPRITE", (255, 206, 70), "World-space sprite quads via Atom; atlas UV, flip, 90-degree transpose, point-filter pixel art."),
+    ("SPRITE", (255, 206, 70), "World-space sprite quads via Atom; atlas UV, flip, transpose, point-filter pixel art; palette recolor for team colors."),
     ("RENDERING", (255, 150, 52), "Batched feature processor (texture + sort-layer); camera-distance depth sort; off-screen culling."),
     ("DEPTH+SHADOW", (90, 210, 255), "2.5D draw order by world depth, plus soft ground shadows under billboarded sprites."),
     ("2.5D+PARALLAX", (120, 235, 150), "Depth-sorted layers, parallax backgrounds, and a tilted 2.5D camera."),
     ("TILEMAP", (90, 225, 210), "Atlas tilemaps: autotiling (4-bit, 47-blob, custom rules), in-editor paint, Tiled .tmj import."),
     ("ANIMATION", (200, 150, 255), "Flipbook + frame events; skeletal cutout + cross-fade; .aseprite import; state machine."),
     ("LIGHTING", (255, 224, 110), "Gem-native 2D point + directional lights; normal-mapped sprites for shaped shading."),
-    ("EFFECTS", (255, 96, 150), "2D particles; per-sprite flash, outline, emissive; hit-stop / slow-motion time-scale."),
+    ("EFFECTS", (255, 96, 150), "2D particles; per-sprite flash, outline, emissive, afterimage trails; hit-stop / slow-motion / super-freeze."),
     ("POST", (180, 130, 255), "Bloom + vignette via a 2D Look component, plus a retro CRT scanline pass."),
     ("CAMERA", (90, 200, 255), "Follow, deadzone, bounds, shake; versus framing + auto-zoom; ortho / pixel-perfect."),
     ("GAMEPLAY", (140, 230, 130), "2D collision (triggers, queries, pushbox), frame-data hitboxes, rebindable input + motions."),
