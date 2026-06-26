@@ -16,9 +16,12 @@ name: build-test
 # the official installer. Windows is O3DE's primary platform, so it is the gate
 # that confirms the gem builds and tests there.
 #
-# Both legs are opt-in via their (distinct) labels: triggered manually, or on PRs
-# a maintainer has labelled. Build verification needs no GPU, so neither leg
-# needs special hardware.
+# Both legs run automatically on any PR that touches buildable code (the `changes`
+# job below detects this), so a code change can never merge without compiling on
+# both verified platforms. The `ci:build` / `ci:build-linux` labels remain as a
+# manual override to force a leg on a PR the path filter skipped (for example a
+# docs-only PR), and a workflow_dispatch runs either leg on demand. Build
+# verification needs no GPU, so neither leg needs special hardware.
 #
 # The lint workflow (lint.yml) is the always-on gate; this one is the heavier,
 # SDK-dependent complement.
@@ -34,7 +37,7 @@ on:
         # GitHub-hosted container and is available any time via linux/both.
         default: windows
   pull_request:
-    types: [labeled, synchronize, reopened]
+    types: [opened, synchronize, reopened, labeled]
 
 permissions:
   contents: read
@@ -46,15 +49,50 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: detect code changes
+    # Cheap gate (~10 s checkout + grep): decides whether a PR touches buildable
+    # code, so the heavy legs auto-run only when they need to. Non-PR events fall
+    # through with code=false; their build conditions key off the dispatch inputs.
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - id: filter
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "code=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          changed=$(git diff --name-only "$BASE_SHA"...HEAD)
+          echo "Changed files:"; echo "$changed"
+          # Buildable surface: gem sources, any CMake list, the gem manifest, and
+          # the build scripts / this workflow themselves (so CI changes self-test).
+          if echo "$changed" | grep -qE '^(Code/|gem\.json$|CMakeLists\.txt$|.*\.cmake$|scripts/ci_build_test\.(sh|ps1)$|\.github/workflows/build-test\.yml$)'; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            echo "-> code paths touched: build legs will run."
+          else
+            echo "code=false" >> "$GITHUB_OUTPUT"
+            echo "-> no code paths touched: build legs skipped (label to force)."
+          fi
+
   build-test-linux:
     name: build and unit test (Linux)
-    # Opt-in via the DISTINCT `ci:build-linux` label (not the general `ci:build`,
-    # which fires Windows only). Runs on a GitHub-hosted runner inside the
-    # ci-fedora container, so the SDK is present and untrusted PR code never
-    # touches local hardware.
+    needs: changes
+    # Auto-runs when the PR touches code; the DISTINCT `ci:build-linux` label (not
+    # the general `ci:build`, which fires Windows only) forces it otherwise. Runs
+    # on a GitHub-hosted runner inside the ci-fedora container, so the SDK is
+    # present and untrusted PR code never touches local hardware.
     if: >
       (github.event_name == 'workflow_dispatch' && (inputs.leg == 'both' || inputs.leg == 'linux')) ||
-      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ci:build-linux'))
+      (github.event_name == 'pull_request' &&
+        (needs.changes.outputs.code == 'true' ||
+         contains(github.event.pull_request.labels.*.name, 'ci:build-linux')))
     runs-on: ubuntu-latest
     container:
       # Fedora 44 + O3DE SDK, published by ci-image.yml. Credentials let the job
@@ -81,14 +119,17 @@ jobs:
 
   build-test-windows:
     name: build and unit test (Windows)
-    # Opt-in via the `ci:build` label (or a manual dispatch). Runs on a
-    # GitHub-hosted windows-2025-vs2026 runner and installs the O3DE SDK at runtime,
-    # so no self-hosted hardware is needed and untrusted PR code stays off local
-    # machines. Windows is O3DE's primary platform, so this confirms the gem
-    # builds and tests there.
+    needs: changes
+    # Auto-runs when the PR touches code; the `ci:build` label (or a manual
+    # dispatch) forces it otherwise. Runs on a GitHub-hosted windows-2025-vs2026
+    # runner and installs the O3DE SDK at runtime, so no self-hosted hardware is
+    # needed and untrusted PR code stays off local machines. Windows is O3DE's
+    # primary platform, so this confirms the gem builds and tests there.
     if: >
       (github.event_name == 'workflow_dispatch' && (inputs.leg == 'both' || inputs.leg == 'windows')) ||
-      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ci:build'))
+      (github.event_name == 'pull_request' &&
+        (needs.changes.outputs.code == 'true' ||
+         contains(github.event.pull_request.labels.*.name, 'ci:build')))
     runs-on: windows-2025-vs2026
     steps:
       - uses: actions/checkout@v6
