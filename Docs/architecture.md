@@ -353,11 +353,11 @@ brush painting, the Aseprite twin runs the **sprite-sheet JSON import**, and the
 Look and Skeletal twins add **edit-mode previews** (bloom A/B, pose scrubbing).
 
 The pure, engine-free cores that back these (`SpriteBatchPlan`, `SpriteCull`,
-`Collision2D`, `Camera2D`, `Particles2D`, `TilemapPaint`, `SkeletalClip`,
-`AsepriteImport`, `InputActionMap`, `MotionInput`, `HitboxFrames`, `BulletPattern`,
-`SlopeCollision`, `DepthLane`, `Pathfinding`, `MovementRange`, `FieldOfView`,
-`DayNightCycle`, `SimClock`, `SimRandom`, `SimState`) are header/`.cpp` pairs unit-tested on their own, the same way the
-config helpers are. `SpriteCull` is the off-screen reject: the feature processor
+`SpriteTrail`, `SpritePalette`, `Collision2D`, `Camera2D`, `Particles2D`,
+`TilemapPaint`, `SkeletalClip`, `AsepriteImport`, `InputActionMap`, `MotionInput`,
+`HitboxFrames`, `BulletPattern`, `SlopeCollision`, `DepthLane`, `Pathfinding`,
+`MovementRange`, `FieldOfView`, `DayNightCycle`, `SimClock`, `SimRandom`, `SimState`)
+are header/`.cpp` pairs unit-tested on their own, the same way the config helpers are. `SpriteCull` is the off-screen reject: the feature processor
 builds the view frustum once per frame and skips packing/drawing any sprite whose
 bounding sphere is fully outside the side planes (conservative, so it never hides a
 visible sprite; toggled by `r_dioramaSpriteCull`).

@@ -301,9 +301,9 @@ Missing table-stakes (no design doc yet):
   flash + camera trauma). Builds on the existing frame events, versus camera, hit-stop,
   and pushbox pieces. Charge-motion hold timing stays game-side; rollback *readiness*
   has since moved in-gem as a designed v3 (next bullet).
-- **Fighting building blocks v3: deterministic sim + typed boxes** (L). The
-  deterministic-sim half is **Shipped** (phases A-D, PRs #112/#115/#114); the typed-box
-  half remains design-only. (1)
+- **Fighting building blocks v3: deterministic sim + typed boxes** (L). **Shipped**
+  (both halves: deterministic sim phases A-D, PRs #112/#115/#114; typed boxes phases
+  A-D, PRs #124/#125/#126/#127). (1)
   [design/2d-deterministic-sim.md](design/2d-deterministic-sim.md) **Shipped**
   ([howto/30-deterministic-sim.md](howto/30-deterministic-sim.md)): the opt-in **2D
   Simulation Clock** (`OnSimTick`, pause/single-step, seeded RNG), snapshot/restore
@@ -317,13 +317,16 @@ Missing table-stakes (no design doc yet):
   machine, the hitbox rig, the bullet emitter) carry a **Use Simulation Clock**
   flag (+ `SetUseSimClock` verb) that advances them on the fixed step, with
   snapshot chunks for the three playback positions. (2)
-  [design/2d-box-interactions.md](design/2d-box-interactions.md): the hitbox rig
-  grows typed kinds (pushbox, throwbox/throwable, armor, proximity), per-box
-  **attack payloads** (damage, hit/block/hit-stop frames, pushback, guard height,
-  launch, priority) delivered on a new `OnBoxEvent`, a clash/armor/throw resolution
-  matrix (pure core), and a world-space color-coded **box overlay** (the
-  training-mode display + frame-data tuning loop). Genre-neutral internals; the
-  SF6/GGST-class systems (meters, scaling, cancels) stay game-side.
+  [design/2d-box-interactions.md](design/2d-box-interactions.md) **Shipped**
+  ([howto/21-fighting.md](howto/21-fighting.md)): the hitbox rig grew typed kinds
+  (pushbox, throwbox/throwable, armor, proximity), per-box **attack payloads** (damage,
+  hit/block/hit-stop frames, pushback, guard height, launch, priority) delivered on a
+  new `OnBoxEvent`, a clash/armor/throw resolution matrix (pure core), and a
+  world-space color-coded **box overlay** (the training-mode display + frame-data
+  tuning loop). Boxes can also ride a 2D-skeletal bone. Genre-neutral internals; the
+  SF6/GGST-class systems (meters, scaling, cancels) stay game-side. Follow-on sprite /
+  clock juice also shipped: afterimage trails, a luminance palette-recolor for team
+  colors, and a super-freeze (`FreezeFor`) cinematic pause on the clock.
 - **Bullet-pattern emitter (danmaku / shmup).** **Shipped**
   ([howto/24-bullet-patterns.md](howto/24-bullet-patterns.md)): a **2D Bullet Emitter**
   component (`DioramaBulletEmitterComponent`) fires Ring / Fan / Spiral patterns at a

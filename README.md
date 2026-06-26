@@ -62,6 +62,8 @@ freely mixed with 3D geometry, lighting, particles, and post effects. See
 | Sprite | Point filter (crisp pixel art) | Working |
 | Sprite | Sprite-sheet / flipbook animation + frame events (`OnAnimationFrame`) | Working |
 | Sprite | Playback speed / time-scale (hit-stop, slow motion) | Working |
+| Sprite | Afterimage trails (fading ghost copies; dash / super effect) | Working |
+| Sprite | Palette recolor (three-stop luminance ramp; team / alt colors) | Working |
 | Rendering | Batched feature processor (texture + sort-layer batching) | Working |
 | Rendering | Automatic camera-distance depth sort | Working |
 | Rendering | Off-screen sprite culling (view side-plane frustum reject) | Working |
@@ -72,6 +74,7 @@ freely mixed with 3D geometry, lighting, particles, and post effects. See
 | Gameplay | 2D collision: colliders, triggers, and queries reachable from scripts | Working |
 | Gameplay | Pushbox resolution (`ComputeBoxPushOut` minimum-translation) | Working |
 | Gameplay | Frame-data hitboxes/hurtboxes (`OnHit`/`OnHurt` over the 2D collision world) | Working |
+| Gameplay | Typed interaction boxes: pushbox/throwbox/armor/proximity + attack payloads on `OnBoxEvent`, clash/armor/throw matrix, world-space box overlay, bone-attached boxes | Working |
 | Gameplay | One-way platforms + ramp ground-follow (`ProbeGroundY`, side-scroller) | Working |
 | Input | Rebindable input action mapping (Button / Axis1D / Axis2D actions) | Working |
 | Input | Motion inputs (numpad sequences: quarter-circle, dragon-punch) | Working |
@@ -80,6 +83,7 @@ freely mixed with 3D geometry, lighting, particles, and post effects. See
 | Simulation | Fixed-step 2D Simulation Clock (`OnSimTick`, pause/single-step) + seeded RNG | Working |
 | Simulation | Snapshot/restore with state hash + slots (rollback-ready; CI determinism proof) | Working |
 | Simulation | Per-sim-frame input ring: frame queries + `InjectActionState` (replays, bots, rollback) | Working |
+| Simulation | Per-component sim-clock advance (Use Simulation Clock) + timed super-freeze (`FreezeFor`, cinematic pause) | Working |
 | 2.5D | Parallax background layers | Working |
 | Camera | 2D camera controller (follow, deadzone, bounds, shake) | Working |
 | Camera | Versus framing (two-target midpoint) + distance zoom/dolly | Working |

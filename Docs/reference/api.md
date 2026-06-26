@@ -85,7 +85,9 @@ reflection in `Code/Source/Clients/SpriteBus.cpp` and `TilemapBus.cpp`:
 `SetFlash`, `SetOutline`, `SetEmissive`, `SetBillboard`, `SetDoubleSided`,
 `SetPointFilter`, `SetUVRegion`, `SetFlip`, `SetTranspose`, `SetSortOffset`,
 `SetFrameGrid`, `SetAnimationEnabled`, `SetPlayback`, `SetPlaybackSpeed`,
-`SetStartFrame`, `PlaySpriteSheet`, `GetSpriteInfo`, `SetAtlasByPath`,
+`SetStartFrame`, `SetUseSimClock`, `SetTrail`, `SetTrailTint`,
+`SetPaletteStrength`, `SetPaletteColors`, `PlaySpriteSheet`, `GetSpriteInfo`,
+`SetAtlasByPath`,
 `SetTilemapByPath`, `SetAtlasGrid`, `SetGridSize`, `SetTileSize`, `SetTile`,
 `Fill`, `Clear`, `Autotile`, `AutotileBlob`, `AutotileRules`,
 `DefineAnimatedTile`, `ClearAnimatedTiles`, `GetTilemapInfo`.
@@ -133,6 +135,10 @@ parameter in the [Sprite component reference](./sprite-component.md).
 | `SetPlaybackSpeed` | `speed: float` | void | Clamped to `>= 0`. Time-scale multiplier on animation advance (`1` = normal, `0` = paused, `0.2` = slow-motion); the global hit-stop / slow-motion knob. | [Playback Speed](./sprite-component.md#playback-speed) |
 | `SetStartFrame` | `frame: int` | void | Clamped to `>= 0` on store; clamped to the valid frame range at read time. | [Start Frame](./sprite-component.md#start-frame) |
 | `SetUseSimClock` | `enabled: bool` | void | None. Advance playback on the 2D Simulation Clock's fixed steps instead of the render tick; with no clock in the level the render tick still advances. | Use Simulation Clock |
+| `SetTrail` | `count: int, intervalSeconds: float, startAlpha: float, fade: float` | void | `count` clamped `>= 0` (0 = off), `intervalSeconds` clamped `>= 0`, `startAlpha`/`fade` clamped `0..1`. Afterimage trail: fading ghost copies of recent poses behind the sprite (the dash / super trail). | [Afterimage Trail](../howto/10-materials.md#afterimage-trail-dash--super-ghosts) |
+| `SetTrailTint` | `r, g, b, a: float` | void | Channels clamped `0..1`. Color the trail ghosts draw in (white shows the sprite faded). | [Afterimage Trail](../howto/10-materials.md#afterimage-trail-dash--super-ghosts) |
+| `SetPaletteStrength` | `strength: float` | void | Clamped `0..1` (0 = off). Blend the sprite toward its three-stop color ramp (team / alt colors); the quick P2-color switch. | [Palette recolor](../howto/10-materials.md#palette-recolor-team--alt-colors) |
+| `SetPaletteColors` | `shadowR, shadowG, shadowB, midR, midG, midB, highR, highG, highB: float` | void | Channels clamped `0..1`. The recolor ramp: the colors the sprite's dark, mid, and bright pixels map to. | [Palette recolor](../howto/10-materials.md#palette-recolor-team--alt-colors) |
 | `PlaySpriteSheet` | `columns: int, rows: int, frameCount: int, framesPerSecond: float, loop: bool` | void | `columns`/`rows`/`frameCount` clamped to `>= 1`; `framesPerSecond` clamped to `>= 0`; also sets `animEnabled = true`. | [Convenience: PlaySpriteSheet](./sprite-component.md#convenience-playspritesheet) |
 | `GetSpriteInfo` | (none) | `SpriteInfo` | Read-only. Safe to poll. | [Verify loop](#query-and-verify-the-verify-loop) |
 

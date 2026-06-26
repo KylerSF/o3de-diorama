@@ -524,6 +524,7 @@ to poll.
 | `m_animEnabled` | `bool` | Resolved animation-enabled flag |
 | `m_currentFrame` | `int` | The frame currently displayed |
 | `m_frameCount` | `int` | The clamped active frame count |
+| `m_useSimClock` | `bool` | Animation advances on the 2D Simulation Clock's fixed steps |
 
 The verify loop is: issue a setter, then read `GetSpriteInfo` and assert the
 resolved field matches your intent. Because the resolved values reflect clamping,
